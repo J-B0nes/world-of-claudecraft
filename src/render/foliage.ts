@@ -1,64 +1,100 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import {
-  DUNGEON_X_THRESHOLD, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z, ZONES,
+  CAMPS, DUNGEON_X_THRESHOLD, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z, ZONES,
 } from '../sim/data';
 import type { BiomeId } from '../sim/types';
 import {
   generateDecorations, roadDistance, terrainHeight, zoneBiomeAt, WATER_LEVEL,
 } from '../sim/world';
 import type { Decoration } from '../sim/world';
-import { GFX, sharedUniforms, surfaceMat } from './gfx';
-import { barkMaps, barkTexture, foliageCardTexture, foliageTexture, grassTuftTexture } from './textures';
+import { GFX, sharedUniforms } from './gfx';
+import { grassTuftTexture } from './textures';
+import { loadGltf } from './assets/loader';
+import { registerPreload } from './assets/preload';
 
-// Vegetation: trees, rocks and the grass ring.
+// Vegetation: trees, rocks, ground dressing and the grass ring.
 //
-// - Trees/rocks are InstancedMeshes bucketed per (zone band x 3 x-columns) so
-//   frustum culling drops whole off-screen forests.
-// - Per-instance HSL color variation rides on instanceColor; the base tint is
-//   biome-aware (marsh trees murkier and mossier, peaks pines a darker
-//   blue-green).
-// - High tier: foliage (not trunks/rocks) sways in the wind via
-//   onBeforeCompile on the shared uTime clock.
-// - Shapes are hand-built organic merges (one trunk draw + one canopy draw
-//   per species per bucket): pines stack ragged noise-rimmed tiers on a
-//   gnarled trunk with a root flare plus a crossed alpha-card ring; oaks fork
-//   into limbs under a cluster of noise-displaced icosahedron lobes; marsh
-//   tree2 becomes a twisted bare swamp tree with sparse drooping lobes and
-//   hanging moss cards; rocks are flat-shaded noise-displaced icosahedron
-//   boulders (single + stacked-cluster archetypes) with a baked moss or
-//   snow-dust top blend.
+// Models come from the Quaternius Stylized Nature MegaKit (CC0), shipped via
+// scripts/assets/specs/foliage.json -> public/models/foliage/*.glb and
+// preloaded at module import (main.ts awaits assetsReady() before the
+// Renderer is constructed, so buildFoliage can read the cache synchronously).
+//
+// - Placement still comes from the deterministic generateDecorations(seed)
+//   field (sim untouched): kind 'tree' = pine, 'tree2' = oak (marsh: swamp
+//   trees split between twisted + dead models), 'rock' = boulders.
+// - Trees/rocks stay InstancedMeshes bucketed per (2 x-halves x 200u z-band)
+//   so frustum/fog culling drops whole off-screen forests. Each bucket picks
+//   a small deterministic subset of the model variants (hash of the bucket
+//   coords) so variety stays high without exploding draw calls.
+// - glTF node transforms are baked into extracted BufferGeometries once;
+//   attributes are converted to float32 because the shipped GLBs are
+//   meshopt-quantized (writing world-space values back into normalized int16
+//   attributes would clip).
+// - Per-instance tints ride instanceColor but are softened toward white —
+//   the models are textured, and strong tints read as dirt.
+// - High tier: leaf materials sway in the wind via onBeforeCompile on the
+//   shared uTime clock; trunks stay planted (sway weight ramps with local y).
+// - Shadow policy: canopies cast (alpha-cutout shadows; r165 depth material
+//   inherits map+alphaTest), trunks/rocks/dressing don't — matches the old
+//   budget where the canopy owns the tree's shadow. Dead trees have no
+//   canopy, so their bark casts instead.
+// - Ground dressing (bushes/ferns/mushrooms) is a new deterministic hash-grid
+//   scatter, walk-through by design (no colliders, like grass).
 // - Grass is a player-centered ring (O(radius^2), not O(world^2)) rebuilt
-//   when the player moves >12u. Tuft placement hashes the absolute grid cell,
-//   so the same tufts always reappear in the same spots. A shader fade
-//   dissolves tufts at the ring edge.
+//   when the player moves >12u, unchanged from the previous pass.
 
 const GRASS_REBUILD_DIST = 12;
 const TREE_WIND_STRENGTH = 0.06;
 const GRASS_WIND_STRENGTH = 0.08;
-// two x-halves x 200u z-bands: each bucket is up to ~6 draws (+canopy
-// shadows), so bucket count is the foliage draw budget — finer 120u thirds
-// cost ~60 extra calls at town for culling that barely bit
-const BUCKET_DEPTH = 200;
+// two x-halves x 240u z-bands: bucket count x variants-per-bucket is the
+// foliage draw budget — see the perBucket caps in the species specs
+const BUCKET_DEPTH = 240;
 
-// Desaturated forest palette: the first pass's lime tints clashed with the
-// warm grade and read as pre-overhaul plastic. Tufts also pick up the ground
-// hue (vale is no longer pure white) so the meadow belongs to the terrain.
+const MODEL_DIR = 'models/foliage/';
+const MODEL_URLS = {
+  // pine_3 is shipped but unused: its 462-tri canopy reads as a dead pole
+  pine: [1, 2, 4, 5].map((i) => `${MODEL_DIR}pine_${i}.glb`),
+  oak: [1, 2, 3, 4, 5].map((i) => `${MODEL_DIR}oak_${i}.glb`),
+  twisted: [1, 2, 3].map((i) => `${MODEL_DIR}twisted_${i}.glb`),
+  dead: [1, 2, 3].map((i) => `${MODEL_DIR}dead_${i}.glb`),
+  rock: [1, 2, 3].map((i) => `${MODEL_DIR}rock_${i}.glb`),
+  bush: [`${MODEL_DIR}bush.glb`],
+  bushFlowers: [`${MODEL_DIR}bush_flowers.glb`],
+  fern: [`${MODEL_DIR}fern.glb`],
+  mushroom: [`${MODEL_DIR}mushroom.glb`],
+};
+
+// kick off fetches at import; buildFoliage assumes the cache is populated
+const loadedModels = new Map<string, GLTF>();
+for (const urls of Object.values(MODEL_URLS)) {
+  for (const url of urls) {
+    registerPreload(loadGltf(url).then((g) => { loadedModels.set(url, g); }));
+  }
+}
+
+// Desaturated biome tints riding instanceColor. The textured models carry
+// their own hue, so tints are lerped most of the way to white before use
+// (raw tints multiply into the albedo and read as grime).
 const PINE_TINT: Record<BiomeId, number> = { vale: 0x9bb48d, marsh: 0x87966b, peaks: 0x6f8a7a };
 const OAK_TINT: Record<BiomeId, number> = { vale: 0xa7b886, marsh: 0x8d9865, peaks: 0x92a37f };
 const ROCK_TINT: Record<BiomeId, number> = { vale: 0x8d8d85, marsh: 0x565c4e, peaks: 0x878e99 };
+const TRUNK_TINT: Record<BiomeId, number> = { vale: 0xffffff, marsh: 0xd2d8bc, peaks: 0xd9dde4 };
+const GRASS_TINT: Record<BiomeId, number> = { vale: 0xdde4c0, marsh: 0xbfc492, peaks: 0xc2cec8 };
+const SWAMP_CANOPY_TINT = 0x7e8b58;
+const DRESS_TINT: Record<BiomeId, number> = { vale: 0xaebf8e, marsh: 0x8d9865, peaks: 0x93a78f };
+// how far tints collapse toward white (1 = no tint at all)
+const LEAF_TINT_SOFTEN = 0.6;
+const BARK_TINT_SOFTEN = 0.85;
+const ROCK_TINT_SOFTEN = 0.45;
+const DRESS_TINT_SOFTEN = 0.65;
 
 // rocks only pick up the snow-dust colorway above the terrain snowline —
 // low-altitude peaks-biome foothills stay mossy/bare (white rocks on green
 // grass read as scattered eggs)
 const ROCK_SNOWLINE_Y = 34; // terrain snow tint starts at h~34 (terrain.ts)
-const TRUNK_TINT: Record<BiomeId, number> = { vale: 0xffffff, marsh: 0xd2d8bc, peaks: 0xd9dde4 };
-const GRASS_TINT: Record<BiomeId, number> = { vale: 0xdde4c0, marsh: 0xbfc492, peaks: 0xc2cec8 };
-// marsh tree2 is a swamp tree: murkier canopy than the vale oak, and the
-// hanging moss strands multiply the olive tuft texture toward gray-green
-const SWAMP_CANOPY_TINT = 0x7e8b58;
-const SWAMP_MOSS_TINT = 0xa8b184;
-// grass refuses cliff faces (mirrors ROCK_SLOPE_START in terrain.ts)
+// grass/dressing refuse cliff faces (mirrors ROCK_SLOPE_START in terrain.ts)
 const GRASS_MAX_SLOPE = 0.62;
 const GRASS_SLOPE_EPS = 1.2;
 
@@ -74,16 +110,37 @@ function hashAt(a: number, b: number, k: number): number {
   return s - Math.floor(s);
 }
 
-// fog-cullable handle for one instanced bucket mesh
+// fog-cullable handle for one instanced bucket mesh; optional distance window
+// (bucket-center based) drives the cheap far-LOD swaps
 interface BucketMesh {
   mesh: THREE.InstancedMesh;
   x: number;
   z: number;
   radius: number;
+  minDist?: number;
+  maxDist?: number;
 }
 
-// Wind sway injection for foliage materials (canopy + grass cards). Phase
-// comes from the instance's world origin so neighbouring trees desynchronise.
+// distance caps for the LOD windows. The dense sculpted barks are ~70% of a
+// tree's triangles but read as a thin pole beyond the fog midpoint — hide
+// them there (oaks swap to a cheap cylinder; pine canopies reach low enough
+// to cover the gap). Dressing/rocks are sub-pixel long before the fog wall.
+// The low tier (software GL / weak iGPU) pulls everything much closer — it
+// has no shadows or fog-flattering post, and raw triangle rate is its limit.
+interface LodDists {
+  barkFar: number;
+  dressFar: number;
+  rockFar: number;
+}
+const LOD_HIGH: LodDists = { barkFar: 330, dressFar: 200, rockFar: 360 };
+const LOD_LOW: LodDists = { barkFar: 150, dressFar: 140, rockFar: 240 };
+function lodDists(): LodDists {
+  return GFX.standardMaterials ? LOD_HIGH : LOD_LOW;
+}
+
+// Wind sway injection for foliage materials (canopies, bushes, grass cards).
+// Phase comes from the instance's world origin so neighbouring trees
+// desynchronise; weight ramps by local height so bases stay planted.
 function addWind(mat: THREE.Material, strength: number): void {
   if (!GFX.windSway) return;
   mat.onBeforeCompile = (sh) => {
@@ -106,157 +163,117 @@ function addWind(mat: THREE.Material, strength: number): void {
   };
 }
 
-// Deterministic hash keyed on the quantised vertex position: seam/cap/pole
-// twin vertices land in the same cell, so welded shapes stay welded after
-// noise displacement.
-function quantHash(x: number, y: number, z: number, k: number): number {
-  const qx = Math.round(x * 20) / 20, qy = Math.round(y * 20) / 20, qz = Math.round(z * 20) / 20;
-  return hashAt(qx * 13.7 + qz * 31.1, qy * 7.3, k);
+// ---------------------------------------------------------------------------
+// glTF extraction
+// ---------------------------------------------------------------------------
+
+// material names -> render policy (everything else is rigid/front-side)
+interface MatPolicy {
+  leaf: boolean; // double-sided alpha cutout that sways in the wind
+  windMul: number;
+  roughness: number;
+}
+const MAT_POLICY: Record<string, MatPolicy> = {
+  Leaves_NormalTree: { leaf: true, windMul: 1, roughness: 0.9 },
+  Leaves_Pine: { leaf: true, windMul: 1, roughness: 0.9 },
+  Leaves_TwistedTree: { leaf: true, windMul: 1, roughness: 0.9 },
+  Leaves: { leaf: true, windMul: 1.2, roughness: 0.95 },
+  Flowers: { leaf: true, windMul: 1, roughness: 0.9 },
+  Bark_NormalTree: { leaf: false, windMul: 0, roughness: 0.95 },
+  Bark_TwistedTree: { leaf: false, windMul: 0, roughness: 0.95 },
+  Bark_DeadTree: { leaf: false, windMul: 0, roughness: 0.95 },
+  Rocks: { leaf: false, windMul: 0, roughness: 1.0 },
+  Mushrooms: { leaf: false, windMul: 0, roughness: 0.9 },
+};
+const DEFAULT_POLICY: MatPolicy = { leaf: false, windMul: 0, roughness: 0.95 };
+const LEAF_ALPHA_TEST = 0.4;
+
+interface ModelPart {
+  geometry: THREE.BufferGeometry;
+  material: THREE.Material;
+  isLeaf: boolean;
 }
 
-// One pine foliage tier: a drooped cone whose rim is pushed in/out and up/down
-// per vertex so the silhouette reads as ragged branch clumps, not a cone.
-function raggedTier(radius: number, height: number, droop: number, key: number): THREE.BufferGeometry {
-  const geo = new THREE.ConeGeometry(radius, height, 8, 2);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const radial = Math.min(1, Math.hypot(x, z) / radius);
-    const rs = 1 + (quantHash(x, y, z, key) - 0.5) * 0.55 * radial;
-    const dy = (quantHash(x, y, z, key + 17) - 0.5) * 0.6 * radial - droop * radial * radial;
-    pos.setXYZ(i, x * rs, y + dy, z * rs);
+// one shared material per source-material name (dedupes textures across the
+// 5 pine / 5 oak files which all reference the same bark + leaf sheets)
+const materialCache = new Map<string, THREE.Material>();
+
+function foliageMaterial(src: THREE.Material, hasVertexColors: boolean): THREE.Material {
+  const cached = materialCache.get(src.name);
+  if (cached) return cached;
+  const std = src as THREE.MeshStandardMaterial;
+  const pol = MAT_POLICY[src.name] ?? DEFAULT_POLICY;
+  const common = {
+    map: std.map,
+    color: std.color.clone(), // baseColorFactor — some kit sheets rely on it
+    vertexColors: hasVertexColors,
+    alphaTest: pol.leaf ? LEAF_ALPHA_TEST : 0,
+    side: pol.leaf ? THREE.DoubleSide : THREE.FrontSide,
+  };
+  const mat = GFX.standardMaterials
+    ? new THREE.MeshStandardMaterial({
+      ...common, normalMap: std.normalMap, roughness: pol.roughness, metalness: 0,
+    })
+    : new THREE.MeshLambertMaterial(common);
+  if (pol.windMul > 0) addWind(mat, TREE_WIND_STRENGTH * pol.windMul);
+  materialCache.set(src.name, mat);
+  return mat;
+}
+
+// The shipped GLBs are meshopt-quantized: positions/normals/colors live in
+// normalized integer attributes with a dequantization node transform. Bake
+// everything to float32 + world space once so geometries can be shared by
+// InstancedMeshes and merged into clusters without overflow.
+function toFloatAttribute(attr: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): THREE.BufferAttribute {
+  const out = new Float32Array(attr.count * attr.itemSize);
+  for (let i = 0; i < attr.count; i++) {
+    for (let j = 0; j < attr.itemSize; j++) out[i * attr.itemSize + j] = attr.getComponent(i, j);
   }
-  geo.computeVertexNormals();
-  return geo;
+  return new THREE.BufferAttribute(out, attr.itemSize);
 }
 
-// Smooth trilinear value noise on the hashAt lattice — continuous across
-// vertices (white per-vertex hash turns dense meshes into spiky messes).
-function valueNoise3(x: number, y: number, z: number, k: number): number {
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-  const sm = (t: number): number => t * t * (3 - 2 * t);
-  const u = sm(x - xi), v = sm(y - yi), w = sm(z - zi);
-  const h = (a: number, b: number, cc: number): number => hashAt(a * 13.7 + cc * 31.1, b * 7.3, k);
-  const lp = (a: number, b: number, t: number): number => a + (b - a) * t;
-  return lp(
-    lp(lp(h(xi, yi, zi), h(xi + 1, yi, zi), u), lp(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v),
-    lp(lp(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), lp(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v),
-    w,
-  );
-}
-
-// Icosahedron lobe with two octaves of radial value noise — a lumpy foliage
-// cloud. Normals are reset to the radial direction for soft rounded shading
-// (icosahedron faces are unwelded, so computeVertexNormals would facet).
-// Big lobes get detail 2 so close-up silhouettes stay leafy, not triangular.
-function noisyLobe(radius: number, amp: number, key: number, detail = 1): THREE.BufferGeometry {
-  const geo = new THREE.IcosahedronGeometry(radius, detail);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  const nrm = geo.attributes.normal as THREE.BufferAttribute;
-  const uv = geo.attributes.uv as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const coarse = (valueNoise3(x * 1.1, y * 1.1, z * 1.1, key) - 0.5) * 2 * amp;
-    const fine = (valueNoise3(x * 3.1, y * 3.1, z * 3.1, key + 9) - 0.5) * amp * 0.8;
-    const s = 1 + coarse + fine;
-    pos.setXYZ(i, x * s, y * s, z * s);
-    const il = 1 / (Math.hypot(x, y, z) || 1);
-    nrm.setXYZ(i, x * il, y * il, z * il);
-    // continuous spherical UVs: the polyhedron's per-face islands turn every
-    // edge into a texture seam, which reads as giant hard triangles up close
-    uv.setXY(i, Math.atan2(z, x) / (Math.PI * 2) + 0.5, Math.acos(Math.max(-1, Math.min(1, y * il))) / Math.PI);
+function bakeGeometry(mesh: THREE.Mesh): THREE.BufferGeometry {
+  const src = mesh.geometry;
+  const out = new THREE.BufferGeometry();
+  for (const name of ['position', 'normal', 'uv', 'color']) {
+    const attr = src.getAttribute(name);
+    if (attr) out.setAttribute(name, toFloatAttribute(attr));
   }
-  return geo;
+  if (src.index) out.setIndex(src.index.clone());
+  out.applyMatrix4(mesh.matrixWorld);
+  return out;
 }
 
-// y-squash a lobe (foliage clouds are wider than tall)
-function squash(geo: THREE.BufferGeometry, k: number): THREE.BufferGeometry {
-  return geo.applyMatrix4(new THREE.Matrix4().makeScale(1, k, 1));
-}
-
-// Tapered trunk with per-ring radius wobble, per-vertex gnarl and an optional
-// lean / S-bend; base sits at y=0. Original radial normals are kept — the
-// wobble is small and recomputing them would crack the UV seam.
-function gnarledTrunk(
-  rBase: number, rTop: number, height: number, lean: number, sBend: number, key: number,
-  heightSegs = 4,
-): THREE.BufferGeometry {
-  const geo = new THREE.CylinderGeometry(rTop, rBase, height, 6, heightSegs);
-  geo.translate(0, height / 2, 0);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const t = Math.min(1, Math.max(0, y / height));
-    const ring = 1 + (hashAt(Math.round(y * 20), key, 4) - 0.5) * 0.28;
-    const gnarl = 1 + (quantHash(x, y, z, key + 5) - 0.5) * 0.14;
-    const bend = Math.sin(t * Math.PI) * sBend + t * t * lean;
-    pos.setXYZ(i, x * ring * gnarl + bend, y, z * ring * gnarl + bend * 0.4);
-  }
-  return geo;
-}
-
-// Tapered limb: base at (bx,by,bz), tilted `tilt` rad from vertical, spun to
-// the `yaw` direction. Used for oak forks and bare swamp branches.
-function branchLimb(
-  rBase: number, rTop: number, len: number, tilt: number, yaw: number,
-  bx: number, by: number, bz: number,
-): THREE.BufferGeometry {
-  const geo = new THREE.CylinderGeometry(rTop, rBase, len, 5, 1);
-  geo.translate(0, len / 2, 0);
-  geo.rotateZ(tilt);
-  geo.rotateY(yaw);
-  geo.translate(bx, by, bz);
-  return geo;
-}
-
-// Short tapered root spur radiating from the trunk base at angle `a`.
-function rootSpur(r: number, len: number, a: number): THREE.BufferGeometry {
-  const geo = new THREE.ConeGeometry(r, len, 4);
-  geo.translate(0, len / 2, 0);
-  geo.rotateZ(-1.25); // apex leans toward +x, nearly horizontal
-  geo.rotateY(a);
-  geo.translate(Math.cos(a) * r, 0.1, -Math.sin(a) * r);
-  return geo;
-}
-
-// Ring of root spurs — merged into the trunk geometry so the base flares
-// organically instead of a cylinder stabbing the ground.
-function rootFlare(count: number, trunkR: number, len: number, key: number): THREE.BufferGeometry[] {
-  const spurs: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < count; i++) {
-    const a = (i / count) * Math.PI * 2 + hashAt(i, key, 6) * 1.1;
-    spurs.push(rootSpur(
-      trunkR * (0.45 + hashAt(i, key, 7) * 0.25),
-      len * (0.8 + hashAt(i, key, 8) * 0.5),
-      a,
-    ));
-  }
-  return spurs;
-}
-
-// Noise-displaced icosahedron boulder; the facets come from the flat-shaded
-// material, so post-noise normals are left alone.
-function boulder(radius: number, amp: number, key: number): THREE.BufferGeometry {
-  const geo = new THREE.IcosahedronGeometry(radius, 1);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const s = 1 + (quantHash(x, y, z, key) - 0.5) * 2 * amp;
-    pos.setXYZ(i, x * s, y * s, z * s);
-  }
-  return geo;
+function extractParts(url: string): ModelPart[] {
+  const gltf = loadedModels.get(url);
+  if (!gltf) throw new Error(`foliage model not preloaded: ${url}`);
+  gltf.scene.updateMatrixWorld(true);
+  const parts: ModelPart[] = [];
+  gltf.scene.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const srcMat = mesh.material as THREE.Material;
+    const geometry = bakeGeometry(mesh);
+    parts.push({
+      geometry,
+      material: foliageMaterial(srcMat, geometry.getAttribute('color') !== undefined),
+      isLeaf: (MAT_POLICY[srcMat.name] ?? DEFAULT_POLICY).leaf,
+    });
+  });
+  if (parts.length === 0) throw new Error(`foliage model has no meshes: ${url}`);
+  // draw barks before leaves: opaque first is kinder to early-z
+  return parts.sort((a, b) => Number(a.isLeaf) - Number(b.isLeaf));
 }
 
 // Upward-facing rock vertices blend toward `tint` (moss or snow dust) and the
-// underside picks up baked AO; both multiply the per-instance gray.
+// underside picks up baked AO; both multiply the texture + per-instance gray.
 function bakeTopTint(geo: THREE.BufferGeometry, tint: THREE.Color): THREE.BufferGeometry {
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  const arr = new Float32Array(pos.count * 3);
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const upness = y / (Math.hypot(x, y, z) || 1);
-    const t = THREE.MathUtils.smoothstep(upness, 0.05, 0.8);
-    const ao = 1 + Math.min(0, upness) * 0.24;
+  const nrm = geo.attributes.normal as THREE.BufferAttribute;
+  const arr = new Float32Array(nrm.count * 3);
+  for (let i = 0; i < nrm.count; i++) {
+    const upness = nrm.getY(i);
+    const t = THREE.MathUtils.smoothstep(upness, 0.25, 0.85);
+    const ao = 1 + Math.min(0, upness) * 0.25;
     arr[i * 3] = (1 + (tint.r - 1) * t) * ao;
     arr[i * 3 + 1] = (1 + (tint.g - 1) * t) * ao;
     arr[i * 3 + 2] = (1 + (tint.b - 1) * t) * ao;
@@ -265,209 +282,211 @@ function bakeTopTint(geo: THREE.BufferGeometry, tint: THREE.Color): THREE.Buffer
   return geo;
 }
 
-// Crossed alpha-card pair hanging below a swamp canopy lobe (top edge at y),
-// using the grass-tuft texture flipped so the blades droop downward.
-function mossStrand(w: number, h: number, x: number, y: number, z: number, yaw: number): THREE.BufferGeometry {
-  const a = new THREE.PlaneGeometry(w, h);
-  a.rotateZ(Math.PI);
-  const b = a.clone().rotateY(Math.PI / 2);
-  const geo = mergeGeometries([a, b]);
-  geo.rotateY(yaw);
-  geo.translate(x, y - h / 2, z);
-  return geo;
-}
-
-// biome tint + per-instance HSL jitter, deterministic from world position
-function tintFor(d: Decoration, hex: number, out: THREE.Color, jitter = 1): THREE.Color {
-  out.setHex(hex);
+// biome tint lerped toward white + per-instance HSL jitter, deterministic
+// from world position
+const tmpWhite = new THREE.Color(1, 1, 1);
+function softTint(
+  x: number, z: number, hex: number, out: THREE.Color, soften: number, jitter = 1,
+): THREE.Color {
+  out.setHex(hex).lerp(tmpWhite, soften);
   out.offsetHSL(
-    (hashAt(d.x, d.z, 1) - 0.5) * 0.09 * jitter,
-    (hashAt(d.x, d.z, 2) - 0.5) * 0.18 * jitter,
-    (hashAt(d.x, d.z, 3) - 0.5) * 0.12 * jitter,
+    (hashAt(x, z, 1) - 0.5) * 0.05 * jitter,
+    (hashAt(x, z, 2) - 0.5) * 0.12 * jitter,
+    (hashAt(x, z, 3) - 0.5) * 0.1 * jitter,
   );
   return out;
-}
-
-// per-canopy-layer brightness baked as vertex colors (multiplies instanceColor)
-function bakeShade(geo: THREE.BufferGeometry, v: number): THREE.BufferGeometry {
-  const count = geo.attributes.position.count;
-  const arr = new Float32Array(count * 3);
-  arr.fill(v);
-  geo.setAttribute('color', new THREE.BufferAttribute(arr, 3));
-  return geo;
-}
-
-// darker under-canopy -> lit crown vertical gradient, multiplied over the
-// per-layer shade — without it trees read as uniformly lit green jellies
-function bakeVerticalShade(geo: THREE.BufferGeometry, dark = 0.62, light = 1.14): THREE.BufferGeometry {
-  geo.computeBoundingBox();
-  const bb = geo.boundingBox!;
-  const span = Math.max(1e-5, bb.max.y - bb.min.y);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  const col = geo.attributes.color as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const t = (pos.getY(i) - bb.min.y) / span;
-    const k = dark + (light - dark) * t * t * (3 - 2 * t);
-    col.setXYZ(i, col.getX(i) * k, col.getY(i) * k, col.getZ(i) * k);
-  }
-  return geo;
 }
 
 // ---------------------------------------------------------------------------
 // Trees & rocks
 // ---------------------------------------------------------------------------
 
+// deterministic per-bucket subset of model variants: rotating start + stride
+// (variant counts are 3/5, both coprime with every stride < count)
+function variantSubset(count: number, total: number, band: number, col: number, salt: number): number[] {
+  const n = Math.min(count, total);
+  const start = Math.floor(hashAt(band, col, salt) * total);
+  const stride = total <= n ? 1 : 1 + Math.floor(hashAt(band, col, salt + 1) * (total - 1));
+  return Array.from({ length: n }, (_, i) => (start + i * stride) % total);
+}
+
+interface SpeciesSpec {
+  sets: ModelPart[][]; // parts per model variant
+  perBucket: number; // variant cap per bucket
+  salt: number;
+  baseScale: number;
+  sink: number; // x instance scale, beyond the model's own below-ground roots
+  leafTint: Record<BiomeId, number> | number;
+  castBarkShadow: boolean;
+  /** hide the heavy bark mesh beyond BARK_FAR (needs a canopy that covers) */
+  cullBarkFar?: boolean;
+  /** beyond BARK_FAR swap the bark for a cheap cylinder (straight trunks) */
+  farTrunkProxy?: boolean;
+}
+
+// far-LOD stand-in for a straight trunk: an open tapered cylinder sized from
+// the bark's bounding box, drawn with the same bark material (the atlas
+// smears, but at 300+u in fog it reads as bark)
+const farTrunkCache = new Map<THREE.BufferGeometry, THREE.BufferGeometry>();
+function farTrunkGeo(barkGeo: THREE.BufferGeometry): THREE.BufferGeometry {
+  const cached = farTrunkCache.get(barkGeo);
+  if (cached) return cached;
+  barkGeo.computeBoundingBox();
+  const h = barkGeo.boundingBox!.max.y * 0.8;
+  const geo = new THREE.CylinderGeometry(0.2, 0.42, h, 5, 1, true);
+  geo.translate(0, h / 2, 0);
+  farTrunkCache.set(barkGeo, geo);
+  return geo;
+}
+
+// second InstancedMesh sharing another's instance matrices/colors
+function cloneInstancedTo(
+  src: THREE.InstancedMesh, geometry: THREE.BufferGeometry, material: THREE.Material,
+): THREE.InstancedMesh {
+  const out = new THREE.InstancedMesh(geometry, material, src.count);
+  (out.instanceMatrix.array as Float32Array).set(src.instanceMatrix.array as Float32Array);
+  out.instanceMatrix.needsUpdate = true;
+  if (src.instanceColor) {
+    out.instanceColor = new THREE.InstancedBufferAttribute(
+      (src.instanceColor.array as Float32Array).slice(), 3,
+    );
+    out.instanceColor.needsUpdate = true;
+  }
+  return out;
+}
+
+interface Bucket {
+  band: number;
+  col: number;
+  items: Decoration[];
+}
+
+// scratch objects shared by every placement loop
+const m = new THREE.Matrix4();
+const q = new THREE.Quaternion();
+const e = new THREE.Euler();
+const up = new THREE.Vector3(0, 1, 0);
+const v = new THREE.Vector3();
+const sv = new THREE.Vector3();
+const c = new THREE.Color();
+
+function placeSpecies(
+  parent: THREE.Group, seed: number, bucket: Bucket, items: Decoration[],
+  spec: SpeciesSpec, register: (mesh: THREE.InstancedMesh, minDist?: number, maxDist?: number) => void,
+): void {
+  if (items.length === 0) return;
+  const subset = variantSubset(spec.perBucket, spec.sets.length, bucket.band, bucket.col, spec.salt);
+  const groups: Decoration[][] = subset.map(() => []);
+  for (const d of items) {
+    const pick = (d.variant + Math.floor(hashAt(d.x, d.z, spec.salt + 2) * subset.length)) % subset.length;
+    groups[pick].push(d);
+  }
+  groups.forEach((list, gi) => {
+    if (list.length === 0) return;
+    for (const part of spec.sets[subset[gi]]) {
+      const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+      list.forEach((d, i) => {
+        const y = terrainHeight(d.x, d.z, seed);
+        const s = d.scale * spec.baseScale;
+        const heightJitter = 1 + (hashAt(d.x, d.z, 31) - 0.5) * 0.18;
+        q.setFromAxisAngle(up, d.variant * 2.1 + hashAt(d.x, d.z, 11) * Math.PI * 2);
+        m.compose(v.set(d.x, y - spec.sink * s, d.z), q, sv.set(s, s * heightJitter, s));
+        im.setMatrixAt(i, m);
+        if (part.isLeaf) {
+          const hex = typeof spec.leafTint === 'number' ? spec.leafTint : spec.leafTint[d.biome];
+          im.setColorAt(i, softTint(d.x, d.z, hex, c, LEAF_TINT_SOFTEN));
+        } else {
+          im.setColorAt(i, softTint(d.x, d.z, TRUNK_TINT[d.biome], c, BARK_TINT_SOFTEN, 0.5));
+        }
+      });
+      // canopy owns the tree shadow; bark casts only when there is no canopy
+      im.castShadow = part.isLeaf || spec.castBarkShadow;
+      im.receiveShadow = true;
+      parent.add(im);
+      const { barkFar } = lodDists();
+      const cullBark = !part.isLeaf && (spec.cullBarkFar || spec.farTrunkProxy);
+      register(im, undefined, cullBark ? barkFar : undefined);
+      if (!part.isLeaf && spec.farTrunkProxy) {
+        const proxy = cloneInstancedTo(im, farTrunkGeo(part.geometry), part.material);
+        proxy.receiveShadow = true;
+        parent.add(proxy);
+        register(proxy, barkFar, undefined);
+      }
+    }
+  });
+}
+
 function buildTrees(parent: THREE.Group, seed: number, registry: BucketMesh[]): void {
-  const usePbr = GFX.standardMaterials;
   const decos = generateDecorations(seed);
-  const buckets = new Map<string, Decoration[]>();
+  const buckets = new Map<string, Bucket>();
   for (const d of decos) {
     const col = d.x < 0 ? 0 : 1;
     const band = Math.floor((d.z - WORLD_MIN_Z) / BUCKET_DEPTH);
     const key = `${band}:${col}`;
-    const list = buckets.get(key);
-    if (list) list.push(d);
-    else buckets.set(key, [d]);
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = { band, col, items: [] };
+      buckets.set(key, bucket);
+    }
+    bucket.items.push(d);
   }
 
-  // materials shared across every bucket (tint lives on instanceColor)
-  const trunkMat = usePbr
-    ? (() => {
-      const bark = barkMaps();
-      return surfaceMat({ map: bark.map, normalMap: bark.normalMap, roughness: 0.95 });
-    })()
-    : new THREE.MeshLambertMaterial({ map: barkTexture() });
-  const leafTex = foliageTexture(usePbr); // high-contrast leaf clusters on the lit tiers
-  // double the tiling on canopies: the native cone/sphere UVs stretched the
-  // 128px detail into long diagonal smears on big canopy faces
-  if (usePbr) leafTex.repeat.set(2, 2);
-  // vertexColors carry the per-canopy-layer shading (the cone stack / blob
-  // cluster is one merged geometry = one draw per bucket)
-  const leafMat = usePbr
-    ? new THREE.MeshStandardMaterial({ map: leafTex, roughness: 0.9, vertexColors: true })
-    : new THREE.MeshLambertMaterial({ map: leafTex, vertexColors: true });
-  addWind(leafMat, TREE_WIND_STRENGTH);
-  let cardMat: THREE.Material | null = null;
-  let mossMat: THREE.Material | null = null;
-  if (usePbr) {
-    cardMat = new THREE.MeshStandardMaterial({
-      map: foliageCardTexture(), alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9,
-    });
-    addWind(cardMat, TREE_WIND_STRENGTH);
-    mossMat = new THREE.MeshStandardMaterial({
-      map: grassTuftTexture(26), alphaTest: 0.3, side: THREE.DoubleSide, roughness: 0.95,
-    });
-    addWind(mossMat, TREE_WIND_STRENGTH * 1.6); // loose strands swing more than boughs
-  }
-  // vertexColors carry the baked moss/snow top blend + under-AO
-  const rockMat = usePbr
-    ? new THREE.MeshStandardMaterial({ flatShading: true, roughness: 1.0, vertexColors: true })
-    : new THREE.MeshLambertMaterial({ flatShading: true, vertexColors: true });
+  // low tier: one variant per species per bucket — it ran one procedural
+  // shape per species before, and software GL pays per triangle
+  const treeVariants = GFX.standardMaterials ? 2 : 1;
+  const pineSpec: SpeciesSpec = {
+    sets: MODEL_URLS.pine.map(extractParts),
+    perBucket: treeVariants, salt: 51, baseScale: 1.1, sink: 0.05,
+    leafTint: PINE_TINT, castBarkShadow: false,
+    cullBarkFar: true, // pine canopies start ~2u up: no proxy needed in fog
+  };
+  const oakSpec: SpeciesSpec = {
+    sets: MODEL_URLS.oak.map(extractParts),
+    perBucket: treeVariants, salt: 54, baseScale: 1.15, sink: 0.05,
+    leafTint: OAK_TINT, castBarkShadow: false,
+    farTrunkProxy: true, // oak crowns float without a trunk stand-in
+  };
+  const twistedSpec: SpeciesSpec = {
+    sets: MODEL_URLS.twisted.map(extractParts),
+    perBucket: treeVariants, salt: 57, baseScale: 0.5, sink: 0.05,
+    // twisted trunks sprawl sideways — no cheap proxy fits, keep them whole
+    leafTint: SWAMP_CANOPY_TINT, castBarkShadow: false,
+  };
+  const deadSpec: SpeciesSpec = {
+    sets: MODEL_URLS.dead.map(extractParts),
+    perBucket: 1, salt: 60, baseScale: 0.7, sink: 0.05,
+    // dead trees have no canopy — the bark must cast or they go shadowless
+    leafTint: TRUNK_TINT.marsh, castBarkShadow: true,
+  };
 
-  // shared geometries — every species is a pre-merged organic shape, local
-  // frame with the trunk base at y=0 (instances sink a little so root flares
-  // grip slopes); the uniform instance scale keeps proportions
+  // rocks: 3 single variants + a merged 3-boulder cluster, each in a mossy-top
+  // and a snow-dusted colorway (baked vertex colors over the rock texture)
+  const rockParts = MODEL_URLS.rock.map(extractParts);
+  const rockMat = rockParts[0][0].material;
+  const colorway = (tint: THREE.Color): THREE.BufferGeometry[] => {
+    const singles = rockParts.map((parts) => bakeTopTint(parts[0].geometry.clone(), tint));
+    const member = (gi: number, x: number, y: number, z: number, ry: number, s: number): THREE.BufferGeometry =>
+      singles[gi].clone().applyMatrix4(
+        m.compose(v.set(x, y, z), q.setFromAxisAngle(up, ry), sv.set(s, s, s)),
+      );
+    const cluster = mergeGeometries([
+      member(0, -0.55, 0, 0.15, 0.3, 0.85),
+      member(1, 0.95, -0.12, 0.45, 1.4, 0.62),
+      member(2, 0.2, 0.6, -0.35, 2.4, 0.48),
+    ]);
+    return [...singles, cluster]; // [single x3, cluster]
+  };
+  const mossRocks = colorway(new THREE.Color(0.62, 0.82, 0.45));
+  const snowRocks = colorway(new THREE.Color(1.5, 1.55, 1.65));
 
-  // pine: gnarled trunk + root flare; four ragged tiers + a tip spike, upper
-  // tiers spaced so slivers of trunk show through the gaps
-  const pineTrunkGeo = mergeGeometries([
-    gnarledTrunk(0.34, 0.12, 6.4, 0.22, 0, 11),
-    ...rootFlare(4, 0.34, 0.85, 12),
-  ]);
-  const pineCanopyGeo = bakeVerticalShade(mergeGeometries([
-    bakeShade(raggedTier(2.5, 1.9, 0.5, 31).translate(0.12, 2.1, -0.08), 1.0),
-    bakeShade(raggedTier(1.95, 1.7, 0.4, 32).rotateY(1.3).translate(-0.15, 3.15, 0.1), 1.14),
-    bakeShade(raggedTier(1.45, 1.5, 0.3, 33).rotateY(2.6).translate(0.1, 4.2, 0.1), 0.98),
-    bakeShade(raggedTier(1.0, 1.35, 0.2, 34).rotateY(4.0).translate(-0.07, 5.2, -0.08), 1.1),
-    bakeShade(raggedTier(0.5, 1.3, 0.1, 35).translate(0, 6.2, 0), 1.04),
-  ]), 0.78, 1.12); // dark floor stays lifted: tier undersides must not go black
-  let cardGeo: THREE.BufferGeometry | null = null;
-  if (usePbr) {
-    const lo = bakeShade(new THREE.PlaneGeometry(4.5, 2.4), 1.0).translate(0, 2.7, 0);
-    const lo2 = lo.clone().rotateY(Math.PI / 2);
-    const hi = bakeShade(new THREE.PlaneGeometry(2.9, 1.7), 1.08).rotateY(Math.PI / 4).translate(0, 4.8, 0);
-    const hi2 = hi.clone().rotateY(Math.PI / 2);
-    cardGeo = mergeGeometries([lo, lo2, hi, hi2]);
-  }
-
-  // oak: trunk forks into limbs that vanish into a cluster of six
-  // noise-displaced icosahedron lobes, two drooping low
-  const oakTrunkGeo = mergeGeometries([
-    gnarledTrunk(0.55, 0.3, 2.5, 0.1, 0.05, 13),
-    branchLimb(0.26, 0.11, 2.5, 0.5, 0.4, 0.15, 2.0, 0),
-    branchLimb(0.23, 0.1, 2.2, 0.62, 2.5, -0.12, 1.9, 0.05),
-    branchLimb(0.16, 0.07, 1.6, 0.95, 4.4, 0, 1.6, -0.1),
-    ...rootFlare(4, 0.5, 0.8, 14),
-  ]);
-  // the crown lobe goes detail 2 on the lit tiers so a camera inside the
-  // canopy sees leafy curvature, not giant flat triangles (the rest stay
-  // detail 1 to hold the triangle budget)
-  const lobeDetail = usePbr ? 2 : 1;
-  const oakCanopyGeo = bakeVerticalShade(mergeGeometries([
-    bakeShade(squash(noisyLobe(1.85, 0.3, 41, lobeDetail), 0.85).translate(0.1, 4.3, 0), 1.0),
-    bakeShade(squash(noisyLobe(1.35, 0.32, 42), 0.8).translate(1.55, 3.85, 0.5), 1.12),
-    bakeShade(squash(noisyLobe(1.3, 0.3, 43), 0.78).translate(-1.5, 3.9, -0.45), 0.92),
-    bakeShade(squash(noisyLobe(1.05, 0.3, 44), 0.75).translate(0.45, 5.15, -0.3), 1.08),
-    bakeShade(squash(noisyLobe(1.0, 0.34, 45), 0.62).translate(1.05, 3.0, -1.25), 0.9),
-    bakeShade(squash(noisyLobe(0.95, 0.32, 46), 0.6).translate(-0.95, 2.95, 1.2), 0.96),
-  ]), 0.66, 1.12);
-  // sparse alpha leaf-card rim breaks the oak silhouette edge (pines have one)
-  let oakCardGeo: THREE.BufferGeometry | null = null;
-  if (usePbr) {
-    const a = bakeShade(new THREE.PlaneGeometry(4.6, 2.6), 1.02).translate(0, 4.2, 0);
-    const b = a.clone().rotateY(Math.PI / 2);
-    const cTop = bakeShade(new THREE.PlaneGeometry(3.0, 1.8), 1.08).rotateY(Math.PI / 4).translate(0, 5.3, 0);
-    oakCardGeo = mergeGeometries([a, b, cTop]);
-  }
-
-  // marsh swamp tree: twisted lanky trunk with bare limbs, buttress roots,
-  // sparse flattened lobes and hanging moss strands
-  const swampTrunkGeo = mergeGeometries([
-    gnarledTrunk(0.5, 0.12, 4.8, 0.55, 0.5, 15, 5),
-    branchLimb(0.13, 0.05, 1.9, 1.15, 0.7, 0.6, 3.6, 0.25),
-    branchLimb(0.12, 0.05, 1.6, -1.2, 2.4, 0.6, 4.1, 0.25),
-    branchLimb(0.1, 0.04, 1.2, 1.35, 4.3, 0.55, 2.6, 0.2),
-    ...rootFlare(5, 0.52, 1.05, 16),
-  ]);
-  const swampCanopyGeo = bakeVerticalShade(mergeGeometries([
-    bakeShade(squash(noisyLobe(1.3, 0.34, 47), 0.5).translate(1.0, 4.9, 0.4), 1.0),
-    bakeShade(squash(noisyLobe(1.05, 0.36, 48), 0.48).translate(-0.45, 5.2, -0.3), 0.92),
-    bakeShade(squash(noisyLobe(0.9, 0.34, 49), 0.45).translate(0.4, 5.5, 0.7), 1.06),
-    bakeShade(squash(noisyLobe(0.75, 0.36, 50), 0.5).translate(-0.7, 4.45, 1.3), 0.9),
-  ]), 0.52, 1.04);
-  const swampMossGeo = usePbr ? mergeGeometries([
-    mossStrand(0.55, 1.6, 1.35, 4.55, 0.6, 0.3),
-    mossStrand(0.5, 1.3, -0.55, 4.9, -0.5, 1.4),
-    mossStrand(0.6, 1.8, 0.3, 5.1, 0.9, 2.3),
-    mossStrand(0.45, 1.2, -0.75, 4.15, 1.2, 0.9),
-    mossStrand(0.5, 1.5, 0.9, 4.5, -0.35, 1.9),
-  ]) : null;
-
-  // rocks: single boulder + split/stacked cluster archetypes, one colorway
-  // with a mossy top (vale/marsh) and one with snow dust (peaks)
-  const rockSet = (tint: THREE.Color): { single: THREE.BufferGeometry; cluster: THREE.BufferGeometry } => ({
-    single: bakeTopTint(boulder(0.95, 0.3, 21), tint),
-    cluster: mergeGeometries([
-      bakeTopTint(boulder(0.7, 0.3, 22), tint).translate(-0.28, 0.02, 0.12),
-      bakeTopTint(boulder(0.52, 0.34, 23), tint).rotateY(1.3).translate(0.6, -0.12, 0.34),
-      bakeTopTint(boulder(0.4, 0.3, 24), tint).rotateY(2.4).translate(0.1, 0.58, -0.12),
-    ]),
-  });
-  const mossRocks = rockSet(new THREE.Color(0.55, 0.78, 0.38));
-  const snowRocks = rockSet(new THREE.Color(1.45, 1.52, 1.6));
-
-  const m = new THREE.Matrix4();
-  const q = new THREE.Quaternion();
-  const e = new THREE.Euler();
-  const up = new THREE.Vector3(0, 1, 0);
-  const v = new THREE.Vector3();
-  const sv = new THREE.Vector3();
-  const c = new THREE.Color();
-
-  for (const items of buckets.values()) {
+  for (const bucket of buckets.values()) {
+    const { items } = bucket;
     const pines = items.filter((d) => d.kind === 'tree');
     const oaks = items.filter((d) => d.kind === 'tree2' && d.biome !== 'marsh');
     const swamps = items.filter((d) => d.kind === 'tree2' && d.biome === 'marsh');
+    // marsh swamp trees split between twisted (mossy) and dead (bare) models
+    const twisteds = swamps.filter((d) => hashAt(d.x, d.z, 19) >= 0.35);
+    const deads = swamps.filter((d) => hashAt(d.x, d.z, 19) < 0.35);
     const rocks = items.filter((d) => d.kind === 'rock');
 
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
@@ -479,138 +498,189 @@ function buildTrees(parent: THREE.Group, seed: number, registry: BucketMesh[]): 
     }
     const bx = (minX + maxX) / 2, bz = (minZ + maxZ) / 2;
     const bRadius = Math.hypot(maxX - minX, maxZ - minZ) / 2 + 18; // canopy margin
-    const register = (mesh: THREE.InstancedMesh): void => {
-      registry.push({ mesh, x: bx, z: bz, radius: bRadius });
+    const register = (mesh: THREE.InstancedMesh, minDist?: number, maxDist?: number): void => {
+      registry.push({ mesh, x: bx, z: bz, radius: bRadius, minDist, maxDist });
     };
 
-    if (pines.length > 0) {
-      const trunk = new THREE.InstancedMesh(pineTrunkGeo, trunkMat, pines.length);
-      const canopy = new THREE.InstancedMesh(pineCanopyGeo, leafMat, pines.length);
-      const cards = cardGeo && cardMat ? new THREE.InstancedMesh(cardGeo, cardMat, pines.length) : null;
-      pines.forEach((t, i) => {
-        const y = terrainHeight(t.x, t.z, seed);
-        const s = t.scale * 1.5;
-        q.setFromAxisAngle(up, t.variant * 2.1 + hashAt(t.x, t.z, 11) * 2.0);
-        m.compose(v.set(t.x, y - 0.25 * s, t.z), q, sv.set(s, s, s));
-        trunk.setMatrixAt(i, m);
-        canopy.setMatrixAt(i, m);
-        cards?.setMatrixAt(i, m);
-        tintFor(t, PINE_TINT[t.biome], c);
-        canopy.setColorAt(i, c);
-        cards?.setColorAt(i, c);
-        trunk.setColorAt(i, tintFor(t, TRUNK_TINT[t.biome], c, 0.5));
-      });
-      canopy.castShadow = true; // trunks skip the shadow pass: the canopy owns it
-      for (const im of [trunk, canopy]) {
-        im.receiveShadow = true; // forests sit inside each other's shade
-        parent.add(im);
-        register(im);
-      }
-      if (cards) {
-        cards.receiveShadow = true;
-        parent.add(cards); // no shadow cast: the cones already cast one
-        register(cards);
-      }
-    }
-
-    if (oaks.length > 0) {
-      const trunk = new THREE.InstancedMesh(oakTrunkGeo, trunkMat, oaks.length);
-      const canopy = new THREE.InstancedMesh(oakCanopyGeo, leafMat, oaks.length);
-      const cards = oakCardGeo && cardMat ? new THREE.InstancedMesh(oakCardGeo, cardMat, oaks.length) : null;
-      oaks.forEach((t, i) => {
-        const y = terrainHeight(t.x, t.z, seed);
-        const s = t.scale * 1.3;
-        q.setFromAxisAngle(up, t.variant * 2.1 + hashAt(t.x, t.z, 11) * 2.0);
-        m.compose(v.set(t.x, y - 0.2 * s, t.z), q, sv.set(s, s, s));
-        trunk.setMatrixAt(i, m);
-        canopy.setMatrixAt(i, m);
-        cards?.setMatrixAt(i, m);
-        canopy.setColorAt(i, tintFor(t, OAK_TINT[t.biome], c));
-        cards?.setColorAt(i, c);
-        trunk.setColorAt(i, tintFor(t, TRUNK_TINT[t.biome], c, 0.5));
-      });
-      canopy.castShadow = true;
-      for (const im of [trunk, canopy]) {
-        im.receiveShadow = true;
-        parent.add(im);
-        register(im);
-      }
-      if (cards) {
-        cards.receiveShadow = true;
-        parent.add(cards); // no shadow cast: the lobes already cast one
-        register(cards);
-      }
-    }
-
-    if (swamps.length > 0) {
-      const trunk = new THREE.InstancedMesh(swampTrunkGeo, trunkMat, swamps.length);
-      const canopy = new THREE.InstancedMesh(swampCanopyGeo, leafMat, swamps.length);
-      const moss = swampMossGeo && mossMat
-        ? new THREE.InstancedMesh(swampMossGeo, mossMat, swamps.length)
-        : null;
-      swamps.forEach((t, i) => {
-        const y = terrainHeight(t.x, t.z, seed);
-        const s = t.scale * 1.35;
-        q.setFromAxisAngle(up, t.variant * 2.1 + hashAt(t.x, t.z, 12) * 2.5);
-        m.compose(v.set(t.x, y - 0.2 * s, t.z), q, sv.set(s, s, s));
-        trunk.setMatrixAt(i, m);
-        canopy.setMatrixAt(i, m);
-        moss?.setMatrixAt(i, m);
-        canopy.setColorAt(i, tintFor(t, SWAMP_CANOPY_TINT, c));
-        moss?.setColorAt(i, tintFor(t, SWAMP_MOSS_TINT, c, 0.6));
-        trunk.setColorAt(i, tintFor(t, TRUNK_TINT.marsh, c, 0.5));
-      });
-      canopy.castShadow = true;
-      for (const im of [trunk, canopy]) {
-        im.receiveShadow = true;
-        parent.add(im);
-        register(im);
-      }
-      if (moss) {
-        moss.receiveShadow = true;
-        parent.add(moss); // no shadow cast: thin strands, the lobes own it
-        register(moss);
-      }
-    }
+    placeSpecies(parent, seed, bucket, pines, pineSpec, register);
+    placeSpecies(parent, seed, bucket, oaks, oakSpec, register);
+    placeSpecies(parent, seed, bucket, twisteds, twistedSpec, register);
+    placeSpecies(parent, seed, bucket, deads, deadSpec, register);
 
     if (rocks.length > 0) {
       const isCluster = (r: Decoration): boolean => hashAt(r.x, r.z, 7) > 0.72;
       const isSnowy = (r: Decoration): boolean =>
         r.biome === 'peaks' && terrainHeight(r.x, r.z, seed) > ROCK_SNOWLINE_Y;
-      const rockGroups: Array<[Decoration[], THREE.BufferGeometry]> = [
-        [rocks.filter((r) => !isSnowy(r) && !isCluster(r)), mossRocks.single],
-        [rocks.filter((r) => !isSnowy(r) && isCluster(r)), mossRocks.cluster],
-        [rocks.filter((r) => isSnowy(r) && !isCluster(r)), snowRocks.single],
-        [rocks.filter((r) => isSnowy(r) && isCluster(r)), snowRocks.cluster],
-      ];
-      for (const [list, geo] of rockGroups) {
-        if (list.length === 0) continue;
+      // 1 of the 3 single variants per bucket + the cluster archetype
+      const singleSubset = variantSubset(1, 3, bucket.band, bucket.col, 71);
+      const groupGeo = (r: Decoration): THREE.BufferGeometry => {
+        const set = isSnowy(r) ? snowRocks : mossRocks;
+        if (isCluster(r)) return set[3];
+        return set[singleSubset[Math.floor(hashAt(r.x, r.z, 72) * singleSubset.length)]];
+      };
+      const groups = new Map<THREE.BufferGeometry, Decoration[]>();
+      for (const r of rocks) {
+        const geo = groupGeo(r);
+        const list = groups.get(geo);
+        if (list) list.push(r);
+        else groups.set(geo, [r]);
+      }
+      for (const [geo, list] of groups) {
         const rockMesh = new THREE.InstancedMesh(geo, rockMat, list.length);
         list.forEach((r, i) => {
           const y = terrainHeight(r.x, r.z, seed);
           const h1 = hashAt(r.x, r.z, 8), h2 = hashAt(r.x, r.z, 9), h3 = hashAt(r.x, r.z, 10);
           // slight tilt + non-uniform scale: one geometry reads as round
           // boulders, low slabs and tall stones depending on the draw
-          const sxz1 = r.scale * (0.85 + h2 * 0.5);
-          const sxz2 = r.scale * (0.85 + h1 * 0.45);
+          const sxz1 = r.scale * 0.62 * (0.85 + h2 * 0.5);
+          const sxz2 = r.scale * 0.62 * (0.85 + h1 * 0.45);
           const maxH = Math.max(sxz1, sxz2);
-          // floor the height at 0.55x the horizontal so slabs stay chunky,
-          // and keep big slabs nearly level (tilted discs read as pancakes)
-          const sy = Math.max(r.scale * 0.7 * (0.75 + h3 * 0.5), 0.55 * maxH);
-          const tiltAmp = maxH > 1.3 ? 0.16 : 0.34;
+          const sy = Math.max(r.scale * 0.45 * (0.75 + h3 * 0.5), 0.55 * maxH);
+          const tiltAmp = maxH > 0.8 ? 0.12 : 0.26;
           q.setFromEuler(e.set((h1 - 0.5) * tiltAmp, r.variant * 1.7 + h3 * 2.0, (h2 - 0.5) * tiltAmp));
-          // sink deeper so displaced undersides bury on slopes
-          m.compose(v.set(r.x, y + 0.1 * sy, r.z), q, sv.set(sxz1, sy, sxz2));
+          // sink so undersides bury on slopes (geometry base is near y=0)
+          m.compose(v.set(r.x, y - 0.3 * sy, r.z), q, sv.set(sxz1, sy, sxz2));
           rockMesh.setMatrixAt(i, m);
           // low-altitude peaks rocks drop the icy blue-gray for a warm field
           // stone — pale rocks on green foothill grass read as eggs
           const rockHex = r.biome === 'peaks' && !isSnowy(r) ? 0x6f6e62 : ROCK_TINT[r.biome];
-          rockMesh.setColorAt(i, tintFor(r, rockHex, c));
+          rockMesh.setColorAt(i, softTint(r.x, r.z, rockHex, c, ROCK_TINT_SOFTEN));
         });
         // no rock shadows cast: sub-pixel at typical camera range, real draw cost
         rockMesh.receiveShadow = true;
         parent.add(rockMesh);
-        register(rockMesh);
+        register(rockMesh, undefined, lodDists().rockFar);
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ground dressing: bushes, ferns, mushrooms on a deterministic hash grid
+// ---------------------------------------------------------------------------
+
+type DressKind = 'bush' | 'bushFlowers' | 'fern' | 'mushroom';
+
+interface DressingSpot {
+  x: number;
+  z: number;
+  kind: DressKind;
+  scale: number;
+}
+
+const DRESS_STEP = 12;
+const DRESS_DENSITY: Record<BiomeId, number> = { vale: 0.26, marsh: 0.26, peaks: 0.15 };
+
+function dressKindFor(biome: BiomeId, r: number): DressKind {
+  if (biome === 'vale') {
+    if (r < 0.36) return 'bush';
+    if (r < 0.46) return 'bushFlowers';
+    if (r < 0.8) return 'fern';
+    return 'mushroom';
+  }
+  if (biome === 'marsh') {
+    if (r < 0.3) return 'bush';
+    if (r < 0.62) return 'fern';
+    return 'mushroom';
+  }
+  return r < 0.62 ? 'bush' : 'fern';
+}
+
+const DRESS_SCALE: Record<DressKind, [number, number]> = {
+  bush: [0.9, 0.7], bushFlowers: [0.9, 0.7], fern: [0.85, 0.6], mushroom: [0.9, 0.8],
+};
+
+function tooSteep(x: number, z: number, seed: number): boolean {
+  const hx = terrainHeight(x + GRASS_SLOPE_EPS, z, seed) - terrainHeight(x - GRASS_SLOPE_EPS, z, seed);
+  const hz = terrainHeight(x, z + GRASS_SLOPE_EPS, seed) - terrainHeight(x, z - GRASS_SLOPE_EPS, seed);
+  return Math.hypot(hx, hz) / (2 * GRASS_SLOPE_EPS) > GRASS_MAX_SLOPE;
+}
+
+function generateDressing(seed: number): DressingSpot[] {
+  const out: DressingSpot[] = [];
+  const xHalf = WORLD_MAX_X - 16;
+  for (let gx = -xHalf; gx < xHalf; gx += DRESS_STEP) {
+    for (let gz = WORLD_MIN_Z + 16; gz < WORLD_MAX_Z - 16; gz += DRESS_STEP) {
+      const r = hashAt(gx, gz, 41);
+      const biome = zoneBiomeAt(gz);
+      if (r > DRESS_DENSITY[biome]) continue;
+      const x = gx + (hashAt(gx, gz, 42) - 0.5) * DRESS_STEP;
+      const z = gz + (hashAt(gx, gz, 43) - 0.5) * DRESS_STEP;
+      let blocked = false;
+      for (const zone of ZONES) {
+        if (Math.hypot(x - zone.hub.x, z - zone.hub.z) < zone.hub.radius + 4) { blocked = true; break; }
+      }
+      if (blocked) continue;
+      for (const camp of CAMPS) {
+        if (Math.hypot(x - camp.center.x, z - camp.center.z) < camp.radius + 2) { blocked = true; break; }
+      }
+      if (blocked) continue;
+      if (roadDistance(x, z) < 4) continue;
+      if (terrainHeight(x, z, seed) < WATER_LEVEL + 1.2) continue;
+      if (tooSteep(x, z, seed)) continue;
+      const kind = dressKindFor(biome, hashAt(gx, gz, 44));
+      const [sMin, sRange] = DRESS_SCALE[kind];
+      out.push({ x, z, kind, scale: sMin + hashAt(gx, gz, 45) * sRange });
+    }
+  }
+  return out;
+}
+
+function buildDressing(parent: THREE.Group, seed: number, registry: BucketMesh[]): void {
+  const kindParts: Record<DressKind, ModelPart[]> = {
+    bush: extractParts(MODEL_URLS.bush[0]),
+    bushFlowers: extractParts(MODEL_URLS.bushFlowers[0]),
+    fern: extractParts(MODEL_URLS.fern[0]),
+    mushroom: extractParts(MODEL_URLS.mushroom[0]),
+  };
+  const buckets = new Map<string, DressingSpot[]>();
+  for (const spot of generateDressing(seed)) {
+    const key = `${Math.floor((spot.z - WORLD_MIN_Z) / BUCKET_DEPTH)}:${spot.x < 0 ? 0 : 1}`;
+    const list = buckets.get(key);
+    if (list) list.push(spot);
+    else buckets.set(key, [spot]);
+  }
+
+  for (const spots of buckets.values()) {
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    for (const s of spots) {
+      minX = Math.min(minX, s.x);
+      maxX = Math.max(maxX, s.x);
+      minZ = Math.min(minZ, s.z);
+      maxZ = Math.max(maxZ, s.z);
+    }
+    const bx = (minX + maxX) / 2, bz = (minZ + maxZ) / 2;
+    const bRadius = Math.hypot(maxX - minX, maxZ - minZ) / 2 + 6;
+
+    const byKind = new Map<DressKind, DressingSpot[]>();
+    for (const s of spots) {
+      const list = byKind.get(s.kind);
+      if (list) list.push(s);
+      else byKind.set(s.kind, [s]);
+    }
+    // cap kinds per bucket: dropping a bucket's rarest dressing kind is
+    // invisible, the draw call is not
+    const kept = [...byKind.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 3);
+    for (const [kind, list] of kept) {
+      for (const part of kindParts[kind]) {
+        const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+        list.forEach((s, i) => {
+          const y = terrainHeight(s.x, s.z, seed);
+          q.setFromAxisAngle(up, hashAt(s.x, s.z, 46) * Math.PI * 2);
+          m.compose(v.set(s.x, y - 0.04 * s.scale, s.z), q, sv.set(s.scale, s.scale, s.scale));
+          im.setMatrixAt(i, m);
+          if (kind === 'mushroom') {
+            // mushrooms keep their painted cap colors — brightness jitter only
+            im.setColorAt(i, c.setScalar(0.85 + hashAt(s.x, s.z, 47) * 0.3));
+          } else {
+            im.setColorAt(i, softTint(s.x, s.z, DRESS_TINT[zoneBiomeAt(s.z)], c, DRESS_TINT_SOFTEN));
+          }
+        });
+        im.receiveShadow = true; // dressing casts nothing: too small to matter
+        parent.add(im);
+        registry.push({ mesh: im, x: bx, z: bz, radius: bRadius, maxDist: lodDists().dressFar });
       }
     }
   }
@@ -696,12 +766,6 @@ function buildGrassRing(parent: THREE.Group, seed: number): GrassRing {
   im.count = 0;
   parent.add(im);
 
-  const m = new THREE.Matrix4();
-  const q = new THREE.Quaternion();
-  const up = new THREE.Vector3(0, 1, 0);
-  const v = new THREE.Vector3();
-  const sv = new THREE.Vector3();
-  const c = new THREE.Color();
   let lastX = Infinity;
   let lastZ = Infinity;
 
@@ -722,9 +786,7 @@ function buildGrassRing(parent: THREE.Group, seed: number): GrassRing {
         const h = terrainHeight(x, z, seed);
         if (h < WATER_LEVEL + 1.6) continue;
         // no blades pasted onto cliff faces
-        const hx = terrainHeight(x + GRASS_SLOPE_EPS, z, seed) - terrainHeight(x - GRASS_SLOPE_EPS, z, seed);
-        const hz = terrainHeight(x, z + GRASS_SLOPE_EPS, seed) - terrainHeight(x, z - GRASS_SLOPE_EPS, seed);
-        if (Math.hypot(hx, hz) / (2 * GRASS_SLOPE_EPS) > GRASS_MAX_SLOPE) continue;
+        if (tooSteep(x, z, seed)) continue;
         let nearHub = false;
         for (const zn of ZONES) {
           if (Math.hypot(x - zn.hub.x, z - zn.hub.z) < 15) { nearHub = true; break; }
@@ -777,14 +839,19 @@ export function buildFoliage(seed: number): FoliageView {
   group.name = 'foliage';
   const bucketMeshes: BucketMesh[] = [];
   buildTrees(group, seed, bucketMeshes);
+  buildDressing(group, seed, bucketMeshes);
   const grass = buildGrassRing(group, seed);
   return {
     group,
     update(px: number, pz: number, camX: number, camZ: number, fogFar: number): void {
       grass.update(px, pz);
-      // buckets fully behind the fog wall are pure overdraw
+      // buckets fully behind the fog wall are pure overdraw; the optional
+      // [minDist, maxDist) window uses the bucket-CENTER distance so a bark
+      // mesh and its far-trunk proxy are never drawn together
       for (const b of bucketMeshes) {
-        b.mesh.visible = Math.hypot(b.x - camX, b.z - camZ) - b.radius < fogFar;
+        const d = Math.hypot(b.x - camX, b.z - camZ);
+        b.mesh.visible = d >= (b.minDist ?? 0) && d < (b.maxDist ?? Infinity)
+          && d - b.radius < fogFar;
       }
     },
   };
