@@ -6,6 +6,7 @@ import { audio } from './game/audio';
 import { music } from './game/music';
 import { Api, ClientWorld, CharacterSummary } from './net/online';
 import type { IWorld } from './world_api';
+import { assetsReady } from './render/assets/preload';
 import { DT, INTERACT_RANGE, PlayerClass, dist2d } from './sim/types';
 
 const WORLD_SEED = 20061; // fixed: Eastbrook Vale is a persistent place
@@ -16,8 +17,17 @@ const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.quer
 // Shared game wiring (used by both offline sim and online world)
 // ---------------------------------------------------------------------------
 
-function startGame(world: IWorld, offlineSim: Sim | null, online: ClientWorld | null): void {
+async function startGame(world: IWorld, offlineSim: Sim | null, online: ClientWorld | null): Promise<void> {
   $('#start-screen').style.display = 'none';
+
+  // Model/texture/HDRI fetches were kicked off at module import; the renderer
+  // builds its scene synchronously, so everything must be resolved first.
+  try {
+    await assetsReady();
+  } catch (err) {
+    fatalOverlay(`Asset loading failed — try reloading. ${err instanceof Error ? err.message : err}`);
+    return;
+  }
 
   const canvas = $('#game-canvas') as unknown as HTMLCanvasElement;
   const nameplates = $('#nameplates') as HTMLDivElement;
@@ -201,7 +211,7 @@ function sanitizeOfflineName(raw: string): string {
 
 function startOffline(playerClass: PlayerClass, name: string): void {
   const sim = new Sim({ seed: WORLD_SEED, playerClass, playerName: name });
-  startGame(sim, sim, null);
+  void startGame(sim, sim, null);
 }
 
 // ---------------------------------------------------------------------------
@@ -267,7 +277,7 @@ function enterWorld(c: CharacterSummary): void {
   const poll = setInterval(() => {
     if (world.connected && world.entities.has(world.playerId)) {
       clearInterval(poll);
-      startGame(world, null, world);
+      void startGame(world, null, world);
     } else if (Date.now() - waitStart > 10000) {
       clearInterval(poll);
       world.close();
