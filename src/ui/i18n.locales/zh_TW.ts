@@ -5685,4 +5685,13 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'hudChrome.crafting.reagentLine': '{name}: {have}/{required}',
   'hudChrome.mobile.actionPageIndicator': '第{page}頁',
   'hudChrome.mobile.spellbookPageLabel': '頁{page}',
+  'hudChrome.crafting.title': '製作',
+  'hudChrome.crafting.close': '關閉製作',
+  'hudChrome.crafting.craft': '製作',
+  'hudChrome.crafting.reagentsNeeded': '需要:',
+  'hudChrome.crafting.empty': '尚無已知配方。',
+  'hudChrome.crafting.resultAria': '製作{name}',
+  'hudChrome.crafting.craftedToast': '已製作:{name}',
+  'hudChrome.crafting.insufficientMaterials': '你沒有足夠的材料。',
+  'hudChrome.crafting.unknownRecipe': '該配方不存在。',
 };

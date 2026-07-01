@@ -212,10 +212,13 @@ import type { ProfessionRecipeRecord as RecipeDef } from './professions/types';
   normalizeCraftSkills,
 } from './professions/wheel';
   gatherNodeById,
+  gatheringSkillsView,
   harvestNode as harvestNodeImpl,
   isNodeHarvestableBy,
   normalizeGatheringProficiency,
 } from './professions/gathering';
+import { type CraftResult, craftItem as craftItemImpl } from './professions/crafting';
+import type { ProfessionRecipeRecord as RecipeDef } from './professions/types';
 import {
   craftSkillsFor,
   emptyCraftSkills,
@@ -6665,6 +6668,8 @@ export class Sim {
 
   get craftSkills(): Record<string, number> {
     return this.craftSkillsFor(this.primaryId);
+  }
+
   // Read-only gathering-profession proficiency surface for IWorld. Stubbed
   // directly on IWorld pending issue #1164 (a broader professions facet); see
   // that issue for the eventual reconciliation.
@@ -6770,10 +6775,6 @@ export class Sim {
 
   get professionsState(): PlayerProfessionsView {
     return this.professionsStateFor(this.primaryId);
-  // Stub read surface for #1164: professions skill tracking + recipes land in
-  // later issues (#1119/#1120). Always empty until then.
-  get professionsState(): PlayerProfessionsView {
-    return { skills: [] };
   }
 }
 
