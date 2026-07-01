@@ -134,9 +134,9 @@ export function bool(): Schema<boolean> {
   return makeSchema<boolean>((input, pointer = '') => {
     if (typeof input === 'boolean') return { ok: true, value: input };
     // Trim string input for parity with num()'s string coercion (' true ' from a query value).
-    const token = typeof input === 'string' ? input.trim() : input;
-    if (token === 'true' || token === '1') return { ok: true, value: true };
-    if (token === 'false' || token === '0') return { ok: true, value: false };
+    const raw = typeof input === 'string' ? input.trim() : input;
+    if (raw === 'true' || raw === '1') return { ok: true, value: true };
+    if (raw === 'false' || raw === '0') return { ok: true, value: false };
     return fail(pointer, 'type');
   });
 }
