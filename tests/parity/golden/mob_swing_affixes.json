@@ -17,7 +17,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "d35a4a11",
+      "state": "f48e1813",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -53,6 +53,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -112,7 +113,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 407,
-      "state": "47d9b874",
+      "state": "a310ed78",
       "events": "b215f456",
       "rng": {
         "draws": 54,
@@ -123,7 +124,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 407,
-      "state": "9782a628",
+      "state": "c2087e1c",
       "events": "04e020e2",
       "rng": {
         "draws": 95,
@@ -134,7 +135,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 407,
-      "state": "dfcad51d",
+      "state": "593ee8bf",
       "events": "96d8859c",
       "rng": {
         "draws": 224,
@@ -145,7 +146,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 407,
-      "state": "ba5c083b",
+      "state": "d6e0465d",
       "events": "741638a5",
       "rng": {
         "draws": 224,
@@ -184,6 +185,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -584,7 +586,7 @@
       "tick": 64,
       "time": 3.2,
       "nextId": 407,
-      "state": "9f90a394",
+      "state": "5fa0a458",
       "events": "741638a5",
       "rng": {
         "draws": 244,
@@ -623,6 +625,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],

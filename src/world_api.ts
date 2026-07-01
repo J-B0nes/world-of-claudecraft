@@ -304,6 +304,7 @@ export const COMMAND_NAMES = [
   'autoloot',
   'resurrect_corpse',
   'resurrect_healer',
+  'set_town_focus',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch

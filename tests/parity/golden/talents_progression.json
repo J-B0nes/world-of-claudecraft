@@ -17,7 +17,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "d35a4a11",
+      "state": "f48e1813",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -53,6 +53,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -112,7 +113,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "35d9d121",
+      "state": "3c759fe3",
       "events": "2856c170",
       "rng": {
         "draws": 0,
@@ -153,6 +154,7 @@
             },
             "spec": "arms"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -212,7 +214,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "0a5a4e0e",
+      "state": "4d4e3b8a",
       "events": "40479820",
       "rng": {
         "draws": 0,
@@ -250,6 +252,7 @@
             "ranks": {},
             "spec": "arms"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -309,7 +312,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "16973b05",
+      "state": "1d09ad07",
       "events": "a7d95be1",
       "rng": {
         "draws": 0,
@@ -365,6 +368,7 @@
             },
             "spec": "arms"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -424,7 +428,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "9b34acd4",
+      "state": "64aa0598",
       "events": "980c682a",
       "rng": {
         "draws": 0,
@@ -480,6 +484,7 @@
             },
             "spec": "arms"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -539,7 +544,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "88eb7058",
+      "state": "25af578c",
       "events": "2856c170",
       "rng": {
         "draws": 0,
@@ -593,6 +598,7 @@
             "ranks": {},
             "spec": "fury"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -652,7 +658,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 401,
-      "state": "88eb7058",
+      "state": "25af578c",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -706,6 +712,7 @@
             "ranks": {},
             "spec": "fury"
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],

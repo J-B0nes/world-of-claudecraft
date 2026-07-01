@@ -31,7 +31,7 @@
       "tick": 2,
       "time": 0.1,
       "nextId": 416,
-      "state": "7f9ad491",
+      "state": "dedc81c7",
       "events": "827b15d7",
       "rng": {
         "draws": 35,
@@ -66,6 +66,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         },
         {
@@ -95,6 +96,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -825,7 +827,7 @@
       "tick": 4,
       "time": 0.2,
       "nextId": 416,
-      "state": "224aef2c",
+      "state": "bb4aaaf2",
       "events": "8ca70f8e",
       "rng": {
         "draws": 49,
@@ -863,6 +865,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         },
         {
@@ -892,6 +895,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -1601,7 +1605,7 @@
       "tick": 5,
       "time": 0.25,
       "nextId": 416,
-      "state": "4534859d",
+      "state": "2ba9ad59",
       "events": "5d7113da",
       "rng": {
         "draws": 49,
@@ -1612,7 +1616,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 416,
-      "state": "d6730d75",
+      "state": "a323b1f1",
       "events": "741638a5",
       "rng": {
         "draws": 49,
@@ -1623,7 +1627,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 416,
-      "state": "c8afdfdf",
+      "state": "00cbfae3",
       "events": "741638a5",
       "rng": {
         "draws": 49,
@@ -1634,7 +1638,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 416,
-      "state": "146d394a",
+      "state": "001af2fa",
       "events": "14a3ffd8",
       "rng": {
         "draws": 49,
@@ -1645,7 +1649,7 @@
       "tick": 24,
       "time": 1.2,
       "nextId": 416,
-      "state": "2d06327a",
+      "state": "722d586a",
       "events": "741638a5",
       "rng": {
         "draws": 49,
@@ -1683,6 +1687,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         },
         {
@@ -1715,6 +1720,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],
@@ -1824,7 +1830,7 @@
       "tick": 24,
       "time": 1.2,
       "nextId": 416,
-      "state": "2d06327a",
+      "state": "722d586a",
       "events": "741638a5",
       "rng": {
         "draws": 49,
@@ -1862,6 +1868,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         },
         {
@@ -1894,6 +1901,7 @@
             "choices": {},
             "ranks": {}
           },
+          "townFocus": {},
           "worldBossDaily": {}
         }
       ],

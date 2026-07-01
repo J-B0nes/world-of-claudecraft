@@ -184,6 +184,7 @@ import {
 } from './pathfind';
 import * as petAi from './pet/pet_ai';
 import * as petCommands from './pet/pet_commands';
+import * as professionsFocus from './professions/focus';
 import {
   drainGatheringGrants,
   emptyGatheringProficiency,
@@ -799,6 +800,10 @@ export interface PlayerMeta {
   // day boundary; holds the boss ids already looted today so a player can take
   // personal loot from each world boss only once per day. See world_boss.ts.
   worldBossDaily: WorldBossDaily;
+  // Persistent town focus allocation (#1143): component type -> points spent.
+  // Set only while standing in a town hub; adds a bonus to that component's
+  // #1142 harvest yield, on top of the universal baseline, never below it.
+  townFocus: Record<string, number>;
 }
 
 // Away-from-keyboard / do-not-disturb presence. `afk` still delivers whispers
@@ -902,6 +907,7 @@ export interface CharacterState {
   // Flat per-craft skill tracking (#1126; JSONB, additive back-compat: absent or
   // partial on older saves loads the missing crafts as 0, see normalizeCraftSkills).
   craftSkills?: Record<string, number>;
+  townFocus?: Record<string, number>;
 }
 
 export interface PetState {
@@ -1437,6 +1443,7 @@ export class Sim {
       delveLoreUnlocked: new Set(),
       delveDaily: { date: '', firstClearXp: new Set(), markClears: 0 },
       worldBossDaily: emptyWorldBossDaily(),
+      townFocus: {},
     };
     this.players.set(player.id, meta);
     player.skinCatalog = meta.skinCatalog;
@@ -1521,6 +1528,7 @@ export class Sim {
       meta.delveMarks = s.delveMarks ?? 0;
       meta.delveClears = { ...(s.delveClears ?? {}) };
       meta.companionUpgrades = { ...(s.companionUpgrades ?? {}) };
+      meta.townFocus = { ...(s.townFocus ?? {}) };
       if (s.delveLoreUnlocked) for (const id of s.delveLoreUnlocked) meta.delveLoreUnlocked.add(id);
       if (s.delveDaily) {
         meta.delveDaily = {
@@ -1789,6 +1797,7 @@ export class Sim {
         date: meta.worldBossDaily.date,
         looted: [...meta.worldBossDaily.looted],
       },
+      townFocus: { ...meta.townFocus },
     };
     return sanitizeRemovedZone1Content(state).state;
   }
@@ -5058,6 +5067,39 @@ export class Sim {
 
   pickUpObject(objId: number, pid?: number): void {
     interaction.pickUpObject(this.ctx, objId, pid);
+  }
+
+  townFocusFor(pid: number): Record<string, number> {
+    return this.players.get(pid)?.townFocus ?? {};
+  }
+
+  get townFocus(): Record<string, number> {
+    return this.townFocusFor(this.primaryId);
+  }
+
+  // #1143: sets the caller's persistent town focus allocation. Gated on the
+  // player standing in their current zone's town hub (professions/focus.ts
+  // isInTownZone); rejected requests (out of town, malformed, over budget)
+  // leave the previous allocation untouched and surface a toast.
+  setTownFocus(allocation: Record<string, number>, pid?: number): void {
+    const r = this.resolve(pid);
+    if (!r) return;
+    const { meta, e: p } = r;
+    const zone = zoneAt(p.pos.z);
+    const inTown = professionsFocus.isInTownZone(p.pos, zone);
+    const result = professionsFocus.setTownFocus(meta.townFocus, allocation, inTown);
+    if (!result.ok) {
+      this.error(
+        meta.entityId,
+        result.reason === 'not_in_town'
+          ? 'You must be in town to set your focus.'
+          : result.reason === 'over_budget'
+            ? 'That allocation exceeds your focus point budget.'
+            : 'Invalid focus allocation.',
+      );
+      return;
+    }
+    meta.townFocus = result.allocation as Record<string, number>;
   }
 
   interact(pid?: number): void {
