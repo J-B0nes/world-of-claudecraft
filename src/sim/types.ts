@@ -1822,7 +1822,9 @@ export interface SimConfig {
   // this and fall back to a flat 24h day. Keeps the time zone out of the sim core.
   raidResetMs?: (nowMs: number) => number;
   // Offline play-test: a custom world to run instead of the built-in one. The Sim
-  // ctor reads spawns from here; render/terrain read it via the data.ts registry.
+  // ctor reads spawns from here; render/terrain read it via the data.ts registry,
+  // so callers that set this MUST also call setActiveWorldContent() with content
+  // whose terrain-relevant fields are identical (see the sim.ts ctor invariant).
   world?: WorldContent;
 }
 

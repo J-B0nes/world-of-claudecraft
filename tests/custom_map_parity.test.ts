@@ -221,6 +221,25 @@ describe('custom-map terrain seam', () => {
     expect(sanitizeMapDoc({ content: { zones: [] } })).toBeNull();
   });
 
+  it('sanitizeMapDoc caps npcs and objects (review hardening)', () => {
+    const npcs: Record<string, unknown> = {};
+    for (let i = 0; i < 500; i++) npcs[`npc${i}`] = { id: `npc${i}`, pos: { x: 0, z: 0 } };
+    const objects = Array.from({ length: 900 }, (_, i) => ({ id: `o${i}`, positions: [] }));
+    const doc = sanitizeMapDoc({
+      content: {
+        zones: [
+          { id: 'z', name: 'Z', zMin: -10, zMax: 10, hub: { x: 0, z: 0, radius: 5, name: 'H' } },
+        ],
+        camps: [],
+        npcs,
+        objects,
+        roads: [],
+      },
+    });
+    expect(Object.keys(doc?.content.npcs ?? {}).length).toBeLessThanOrEqual(200);
+    expect(doc?.content.objects.length).toBeLessThanOrEqual(400);
+  });
+
   it('a custom single-biome world re-shapes terrain and biome lookup', () => {
     const peaks: WorldContent = {
       ...BUILTIN_WORLD,

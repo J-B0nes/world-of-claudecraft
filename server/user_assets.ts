@@ -73,8 +73,29 @@ export interface UserAssetsDb {
   deleteAsset(id: number, accountId: number): Promise<boolean>;
 }
 
+// Hot-path byte cache for the public GET: content-addressed bytes never
+// change, so a small in-process TTL+LRU absorbs cold-load bursts (a popular
+// public map's assets fetched by many viewers at once) without those reads
+// holding pg pool connections the game loop's autosaves share. The TTL, not
+// exact invalidation, is what keeps admin blocks and owner deletes effective
+// within minutes on EVERY realm process (eviction cannot cross processes).
+const BYTE_CACHE_MAX_BYTES = 32 * 1024 * 1024;
+const BYTE_CACHE_TTL_MS = 5 * 60_000;
+
+interface CachedBytes {
+  bytes: Buffer;
+  at: number;
+}
+
 export class UserAssetsService {
-  constructor(private readonly db: UserAssetsDb) {}
+  // Map iteration order doubles as the LRU order (entries re-set on hit).
+  private readonly byteCache = new Map<string, CachedBytes>();
+  private byteCacheTotal = 0;
+
+  constructor(
+    private readonly db: UserAssetsDb,
+    private readonly nowMs: () => number = Date.now,
+  ) {}
 
   async upload(accountId: number, bytes: Buffer, rawName: unknown): Promise<UserAssetUploadResult> {
     if (bytes.length === 0 || bytes.length > MAX_ASSET_BYTES) {
@@ -112,9 +133,33 @@ export class UserAssetsService {
     }
   }
 
-  /** Bytes for the public GET; null covers both missing and blocked (a 404). */
-  bytesForSha(sha256: string): Promise<Buffer | null> {
-    return this.db.getActiveBytes(sha256);
+  /** Bytes for the public GET; null covers both missing and blocked (a 404).
+   *  Served through the TTL+LRU cache; misses (including blocked) are never
+   *  cached, so a fresh upload is visible immediately. */
+  async bytesForSha(sha256: string): Promise<Buffer | null> {
+    const now = this.nowMs();
+    const hit = this.byteCache.get(sha256);
+    if (hit) {
+      if (now - hit.at <= BYTE_CACHE_TTL_MS) {
+        // Refresh the LRU position.
+        this.byteCache.delete(sha256);
+        this.byteCache.set(sha256, hit);
+        return hit.bytes;
+      }
+      this.byteCache.delete(sha256);
+      this.byteCacheTotal -= hit.bytes.length;
+    }
+    const bytes = await this.db.getActiveBytes(sha256);
+    if (bytes) {
+      this.byteCache.set(sha256, { bytes, at: now });
+      this.byteCacheTotal += bytes.length;
+      for (const [key, entry] of this.byteCache) {
+        if (this.byteCacheTotal <= BYTE_CACHE_MAX_BYTES) break;
+        this.byteCache.delete(key);
+        this.byteCacheTotal -= entry.bytes.length;
+      }
+    }
+    return bytes;
   }
 
   listMine(accountId: number): Promise<UserAssetRecord[]> {

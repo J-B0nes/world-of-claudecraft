@@ -18,6 +18,8 @@ export const MAP_DOC_VERSION = 2;
 export const MAX_TERRAIN_EDITS = 4000;
 export const MAX_PLACEMENTS = 4000;
 export const MAX_CAMPS = 600;
+export const MAX_NPCS = 200;
+export const MAX_OBJECTS = 400;
 export const MAX_ZONES = 12;
 export const MAX_ROADS = 64;
 export const MAX_ROAD_POINTS = 256;
@@ -215,7 +217,8 @@ export function sanitizeMapDoc(raw: unknown): MapDoc | null {
   >;
   const zones = arr(content.zones).filter(zoneIsUsable).slice(0, MAX_ZONES);
   if (zones.length === 0) return null; // nothing to render/play
-  const npcs = content.npcs && typeof content.npcs === 'object' ? (content.npcs as object) : {};
+  const npcsRaw = content.npcs && typeof content.npcs === 'object' ? (content.npcs as object) : {};
+  const npcs = Object.fromEntries(Object.entries(npcsRaw).slice(0, MAX_NPCS));
   const doc: MapDoc = {
     version: num(o.version, MAP_DOC_VERSION),
     meta: sanitizeMeta(o.meta),
@@ -225,7 +228,7 @@ export function sanitizeMapDoc(raw: unknown): MapDoc | null {
       zones: zones as ZoneDef[],
       camps: arr(content.camps).slice(0, MAX_CAMPS) as CampDef[],
       npcs: npcs as Record<string, NpcDef>,
-      objects: arr(content.objects) as GroundObjectDef[],
+      objects: arr(content.objects).slice(0, MAX_OBJECTS) as GroundObjectDef[],
       roads: sanitizeRoads(content.roads),
     },
     terrainEdits: arr(o.terrainEdits)

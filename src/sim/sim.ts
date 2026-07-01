@@ -939,6 +939,12 @@ export class Sim {
 
     // Spawn content: a custom world (editor play-test) or the built-in world.
     // CAMPS order is a determinism contract; both bundles preserve it.
+    // INVARIANT: terrain/colliders/roads read ONLY the data.ts module global
+    // (getActiveWorldContent), never cfg.world. A caller that passes cfg.world
+    // MUST also setActiveWorldContent() with content whose terrain-relevant
+    // fields (zones, camps, roads, terrainEdits, biomePaint, waterLevel) are
+    // identical, or spawns and geometry silently fork. Placements MAY differ
+    // (render-only ownership; the editor viewport strips them from cfg.world).
     const worldContent = this.cfg.world ?? getActiveWorldContent();
 
     // NPCs — nudged out of buildings and deep water if their data position is bad

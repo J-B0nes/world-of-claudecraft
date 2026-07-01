@@ -152,6 +152,7 @@ import {
   clearAuthFailures,
   discordRateLimited,
   githubRateLimited,
+  mapMutationRateLimited,
   publicReadRateLimited,
   rateLimited,
   recordAuthFailure,
@@ -1513,6 +1514,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
       }
       const accountId = await bearerActiveAccount(req, res);
       if (accountId === null) return;
+      if (mapMutationRateLimited(req, accountId)) return json(res, 429, { error: 'rate_limited' });
       let body: any;
       try {
         body = await readBody(req, MAX_MAP_SAVE_BYTES);
@@ -1556,6 +1558,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
       }
       const accountId = await bearerActiveAccount(req, res);
       if (accountId === null) return;
+      if (mapMutationRateLimited(req, accountId)) return json(res, 429, { error: 'rate_limited' });
       let body: any;
       try {
         body = await readBody(req, MAX_MAP_SAVE_BYTES);
@@ -1585,6 +1588,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
     if (req.method === 'DELETE' && mapIdMatch) {
       const accountId = await bearerActiveAccount(req, res);
       if (accountId === null) return;
+      if (mapMutationRateLimited(req, accountId)) return json(res, 429, { error: 'rate_limited' });
       const deleted = await customMaps.deleteMap(accountId, Number(mapIdMatch[1]));
       return json(res, deleted ? 200 : 404, deleted ? { ok: true } : { error: 'map_not_found' });
     }
@@ -1592,7 +1596,13 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
     if (req.method === 'POST' && mapForkMatch) {
       const accountId = await bearerActiveAccount(req, res);
       if (accountId === null) return;
-      const body = await readBody(req);
+      if (mapMutationRateLimited(req, accountId)) return json(res, 429, { error: 'rate_limited' });
+      let body: any;
+      try {
+        body = await readBody(req);
+      } catch {
+        return json(res, 400, { error: 'bad_json' });
+      }
       const result = await customMaps.forkMap(accountId, Number(mapForkMatch[1]), body.name);
       if (!result.ok) return json(res, mapsErrorStatus(result.error), { error: result.error });
       // The fork response carries the full document so the editor can open the
@@ -1603,6 +1613,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
     if (req.method === 'POST' && mapPublishMatch) {
       const accountId = await bearerActiveAccount(req, res);
       if (accountId === null) return;
+      if (mapMutationRateLimited(req, accountId)) return json(res, 429, { error: 'rate_limited' });
       const publish = mapPublishMatch[2] === 'publish';
       const done = await customMaps.setPublished(accountId, Number(mapPublishMatch[1]), publish);
       return json(res, done ? 200 : 404, done ? { ok: true } : { error: 'map_not_found' });
@@ -1663,6 +1674,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         // Content-addressed by sha256: the bytes behind a given URL can never
         // change, so cache like the hashed build assets (static_cache.ts).
         'Cache-Control': 'public, max-age=31536000, immutable',
+        'X-Content-Type-Options': 'nosniff',
       });
       res.end(bytes);
       return;

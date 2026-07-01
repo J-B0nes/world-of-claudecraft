@@ -231,6 +231,34 @@ export function resetCardUploadRateLimits(): void {
 // `attempts` map, so STRICTEST_RATE_LIMIT is unaffected), and a single account
 // spraying uploads through many IPs is still capped by the account key.
 export const ASSET_UPLOAD_MAX_PER_MINUTE = 10;
+// Map saves are bigger writes (up to 2 MiB JSONB) but honest editors autosave;
+// 30/min leaves headroom for rapid save-as/fork flows while bounding floods.
+export const MAP_MUTATION_MAX_PER_MINUTE = 30;
+const mapMutationIpAttempts = new Map<string, number[]>();
+const mapMutationAccountAttempts = new Map<number, number[]>();
+
+/** Per-IP AND per-account throttle shared by every /api/maps mutation
+ * (create/save/fork/publish/unpublish/delete). */
+export function mapMutationRateLimited(req: http.IncomingMessage, accountId: number): boolean {
+  const ipLimited = recordSlidingWindowAttempt(
+    mapMutationIpAttempts,
+    requestIp(req),
+    MAP_MUTATION_MAX_PER_MINUTE,
+  );
+  const accountLimited = recordSlidingWindowAttempt(
+    mapMutationAccountAttempts,
+    accountId,
+    MAP_MUTATION_MAX_PER_MINUTE,
+  );
+  return ipLimited || accountLimited;
+}
+
+/** Reset map-mutation throttles. Test-only. */
+export function resetMapMutationRateLimits(): void {
+  mapMutationIpAttempts.clear();
+  mapMutationAccountAttempts.clear();
+}
+
 const assetUploadIpAttempts = new Map<string, number[]>();
 const assetUploadAccountAttempts = new Map<number, number[]>();
 
