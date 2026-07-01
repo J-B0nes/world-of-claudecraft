@@ -782,6 +782,12 @@ export const en_XA: EnTranslations = {
       "mob": "[[{level}] {name}]",
       "mobElite": "[[{level}+] {name}]"
     },
+    "mobTooltip": {
+      "levelFamily": "[Ļéʋéļ {level} {family}]",
+      "familyDemon": "[Ðéɱóñ]",
+      "hostile": "[Ĥóšţíļé]",
+      "friendly": "[Ƒŕíéñðļý]"
+    },
     "itemTooltip": {
       "requiresLevel": "[Ŕéɋúíŕéš Ļéʋéļ {level}]"
     },

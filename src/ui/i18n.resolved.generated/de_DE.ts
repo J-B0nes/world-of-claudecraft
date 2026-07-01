@@ -782,6 +782,12 @@ export const de_DE: EnTranslations = {
       "mob": "[{level}] {name}",
       "mobElite": "[{level}+] {name}"
     },
+    "mobTooltip": {
+      "levelFamily": "Level {level} {family}",
+      "familyDemon": "Demon",
+      "hostile": "Hostile",
+      "friendly": "Friendly"
+    },
     "itemTooltip": {
       "requiresLevel": "Benötigt Stufe {level}"
     },

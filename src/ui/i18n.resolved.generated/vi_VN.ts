@@ -782,6 +782,12 @@ export const vi_VN: EnTranslations = {
       "mob": "[{level}] {name}",
       "mobElite": "[{level}+] {name}"
     },
+    "mobTooltip": {
+      "levelFamily": "Level {level} {family}",
+      "familyDemon": "Demon",
+      "hostile": "Hostile",
+      "friendly": "Friendly"
+    },
     "itemTooltip": {
       "requiresLevel": "Yêu cầu Cấp {level}"
     },

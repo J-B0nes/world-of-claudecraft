@@ -782,6 +782,12 @@ export const da_DK: EnTranslations = {
       "mob": "[{level}] {name}",
       "mobElite": "[{level}+] {name}"
     },
+    "mobTooltip": {
+      "levelFamily": "Level {level} {family}",
+      "familyDemon": "Demon",
+      "hostile": "Hostile",
+      "friendly": "Friendly"
+    },
     "itemTooltip": {
       "requiresLevel": "Kræver niveau {level}"
     },

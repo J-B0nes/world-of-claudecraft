@@ -2176,6 +2176,28 @@
     color: var(--color-text-muted);
     font-size: 11px;
   }
+  /* World mob-hover tooltip (mob_tooltip_view.ts): a bit roomier than the default
+     item/ability tooltip box, since it is read at a glance while moving. The
+     compound selector (higher specificity than the plain #tooltip .tt-title/
+     .tt-sub/.tt-red/.tt-green rules above and the --tooltip-scale rules below)
+     wins regardless of source order; still scales with the user's own Tooltip
+     Text Size setting via --tooltip-scale so it does not fight that control.
+     hud.ts toggles the "mob-tooltip" class: added for showMobHoverTooltip,
+     removed by every other tooltip path (attachTooltip/hideTooltip) so it never
+     leaks its bigger sizing onto an item/ability tooltip that reuses #tooltip. */
+  #tooltip.mob-tooltip {
+    max-width: 340px;
+    padding: 10px 14px;
+    font-size: calc(14px * var(--tooltip-scale, 1));
+  }
+  #tooltip.mob-tooltip .tt-title {
+    font-size: calc(17px * var(--tooltip-scale, 1));
+  }
+  #tooltip.mob-tooltip .tt-sub,
+  #tooltip.mob-tooltip .tt-red,
+  #tooltip.mob-tooltip .tt-green {
+    font-size: calc(14px * var(--tooltip-scale, 1));
+  }
   /* Item-set (tier set) tooltip lines: gold set name, then bonus tiers that are
      dim until their piece threshold is met, lit green when active. */
   #tooltip .tt-set-name {

@@ -11,22 +11,82 @@
 export const pending: Record<string, readonly string[]> = {
   "es": [],
   "es_ES": [],
-  "fr_FR": [],
-  "fr_CA": [],
+  "fr_FR": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "fr_CA": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
   "en_CA": [],
-  "it_IT": [],
-  "de_DE": [],
+  "it_IT": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "de_DE": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
   "zh_CN": [],
   "zh_TW": [],
   "ko_KR": [],
   "ja_JP": [],
-  "pt_BR": [],
+  "pt_BR": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
   "ru_RU": [],
-  "nl_NL": [],
-  "pl_PL": [],
-  "id_ID": [],
-  "tr_TR": [],
-  "sv_SE": [],
-  "vi_VN": [],
-  "da_DK": []
+  "nl_NL": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "pl_PL": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "id_ID": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "tr_TR": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "sv_SE": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "vi_VN": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ],
+  "da_DK": [
+    "hudChrome.mobTooltip.familyDemon",
+    "hudChrome.mobTooltip.friendly",
+    "hudChrome.mobTooltip.hostile",
+    "hudChrome.mobTooltip.levelFamily"
+  ]
 };

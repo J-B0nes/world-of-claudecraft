@@ -2097,13 +2097,21 @@ async function startGame(
   function updateHoverCursor(): void {
     if (!input.hoverActive || input.isDragging() || hud.isModalOpen()) {
       input.setHoverCursor('default');
+      hud.clearMobHoverTooltip();
       return;
     }
     const id = renderer.pick(input.hoverX, input.hoverY);
     const entity = id !== null ? world.entities.get(id) : undefined;
-    input.setHoverCursor(
-      hoverCursorKind(entity, world.playerId, partyMemberIds(), activePvpOpponentIds(world)),
-    );
+    const pvpOpponents = activePvpOpponentIds(world);
+    input.setHoverCursor(hoverCursorKind(entity, world.playerId, partyMemberIds(), pvpOpponents));
+    // WoW-style mouseover tooltip (name / level / creature type) for a mob under
+    // the cursor, reusing the same pick this function already does for the
+    // hover-cursor kind above.
+    if (entity && entity.kind === 'mob' && !entity.dead) {
+      hud.showMobHoverTooltip(entity, pvpOpponents);
+    } else {
+      hud.clearMobHoverTooltip();
+    }
   }
 
   function renderFacingOverride(): number | null {

@@ -782,6 +782,12 @@ export const ja_JP: EnTranslations = {
       "mob": "[{level}] {name}",
       "mobElite": "[{level}+] {name}"
     },
+    "mobTooltip": {
+      "levelFamily": "レベル{level} {family}",
+      "familyDemon": "デーモン",
+      "hostile": "敵対",
+      "friendly": "味方"
+    },
     "itemTooltip": {
       "requiresLevel": "必要レベル {level}"
     },
