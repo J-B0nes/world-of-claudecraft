@@ -617,6 +617,10 @@ export interface PlayerMeta {
   characterId?: number;
   cls: PlayerClass;
   name: string;
+  // Dev-only test dummy spawned via "/dev bot <name>" (social/chat.ts, gated by
+  // devCommands): a stationary player you can target and whisper to exercise social
+  // features offline; a whisper to it auto-replies. Runtime-only, never serialized.
+  isDevBot?: boolean;
   skin: number; // appearance index into the render SKINS[player_<cls>]; persisted, synced
   skinCatalog: SkinCatalog;
   // Cosmetic skin-select event: the rank rolled when the event token was used,
@@ -1306,6 +1310,31 @@ export class Sim {
     player.potionCdRemaining = Math.max(0, player.potionCooldownUntil - this.time);
     if (savedState?.pet) this.restorePet(player, savedState.pet);
     return player.id;
+  }
+
+  // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
+  // social/chat.ts): a dummy you can target and whisper to exercise social features
+  // offline. Placed a few yards from the primary player so it is visible, and marked
+  // isDevBot so a whisper to it auto-replies (see the whisper handler in chat.ts).
+  // Returns the new pid, or -1 if the name is blank or already taken (whisper
+  // resolution needs a unique name). Never reached in production (the caller runs
+  // only when devCommands is on).
+  spawnDevBot(name: string): number {
+    const clean = name.trim();
+    if (!clean) return -1;
+    for (const m of this.players.values())
+      if (m.name.toLowerCase() === clean.toLowerCase()) return -1;
+    const pid = this.addPlayer('mage', clean);
+    const meta = this.players.get(pid);
+    if (meta) meta.isDevBot = true;
+    const me = this.entities.get(this.primaryId);
+    const e = this.entities.get(pid);
+    if (e && me) {
+      e.pos = this.groundPos(me.pos.x + 3, me.pos.z + 3);
+      e.prevPos = { ...e.pos };
+      this.rebucket(e);
+    }
+    return pid;
   }
 
   removePlayer(pid: number): void {
@@ -2206,6 +2235,8 @@ export class Sim {
       // already bound above; isRooted/moveSpeedMult/swingIntervalMult are M2 bindings above.)
       setPlayerLevel: sim.setPlayerLevel.bind(sim),
       notice: sim.notice.bind(sim),
+      // Dev-only test-dummy spawner backing "/dev bot <name>" in social/chat.ts.
+      spawnDevBot: sim.spawnDevBot.bind(sim),
       // L2 inventory/vendor (W2): the four still-on-Sim helpers the moved items.useItem
       // dispatches to. Late-bound arrows (looked up at call time, not `.bind`d at ctor)
       // so they preserve the pre-move `this.X` dynamic-dispatch semantics, including tests

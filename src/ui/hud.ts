@@ -127,13 +127,19 @@ import { ChatAnnouncer } from './chat_announcer';
 import {
   CHANNEL_LABEL_KEYS,
   CHAT_TAB_CHANNELS,
+  type ChatOpenTab,
   type ChatTabChannel,
   type ChatTabId,
   channelNeedsJoin,
+  chatOpenTabLabelKey,
   composeChatLine,
+  composeWhisperReply,
+  isChatOpenTab,
   isChatTabChannel,
   parseChatTabs,
   serializeChatTabs,
+  WHISPER_TAB,
+  WHISPER_TAB_LABEL_KEY,
 } from './chat_channels';
 import { type ChatClock, clampChatClock, formatChatTimestamp } from './chat_timestamp';
 import { type ChatBoxGeometry, clampChatBox, parseChatBox, serializeChatBox } from './chat_window';
@@ -707,10 +713,11 @@ export class Hud {
   // ./focus_manager. Escape is NOT handled here: it stays with the existing unified
   // dispatcher (main.ts game input -> hud.closeAll()), so there is one Escape path.
   private readonly focusManager = new FocusManager();
-  // WoW-style chat tabs. `chatTabs` are the player-added channel tabs (the
-  // built-in `all`/`combat` views are implicit); `activeChatTab` is the one
-  // currently shown, and drives both the log filter and the send channel.
-  private chatTabs: ChatTabChannel[] = [];
+  // WoW-style chat tabs. `chatTabs` are the player-added tabs (send-capable
+  // channels plus the optional filter-only whisper collector; the built-in
+  // `all`/`combat` views are implicit); `activeChatTab` is the one currently
+  // shown, and drives both the log filter and the send channel.
+  private chatTabs: ChatOpenTab[] = [];
   private activeChatTab: ChatTabId = 'all';
   private errorEl = $('#error-msg');
   private bannerEl = $('#banner');
@@ -1714,12 +1721,13 @@ export class Hud {
     this.activeChatTab =
       savedActive === 'all' ||
       savedActive === 'combat' ||
-      (isChatTabChannel(savedActive) && this.chatTabs.includes(savedActive))
+      (isChatOpenTab(savedActive) && this.chatTabs.includes(savedActive))
         ? (savedActive as ChatTabId)
         : 'all';
     // re-join any opt-in global channels whose tabs were restored, so messages
-    // typed there are delivered this session too
-    for (const ch of this.chatTabs) if (channelNeedsJoin(ch)) this.sim.chat(`/join ${ch}`);
+    // typed there are delivered this session too (the whisper tab never joins)
+    for (const ch of this.chatTabs)
+      if (isChatTabChannel(ch) && channelNeedsJoin(ch)) this.sim.chat(`/join ${ch}`);
     this.renderChatTabs();
     this.selectChatTab(this.activeChatTab, false);
   }
@@ -1939,7 +1947,7 @@ export class Hud {
       makeTab('combat', t('hud.core.combatLogTab')),
     );
     for (const ch of this.chatTabs) {
-      const label = t(CHANNEL_LABEL_KEYS[ch]);
+      const label = t(chatOpenTabLabelKey(ch));
       const btn = makeTab(ch, label);
       btn.title = t('hud.core.chatChannels.close', { channel: label });
       // right-click / long-press a channel tab to close it (the + menu also toggles)
@@ -1992,14 +2000,13 @@ export class Hud {
   // hijacks where typed text goes. `join` auto-joins opt-in global channels;
   // skip it when the caller already sent the /join (e.g. a typed command).
   // `select` focuses the new tab — reserved for a deliberate tab click.
-  private addChatTab(
-    channel: ChatTabChannel,
-    opts: { join?: boolean; select?: boolean } = {},
-  ): void {
+  private addChatTab(channel: ChatOpenTab, opts: { join?: boolean; select?: boolean } = {}): void {
     const { join = true, select = false } = opts;
     if (!this.chatTabs.includes(channel)) {
       this.chatTabs.push(channel);
-      if (join && channelNeedsJoin(channel)) this.sim.chat(`/join ${channel}`);
+      // The whisper tab is filter-only (no channel to /join); only real channels join.
+      if (join && isChatTabChannel(channel) && channelNeedsJoin(channel))
+        this.sim.chat(`/join ${channel}`);
       this.renderChatTabs();
       this.persistChatTabs();
     }
@@ -2019,7 +2026,7 @@ export class Hud {
     else if (this.chatTabs.includes(channel)) this.removeChatTab(channel);
   }
 
-  private removeChatTab(channel: ChatTabChannel): void {
+  private removeChatTab(channel: ChatOpenTab): void {
     const i = this.chatTabs.indexOf(channel);
     if (i < 0) return;
     this.chatTabs.splice(i, 1);
@@ -2029,37 +2036,55 @@ export class Hud {
     this.selectChatTab(this.activeChatTab, true);
   }
 
-  // The "+" menu: a toggle list of every bindable channel. Open channels show a
-  // check and toggle off; the rest add a tab. Reuses the shared #ctx-menu, so
-  // it inherits its outside-click / Escape close behaviour.
+  // The "+" menu: a toggle list of every openable tab. Open tabs show a check and
+  // toggle off; the rest add a tab. Whisper is offered alongside the channels as
+  // a filter-only tab that gathers every whisper in one place. Reuses the shared
+  // #ctx-menu, so it inherits its outside-click / Escape close behaviour.
   private openChatChannelMenu(x: number, y: number): void {
     const el = $('#ctx-menu');
     let html = `<div class="ctx-title">${esc(t('hud.core.chatChannels.addTitle'))}</div>`;
-    for (const ch of CHAT_TAB_CHANNELS) {
-      const open = this.chatTabs.includes(ch);
-      html += `<div class="ctx-item" data-act="${ch}">${esc(t(CHANNEL_LABEL_KEYS[ch]))}${open ? ' ✓' : ''}</div>`;
-    }
+    // A trailing check mark flags already-open tabs, exactly as the channel list
+    // did before this whisper tab was added. Built from its char code so no literal
+    // glyph sits in source, keeping the no-emoji source guard green.
+    const checkMark = ` ${String.fromCharCode(0x2713)}`;
+    const item = (id: ChatOpenTab, labelKey: TranslationKey): string => {
+      const open = this.chatTabs.includes(id);
+      return `<div class="ctx-item" data-act="${id}">${esc(t(labelKey))}${open ? checkMark : ''}</div>`;
+    };
+    for (const ch of CHAT_TAB_CHANNELS) html += item(ch, CHANNEL_LABEL_KEYS[ch]);
+    html += item(WHISPER_TAB, WHISPER_TAB_LABEL_KEY);
     html += `<div class="ctx-item" data-act="close">${esc(t('hud.chat.context.cancel'))}</div>`;
     el.innerHTML = html;
     this.placePopupAt(el, x, y, 170, 320, 0, 8);
     el.style.display = 'block';
     this.bindContextMenuActions((act) => {
-      if (!isChatTabChannel(act)) return;
+      if (!isChatOpenTab(act)) return;
       if (this.chatTabs.includes(act)) this.removeChatTab(act);
-      else this.addChatTab(act);
+      // Focus the whisper tab on open so the effect is visible (channels stay put,
+      // as opening one must not hijack where the player's typed text goes).
+      else this.addChatTab(act, { select: act === WHISPER_TAB });
     });
   }
 
-  // null when the all/combat views are active (no filter, no send prefix);
-  // otherwise the channel the active tab is bound to.
-  private chatFilterChannel(): ChatTabChannel | null {
+  // The tab that FILTERS the log (which messages show): null on all/combat, else
+  // the active tab, including the whisper collector (its messages carry chan
+  // 'whisper', so the same dataset.chan filter gathers them).
+  private chatFilterTab(): ChatOpenTab | null {
     return this.activeChatTab === 'all' || this.activeChatTab === 'combat'
       ? null
       : this.activeChatTab;
   }
 
+  // The SEND channel a plain typed line targets: null on all/combat AND on the
+  // whisper tab (whisper has no generic send channel; the whisper tab replies via
+  // /r instead, handled in composeChatSend).
+  private chatSendChannel(): ChatTabChannel | null {
+    const tab = this.chatFilterTab();
+    return tab !== null && isChatTabChannel(tab) ? tab : null;
+  }
+
   private applyChatFilter(): void {
-    const filter = this.chatFilterChannel();
+    const filter = this.chatFilterTab();
     for (const child of Array.from(this.chatLogEl.children)) {
       const chan = (child as HTMLElement).dataset.chan;
       (child as HTMLElement).classList.toggle('chat-hidden', filter !== null && chan !== filter);
@@ -2068,7 +2093,7 @@ export class Hud {
   }
 
   private hideIfFiltered(div: HTMLElement, chan: string): void {
-    const filter = this.chatFilterChannel();
+    const filter = this.chatFilterTab();
     if (filter !== null && chan !== filter) div.classList.add('chat-hidden');
   }
 
@@ -2077,12 +2102,14 @@ export class Hud {
     if (input) input.placeholder = this.activeChatPlaceholder();
   }
 
-  // The line actually sent for what the player typed, honoring the active
-  // channel tab. main.ts calls this on Enter so a channel tab works without
-  // retyping the slash command; an explicit "/..." the player typed still wins.
+  // The line actually sent for what the player typed, honoring the active tab.
+  // main.ts calls this on Enter so a channel tab works without retyping the slash
+  // command; an explicit "/..." the player typed still wins. On the whisper tab,
+  // plain text replies to the last whisperer (/r) instead of binding a channel.
   composeChatSend(typed: string): string {
     const withLinks = this.applyPendingChatLinks(typed);
-    const ch = this.chatFilterChannel();
+    if (this.activeChatTab === WHISPER_TAB) return composeWhisperReply(withLinks);
+    const ch = this.chatSendChannel();
     return ch ? composeChatLine(ch, withLinks) : withLinks.trim();
   }
 
@@ -2143,9 +2170,11 @@ export class Hud {
     return true;
   }
 
-  // Placeholder for the chat input reflecting the active channel tab.
+  // Placeholder for the chat input reflecting the active tab.
   activeChatPlaceholder(): string {
-    const ch = this.chatFilterChannel();
+    if (this.activeChatTab === WHISPER_TAB)
+      return t('hud.core.chatChannels.sendingTo', { channel: t(WHISPER_TAB_LABEL_KEY) });
+    const ch = this.chatSendChannel();
     return ch
       ? t('hud.core.chatChannels.sendingTo', { channel: t(CHANNEL_LABEL_KEYS[ch]) })
       : t('hud.core.chatPlaceholder');
@@ -10042,6 +10071,8 @@ export class Hud {
     let html = `<div class="ctx-title ctx-title-player">${entCls ? portraitChipHtml({ cls: entCls, skin: ent?.skin ?? 0, name, variant: 'sm' }) : ''}<span class="ctx-title-name">${esc(name)}</span></div>`;
     if (entCls)
       html += `<div class="ctx-item" data-act="inspect">${esc(t('character.viewProfile'))}</div>`;
+    if (pid !== this.sim.playerId)
+      html += `<div class="ctx-item" data-act="whisper">${esc(t('hud.chat.context.whisper'))}</div>`;
     if (!isMember)
       html += `<div class="ctx-item" data-act="invite">${esc(t('hud.chat.context.invite'))}</div>`;
     html += `<div class="ctx-item" data-act="trade">${esc(t('hud.chat.context.trade'))}</div>`;
@@ -10076,6 +10107,7 @@ export class Hud {
     el.style.display = 'block';
     this.bindContextMenuActions((act) => {
       if (act === 'inspect') this.openInspect(pid);
+      else if (act === 'whisper') this.startWhisper(name);
       else if (act === 'invite') this.sim.partyInvite(pid);
       else if (act === 'trade') this.sim.tradeRequest(pid);
       else if (act === 'duel') this.sim.duelRequest(pid);
