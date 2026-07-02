@@ -16,7 +16,6 @@ import { assetsReady } from '../../render/assets/preload';
 import { type SeatRegion, unionRegion } from '../../render/placed_assets';
 import { Renderer } from '../../render/renderer';
 import { Sim } from '../../sim/sim';
-import type { WorldContent } from '../../sim/types';
 import { DT } from '../../sim/types';
 import { terrainHeight } from '../../sim/world';
 import { type CustomMap, customMapToWorldContent, placementsToRenderAssets } from '../custom_map';
@@ -96,7 +95,6 @@ export class Editor3DViewport {
   // Interaction state.
   private dragMode: 'none' | 'orbit' | 'pan' | 'edit' = 'none';
   private lastPointer = { x: 0, y: 0 };
-  private downPointer = { x: 0, y: 0 };
   private dragDist = 0;
   private readonly keys = new Set<string>();
 
@@ -570,7 +568,6 @@ export class Editor3DViewport {
 
   private onPointerDown = (ev: PointerEvent): void => {
     this.lastPointer = { x: ev.clientX, y: ev.clientY };
-    this.downPointer = { x: ev.clientX, y: ev.clientY };
     this.dragDist = 0;
     const wantsEdit = ev.button === 0 && this.hooks.toolActive();
     if (wantsEdit) {

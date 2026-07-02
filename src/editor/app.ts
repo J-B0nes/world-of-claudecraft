@@ -176,7 +176,6 @@ export class EditorApp {
   private regionBox: RegionBox | null = null;
   private regionStart: Vec2 | null = null;
   private selectingRegion = false;
-  private regionDownScreen: ScreenPoint = { sx: 0, sy: 0 };
   private clipboard: Clipboard | null = null;
 
   // 2D pointer state
@@ -1982,7 +1981,6 @@ export class EditorApp {
       }
       if (this.tool === 'region') {
         this.selectingRegion = true;
-        this.regionDownScreen = s;
         this.editStart(w);
         stage.setPointerCapture(ev.pointerId);
         return;
