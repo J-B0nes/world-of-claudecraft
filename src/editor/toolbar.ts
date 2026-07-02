@@ -14,6 +14,7 @@ export type EditorTool =
   | 'paint'
   | 'water'
   | 'place'
+  | 'blocker'
   | 'camp'
   | 'spawn'
   | 'region'
@@ -32,6 +33,7 @@ export interface ToolDef {
     | 'editor.tool.paint'
     | 'editor.tool.water'
     | 'editor.tool.place'
+    | 'editor.tool.blocker'
     | 'editor.tool.camp'
     | 'editor.tool.spawn'
     | 'editor.tool.region'
@@ -82,6 +84,12 @@ export const TOOL_DEFS: readonly ToolDef[] = [
     key: 'p',
     labelKey: 'editor.tool.place',
     icon: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 3v9M4 7.5l8 4.5 8-4.5',
+  },
+  {
+    tool: 'blocker',
+    key: 'k',
+    labelKey: 'editor.tool.blocker',
+    icon: 'M3 7h18v10H3zM3 12h18M9 7v5M15 12v5',
   },
   {
     tool: 'camp',

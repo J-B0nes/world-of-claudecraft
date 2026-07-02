@@ -166,10 +166,12 @@ export class PlacedAssetsView {
     if (preload) registerPreload(task);
   }
 
-  /** Move/rotate/rescale the placement at `index` (fields left undefined keep). */
+  /** Move/rotate/rescale the placement at `index` (fields left undefined keep).
+   *  `collideRadius` is the EFFECTIVE footprint radius (0 or less = none), so
+   *  the editor's collide/radius edits repaint the ring without a rebuild. */
   updatePlacement(
     index: number,
-    change: { x?: number; z?: number; rotY?: number; scale?: number },
+    change: { x?: number; z?: number; rotY?: number; scale?: number; collideRadius?: number },
   ): void {
     const entry = this.entries.get(index);
     if (!entry) return;
@@ -178,6 +180,10 @@ export class PlacedAssetsView {
     if (change.z !== undefined) p.z = change.z;
     if (change.rotY !== undefined) p.rotY = change.rotY;
     if (change.scale !== undefined) p.scale = change.scale;
+    if (change.collideRadius !== undefined) {
+      if (change.collideRadius > 0) p.collideRadius = change.collideRadius;
+      else delete p.collideRadius;
+    }
     this.applyTransform(entry);
     this.refreshFootprint(entry);
     if (this.selected === index) this.refreshSelection();

@@ -11,20 +11,29 @@
 
 import { invalidateStaticColliders } from '../sim/colliders';
 import { BUILTIN_WORLD, MOBS, PLAYER_START, setActiveWorldContent } from '../sim/data';
-import { MAX_PLACEMENTS, MAX_TERRAIN_EDITS } from '../sim/map_doc';
-import type { CampDef, HeightStamp, WorldContent } from '../sim/types';
+import {
+  clampBlockerSegment,
+  MAX_BLOCKERS,
+  MAX_COLLIDE_RADIUS,
+  MAX_PLACEMENTS,
+  MAX_TERRAIN_EDITS,
+  MIN_COLLIDE_RADIUS,
+} from '../sim/map_doc';
+import type { BlockerDef, CampDef, HeightStamp, WorldContent } from '../sim/types';
 import { invalidateTerrainEditIndex, terrainHeight, WATER_LEVEL, waterLevel } from '../sim/world';
 import { tEntity } from '../ui/entity_i18n';
 import { t } from '../ui/i18n';
 import { Editor3DViewport } from './3d/viewport';
 import { AssetBrowser } from './asset_browser';
 import { ASSET_CATALOG, assetById } from './asset_catalog.generated';
+import { nearestBlockerIndex } from './blocker_core';
 import { draw } from './canvas';
 import {
   type AssetPlacement,
   CUSTOM_MAP_VERSION,
   type CustomMap,
   customMapToWorldContent,
+  effectiveCollideRadius,
   newCustomMap,
 } from './custom_map';
 import { el } from './dom';
@@ -42,6 +51,16 @@ import {
 } from './model';
 import { EditorApiError, forkMap, type MapFullWire, signedIn, uploadAsset } from './net';
 import { parseMap } from './persist';
+import {
+  CommitCoalescer,
+  NORTH_UP_YAW,
+  NUDGE_STEP_BIG_YD,
+  NUDGE_STEP_YD,
+  type NudgeKey,
+  nudgeDelta,
+  rotateStep,
+  scaleStep,
+} from './placement_transform_core';
 import { DEFAULT_PLAYTEST_SEED, launchPlaytest } from './playtest';
 import { type Bounds, scatterHills, scatterPlacements } from './procgen';
 import { EditGeneration } from './save_lifecycle_core';
@@ -58,6 +77,7 @@ import {
 import { confirmDialog, promptDialog, Toasts } from './toasts';
 import { type EditorTool, TOOL_BY_KEY, Toolbar } from './toolbar';
 import { Topbar } from './topbar';
+import { EditorTutorial } from './tutorial';
 import { UndoStack } from './undo_core';
 import { isUserAssetId, registerUserAssets, userAssetIdFor, userAssetLabel } from './user_assets';
 import { Camera, pickHandle, type ScreenPoint, type Vec2, type Viewport } from './view';
@@ -113,6 +133,7 @@ export class EditorApp {
   private readonly assets: AssetBrowser;
   private readonly drawer: MapDrawer;
   private readonly toasts: Toasts;
+  private readonly tutorial: EditorTutorial;
 
   // ---- stage -----------------------------------------------------------------
   private readonly stage2d: HTMLElement;
@@ -137,8 +158,16 @@ export class EditorApp {
   private placeRandomRot = true;
   private scatterCount = 80;
   private campMobId: string = Object.keys(MOBS)[0] ?? 'boar';
+  /** The user's MANUAL footprint-overlay toggle; the effective overlay also
+   *  forces on while authoring collision (see syncFootprintOverlay). */
   private footprintsOn = false;
   private readonly biomeCell = 8;
+
+  // blocker walls (drag-drawn invisible colliders)
+  private blockerStart: Vec2 | null = null;
+  private blockerPreview: BlockerDef | null = null;
+  private drawingBlocker2d = false;
+  private blockersVisible2d = true;
 
   private readonly undo = new UndoStack();
   private dirty = false;
@@ -156,6 +185,11 @@ export class EditorApp {
   // Pre-drag placement value for slider undo (waterBase pattern): captured on
   // the first LIVE change so the trailing commit diffs against the real prev.
   private placementDragBase: { index: number; prev: AssetPlacement } | null = null;
+  // Wheel/nudge bursts coalesce into ONE undo commit (against placementDragBase).
+  private readonly transformCoalescer = new CommitCoalescer();
+  private transformTimer = 0;
+  // A 3D drag-move is in flight: single-key tool shortcuts stay suppressed.
+  private placementDragging = false;
 
   // stroke state
   private strokeStamps: HeightStamp[] = [];
@@ -236,6 +270,7 @@ export class EditorApp {
       onViewMode: (mode) => this.setViewMode(mode),
       onUndo: () => this.doUndo(),
       onRedo: () => this.doRedo(),
+      onHelp: () => this.tutorial.openHelp(),
     });
 
     const main = el('div', 'ed-main');
@@ -318,6 +353,11 @@ export class EditorApp {
 
     this.applyViewMode();
     this.boot3d();
+
+    // Help modal + first-run tour (auto-starts once; Help > Begin tutorial
+    // replays it any time).
+    this.tutorial = new EditorTutorial(this.root);
+    this.tutorial.maybeAutoStart();
   }
 
   // ---- active world -------------------------------------------------------------
@@ -341,11 +381,31 @@ export class EditorApp {
       placements: [],
       biomePaint: map.biomePaint,
     };
+    if (map.blockers) world.blockers = map.blockers;
     if (map.waterLevel !== undefined) world.waterLevel = map.waterLevel;
     this.activeWorld = world;
     setActiveWorldContent(world);
     // The whole terrainEdits array was swapped: every derived cache is stale.
     this.terrainEditsMutated();
+  }
+
+  /** The document's blocker list, lazily created and SHARED with the active
+   *  WorldContent so the sim's colliders always read the live array. */
+  private blockersRef(): BlockerDef[] {
+    if (!this.map.blockers) this.map.blockers = [];
+    if (this.activeWorld.blockers !== this.map.blockers) {
+      this.activeWorld.blockers = this.map.blockers;
+    }
+    return this.map.blockers;
+  }
+
+  /** EVERY blocker mutation (add, erase, undo/redo) funnels here: the cached
+   *  static-collider grid is stale and the overlays must repaint. */
+  private blockersMutated(): void {
+    invalidateStaticColliders();
+    this.viewport3d?.rebuildBlockers();
+    this.map.meta.updatedAt = now();
+    this.canvasDirty = true;
   }
 
   private syncWaterToActive(): void {
@@ -365,12 +425,20 @@ export class EditorApp {
         onEditEnd: () => this.editEnd(),
         onHover: (w) => this.hover3d(w),
         onTap: (cx, cy, w) => this.tap3d(cx, cy, w),
+        placementDragEnabled: () => this.tool === 'select',
+        onPlacementDragStart: (index) => this.beginPlacementDrag(index),
+        onPlacementDragMove: (w) => this.updateSelectedPlacement({ x: w.x, z: w.z }, false),
+        onPlacementDragEnd: () => this.endPlacementDrag(),
+        onTransformWheel: (kind, deltaY) => this.transformWheel(kind, deltaY),
       });
-      void this.viewport3d.start().catch((e) => {
-        console.error('3D viewport failed; falling back to 2D', e);
-        this.viewMode = '2d';
-        this.applyViewMode();
-      });
+      void this.viewport3d
+        .start()
+        .then(() => this.syncFootprintOverlay())
+        .catch((e) => {
+          console.error('3D viewport failed; falling back to 2D', e);
+          this.viewMode = '2d';
+          this.applyViewMode();
+        });
     } catch (e) {
       console.error('3D viewport unavailable; using 2D', e);
       this.viewMode = '2d';
@@ -415,9 +483,22 @@ export class EditorApp {
     if (tool !== 'select') this.setSelectedPlacement(null);
     if (tool !== 'select') this.selectedKey = null;
     if (tool !== 'camp') this.selectedCamp = null;
+    if (tool !== 'blocker') this.clearBlockerDraft();
     this.viewport3d?.clearBrush();
+    this.syncFootprintOverlay();
     this.inspector.refresh();
     this.canvasDirty = true;
+  }
+
+  /**
+   * Effective footprint overlay = the user's manual toggle OR a collision-
+   * authoring context that forces it on (the Place tool with collide checked,
+   * or the Blocker tool). Leaving those contexts falls back to the manual
+   * setting untouched, so the toggle's semantics never change.
+   */
+  private syncFootprintOverlay(): void {
+    const forced = this.tool === 'blocker' || (this.tool === 'place' && this.placeCollide);
+    this.viewport3d?.showFootprints(this.footprintsOn || forced);
   }
 
   /** Tools that claim the left pointer in the 3D viewport. */
@@ -456,6 +537,10 @@ export class EditorApp {
       case 'place':
         this.placeAt(w);
         break;
+      case 'blocker':
+        this.blockerStart = { ...w };
+        this.blockerPreview = null;
+        break;
       case 'camp':
         this.campClick(w);
         break;
@@ -489,6 +574,16 @@ export class EditorApp {
         this.eraseAt(w);
         this.brushRing(w);
         break;
+      case 'blocker':
+        if (this.blockerStart) {
+          const s = this.blockerStart;
+          // Same clamp the sanitizer applies: too short previews nothing, and
+          // a drag past 200yd truncates live, so the preview IS the stored wall.
+          this.blockerPreview = clampBlockerSegment(s.x, s.z, w.x, w.z);
+          this.viewport3d?.setBlockerPreview(this.blockerPreview);
+          this.canvasDirty = true;
+        }
+        break;
       case 'region':
         if (this.regionStart) {
           this.regionBox = {
@@ -518,6 +613,9 @@ export class EditorApp {
         break;
       case 'erase':
         this.inspector.refresh();
+        break;
+      case 'blocker':
+        this.commitBlocker();
         break;
       case 'paint':
         this.paintCommit();
@@ -565,7 +663,12 @@ export class EditorApp {
       radius = this.selectedCampDef()?.radius ?? 10;
     } else if (this.tool === 'spawn') {
       radius = 1.6;
-    } else if (this.tool === 'select' || this.tool === 'water' || this.tool === 'region') {
+    } else if (
+      this.tool === 'select' ||
+      this.tool === 'water' ||
+      this.tool === 'region' ||
+      this.tool === 'blocker' // the wall preview box is the cursor
+    ) {
       this.viewport3d.clearBrush();
       return;
     }
@@ -812,6 +915,70 @@ export class EditorApp {
     });
   }
 
+  // ---- blocker walls ---------------------------------------------------------------
+
+  private clearBlockerDraft(): void {
+    this.blockerStart = null;
+    if (this.blockerPreview) {
+      this.blockerPreview = null;
+      this.viewport3d?.setBlockerPreview(null);
+      this.canvasDirty = true;
+    }
+  }
+
+  /** Release of a blocker drag: store the previewed segment (already length-
+   *  clamped by the preview step); a sub-minimum drag cancels silently. */
+  private commitBlocker(): void {
+    const seg = this.blockerPreview;
+    this.clearBlockerDraft();
+    if (!seg) return;
+    const blockers = this.blockersRef();
+    if (blockers.length >= MAX_BLOCKERS) {
+      this.toasts.error(t('editor.status.blockerCapReached', { max: MAX_BLOCKERS }));
+      return;
+    }
+    blockers.push(seg);
+    this.blockersMutated();
+    this.inspector.refresh(); // the blocker panel's count readout
+    this.pushUndo({
+      label: 'add-blocker',
+      undo: () => {
+        const list = this.blockersRef();
+        const i = list.indexOf(seg);
+        if (i >= 0) list.splice(i, 1);
+        this.blockersMutated();
+        this.inspector.refresh();
+      },
+      redo: () => {
+        this.blockersRef().push(seg);
+        this.blockersMutated();
+        this.inspector.refresh();
+      },
+    });
+  }
+
+  private removeBlockerAt(index: number): void {
+    const blockers = this.blockersRef();
+    const seg = blockers[index];
+    if (!seg) return;
+    blockers.splice(index, 1);
+    this.blockersMutated();
+    this.inspector.refresh();
+    this.pushUndo({
+      label: 'erase-blocker',
+      undo: () => {
+        this.blockersRef().splice(index, 0, seg);
+        this.blockersMutated();
+        this.inspector.refresh();
+      },
+      redo: () => {
+        this.blockersRef().splice(index, 1);
+        this.blockersMutated();
+        this.inspector.refresh();
+      },
+    });
+  }
+
   // ---- erase -----------------------------------------------------------------------
 
   private eraseAt(w: Vec2): void {
@@ -825,6 +992,13 @@ export class EditorApp {
     const pi = erasePlacementIndex(this.map.placements, w.x, w.z, this.brushRadius);
     if (pi >= 0) {
       this.removePlacementAt(pi);
+      return;
+    }
+    // Blocker walls next: a tight threshold so a wall near a sculpt stamp is
+    // still pickable, while a miss falls through to the stamp eraser.
+    const bi = nearestBlockerIndex(this.map.blockers ?? [], w.x, w.z);
+    if (bi >= 0) {
+      this.removeBlockerAt(bi);
       return;
     }
     const si = eraseStampIndex(this.map.terrainEdits, w.x, w.z);
@@ -924,7 +1098,12 @@ export class EditorApp {
   }
 
   private setSelectedPlacement(index: number | null): void {
-    if (this.selectedPlacement !== index) this.placementDragBase = null;
+    if (this.selectedPlacement !== index) {
+      // An open wheel/nudge burst on the OLD selection commits now, or its
+      // live changes would silently drop out of the undo history.
+      this.flushTransformCommit();
+      this.placementDragBase = null;
+    }
     this.selectedPlacement = index;
     this.viewport3d?.setSelectedPlacement(index);
   }
@@ -935,7 +1114,14 @@ export class EditorApp {
   }
 
   private updateSelectedPlacement(
-    change: { x?: number; z?: number; rotY?: number; scale?: number; collide?: boolean },
+    change: {
+      x?: number;
+      z?: number;
+      rotY?: number;
+      scale?: number;
+      collide?: boolean;
+      collideRadius?: number | null;
+    },
     commit: boolean,
   ): void {
     const index = this.selectedPlacement;
@@ -953,8 +1139,26 @@ export class EditorApp {
     if (change.rotY !== undefined) p.rotY = change.rotY;
     if (change.scale !== undefined) p.scale = change.scale;
     if (change.collide !== undefined) p.collide = change.collide;
-    this.viewport3d?.placementUpdated(index, change);
-    if (change.collide !== undefined) this.viewport3d?.rebuildPlacements();
+    if (change.collideRadius !== undefined) {
+      // number = set the override (clamped), null = back to the derived auto.
+      if (change.collideRadius === null) delete p.collideRadius;
+      else {
+        p.collideRadius = Math.min(
+          MAX_COLLIDE_RADIUS,
+          Math.max(MIN_COLLIDE_RADIUS, change.collideRadius),
+        );
+      }
+    }
+    // The render view gets the transform change plus the EFFECTIVE footprint
+    // radius (0 = walk-through), so collide toggles, radius drags, and scale
+    // changes all repaint the footprint ring live.
+    this.viewport3d?.placementUpdated(index, {
+      x: change.x,
+      z: change.z,
+      rotY: change.rotY,
+      scale: change.scale,
+      collideRadius: p.collide ? effectiveCollideRadius(p) : 0,
+    });
     this.canvasDirty = true;
     if (!commit) return;
     const prev = base.prev;
@@ -965,24 +1169,102 @@ export class EditorApp {
       prev.z === next.z &&
       prev.rotY === next.rotY &&
       prev.scale === next.scale &&
-      prev.collide === next.collide
+      prev.collide === next.collide &&
+      prev.collideRadius === next.collideRadius
     ) {
       return; // drag ended where it started: no undoable change
     }
     this.map.meta.updatedAt = now();
     this.pushUndo({
       label: 'edit-placement',
-      undo: () => {
-        Object.assign(this.map.placements[index] ?? {}, prev);
-        this.viewport3d?.rebuildPlacements();
-        this.canvasDirty = true;
-      },
-      redo: () => {
-        Object.assign(this.map.placements[index] ?? {}, next);
-        this.viewport3d?.rebuildPlacements();
-        this.canvasDirty = true;
-      },
+      undo: () => this.restorePlacementSnapshot(index, prev),
+      redo: () => this.restorePlacementSnapshot(index, next),
     });
+  }
+
+  /** Undo/redo restore of a full placement snapshot. Object.assign alone would
+   *  leave a since-added optional collideRadius behind, so clear it explicitly
+   *  when the snapshot never carried one. */
+  private restorePlacementSnapshot(index: number, snap: AssetPlacement): void {
+    const p = this.map.placements[index];
+    if (!p) return;
+    Object.assign(p, snap);
+    if (snap.collideRadius === undefined) delete p.collideRadius;
+    this.viewport3d?.rebuildPlacements();
+    this.canvasDirty = true;
+  }
+
+  // ---- direct manipulation (Select mode: drag-move, wheel, nudge) ------------------
+
+  /** A 3D left-press landed on a pickable placement; claim it in Select mode. */
+  private beginPlacementDrag(index: number): boolean {
+    if (this.tool !== 'select') return false;
+    this.selectedKey = null;
+    this.setSelectedPlacement(index);
+    this.placementDragging = true;
+    this.inspector.refresh();
+    this.canvasDirty = true;
+    return true;
+  }
+
+  /** Release: ONE commit diffed against the pre-drag base (single Ctrl+Z). */
+  private endPlacementDrag(): void {
+    this.placementDragging = false;
+    this.updateSelectedPlacement({}, true);
+    this.inspector.refresh();
+  }
+
+  /** Shift+wheel rotates, Alt+wheel scales; a burst commits once at the end. */
+  private transformWheel(kind: 'rotate' | 'scale', deltaY: number): boolean {
+    if (this.tool !== 'select' || this.selectedPlacement === null) return false;
+    const p = this.map.placements[this.selectedPlacement];
+    if (!p) return false;
+    if (kind === 'rotate')
+      this.updateSelectedPlacement({ rotY: rotateStep(p.rotY, deltaY) }, false);
+    else this.updateSelectedPlacement({ scale: scaleStep(p.scale, deltaY) }, false);
+    this.scheduleTransformCommit();
+    return true;
+  }
+
+  /** Arrow-key nudge on the ground plane, relative to the camera yaw. */
+  private nudgeSelected(key: NudgeKey, big: boolean): void {
+    const i = this.selectedPlacement;
+    const p = i === null ? undefined : this.map.placements[i];
+    if (!p) return;
+    const yaw =
+      this.viewMode === '3d' ? (this.viewport3d?.cameraYaw() ?? NORTH_UP_YAW) : NORTH_UP_YAW;
+    const d = nudgeDelta(key, yaw, big ? NUDGE_STEP_BIG_YD : NUDGE_STEP_YD);
+    this.updateSelectedPlacement({ x: p.x + d.dx, z: p.z + d.dz }, false);
+    this.scheduleTransformCommit();
+  }
+
+  /** Debounce the burst commit: one undo entry per wheel spin / key volley. */
+  private scheduleTransformCommit(): void {
+    this.transformCoalescer.tick(performance.now());
+    window.clearTimeout(this.transformTimer);
+    this.transformTimer = window.setTimeout(() => {
+      if (this.transformCoalescer.due(performance.now())) {
+        this.updateSelectedPlacement({}, true);
+        this.inspector.refresh();
+      }
+    }, this.transformCoalescer.windowMs);
+  }
+
+  /** Commit an open burst NOW (selection change, undo/redo). */
+  private flushTransformCommit(): void {
+    if (!this.transformCoalescer.pending) return;
+    this.transformCoalescer.cancel();
+    window.clearTimeout(this.transformTimer);
+    this.updateSelectedPlacement({}, true);
+  }
+
+  private duplicateSelectedPlacement(): void {
+    const i = this.selectedPlacement;
+    const p = i === null ? undefined : this.map.placements[i];
+    if (!p) return;
+    this.appendPlacements([{ ...p, x: p.x + 2, z: p.z + 2 }], 'duplicate-placement');
+    this.setSelectedPlacement(this.map.placements.length - 1);
+    this.inspector.refresh();
   }
 
   // ---- camps ----------------------------------------------------------------------
@@ -1370,6 +1652,8 @@ export class EditorApp {
   }
 
   private doUndo(): void {
+    // An open transform burst commits first, so Ctrl+Z reverts THAT burst.
+    this.flushTransformCommit();
     if (this.undo.undo()) {
       this.markDirty();
       this.inspector.refresh();
@@ -1378,6 +1662,7 @@ export class EditorApp {
   }
 
   private doRedo(): void {
+    this.flushTransformCommit();
     if (this.undo.redo()) {
       this.markDirty();
       this.inspector.refresh();
@@ -1658,10 +1943,16 @@ export class EditorApp {
     this.hoverKey = null;
     this.selectedPlacement = null;
     this.placementDragBase = null;
+    this.transformCoalescer.cancel();
+    window.clearTimeout(this.transformTimer);
+    this.placementDragging = false;
     this.markerDragStart = null;
     this.selectedCamp = null;
     this.regionBox = null;
     this.clipboard = null;
+    this.blockerStart = null;
+    this.blockerPreview = null;
+    this.drawingBlocker2d = false;
     this.waterBase = map.waterLevel ?? WATER_LEVEL;
     this.rebuildActiveWorld();
     this.topbar.setMapName(map.meta.name);
@@ -1672,7 +1963,11 @@ export class EditorApp {
     this.frameAll();
     this.canvasDirty = true;
     this.inspector.refresh();
-    if (this.viewport3d) void this.viewport3d.reload(map);
+    // The reload rebuilds the render view, which resets its footprint flag:
+    // reapply the effective overlay once the fresh engine is up.
+    if (this.viewport3d) {
+      void this.viewport3d.reload(map).then(() => this.syncFootprintOverlay());
+    }
   }
 
   // ---- keyboard -----------------------------------------------------------------------
@@ -1702,6 +1997,13 @@ export class EditorApp {
       void this.save();
       return;
     }
+    if (mod && ev.key.toLowerCase() === 'd') {
+      if (this.selectedPlacement !== null) {
+        ev.preventDefault();
+        this.duplicateSelectedPlacement();
+      }
+      return;
+    }
     if (mod) return;
     if (ev.key === 'Escape') {
       if (this.drawer.isOpen) {
@@ -1724,6 +2026,17 @@ export class EditorApp {
       else if (this.selectedCamp !== null) this.deleteSelectedCamp();
       return;
     }
+    if (
+      (ev.key === 'ArrowUp' ||
+        ev.key === 'ArrowDown' ||
+        ev.key === 'ArrowLeft' ||
+        ev.key === 'ArrowRight') &&
+      this.selectedPlacement !== null
+    ) {
+      ev.preventDefault();
+      this.nudgeSelected(ev.key, ev.shiftKey);
+      return;
+    }
     if (ev.key === '[' || ev.key === '{') {
       if (ev.shiftKey) this.brushStrength = Math.max(1, this.brushStrength - 1);
       else this.brushRadius = Math.max(4, this.brushRadius - 2);
@@ -1736,8 +2049,9 @@ export class EditorApp {
       this.inspector.refresh();
       return;
     }
-    // Single-key tool shortcuts; suppressed while the 3D fly keys are live.
-    if (this.viewport3d?.isNavigating()) return;
+    // Single-key tool shortcuts; suppressed while the 3D fly keys are live
+    // and while a placement drag-move is in flight.
+    if (this.viewport3d?.isNavigating() || this.placementDragging) return;
     const tool = TOOL_BY_KEY.get(ev.key.toLowerCase());
     if (tool && !ev.altKey) this.setTool(tool);
   };
@@ -1781,6 +2095,8 @@ export class EditorApp {
       getPlaceCollide: () => this.placeCollide,
       setPlaceCollide: (on) => {
         this.placeCollide = on;
+        // Authoring collision: surface the footprints so radii are visible.
+        this.syncFootprintOverlay();
       },
       getPlaceRandomRot: () => this.placeRandomRot,
       setPlaceRandomRot: (on) => {
@@ -1809,6 +2125,10 @@ export class EditorApp {
       clearSpawn: () => this.clearSpawn(),
       copyRegion: () => this.copyRegion(),
       pasteBeside: () => this.pasteBeside(),
+      getBlockerStats: () => ({
+        count: this.map.blockers?.length ?? 0,
+        max: MAX_BLOCKERS,
+      }),
       getSelection: (): PlacementSelection | null => {
         const i = this.selectedPlacement;
         const p = i === null ? undefined : this.map.placements[i];
@@ -1821,24 +2141,18 @@ export class EditorApp {
           rotY: p.rotY,
           scale: p.scale,
           collide: p.collide,
+          collideRadius: p.collideRadius ?? null,
         };
       },
       updateSelection: (change, commit) => this.updateSelectedPlacement(change, commit),
-      duplicateSelection: () => {
-        const i = this.selectedPlacement;
-        const p = i === null ? undefined : this.map.placements[i];
-        if (!p) return;
-        this.appendPlacements([{ ...p, x: p.x + 2, z: p.z + 2 }], 'duplicate-placement');
-        this.setSelectedPlacement(this.map.placements.length - 1);
-        this.inspector.refresh();
-      },
+      duplicateSelection: () => this.duplicateSelectedPlacement(),
       deleteSelection: () => {
         if (this.selectedPlacement !== null) this.removePlacementAt(this.selectedPlacement);
       },
       getFootprints: () => this.footprintsOn,
       setFootprints: (on) => {
         this.footprintsOn = on;
-        this.viewport3d?.showFootprints(on);
+        this.syncFootprintOverlay();
       },
       getMarkerSelection: () => {
         const e = this.entities.find((x) => x.key === this.selectedKey);
@@ -1870,14 +2184,18 @@ export class EditorApp {
       },
       runScatter: () => this.runScatter(),
       runHills: () => this.runHills(),
-      layers: () =>
-        KINDS.map((kind) => ({
-          kind,
+      layers: () => [
+        ...KINDS.map((kind) => ({
+          kind: kind as string,
           label: t(LAYER_KEYS[kind] as Parameters<typeof t>[0]),
           visible: this.visible.has(kind),
         })),
+        // Blocker walls are a document layer, not a marker entity kind.
+        { kind: 'blocker', label: t('editor.layers.blocker'), visible: this.blockersVisible2d },
+      ],
       toggleLayer: (kind, on) => {
-        if (on) this.visible.add(kind as EntityKind);
+        if (kind === 'blocker') this.blockersVisible2d = on;
+        else if (on) this.visible.add(kind as EntityKind);
         else this.visible.delete(kind as EntityKind);
         this.canvasDirty = true;
       },
@@ -1945,6 +2263,8 @@ export class EditorApp {
         terrainEdits: this.map.terrainEdits,
         placements: this.map.placements,
         biomePaint: this.map.biomePaint ?? null,
+        blockers: this.blockersVisible2d ? (this.map.blockers ?? []) : [],
+        blockerPreview: this.blockerPreview,
         region: this.tool === 'region' ? this.regionBox : null,
         spawn: this.map.playerStart ?? null,
         brush:
@@ -1981,6 +2301,12 @@ export class EditorApp {
       }
       if (this.tool === 'region') {
         this.selectingRegion = true;
+        this.editStart(w);
+        stage.setPointerCapture(ev.pointerId);
+        return;
+      }
+      if (this.tool === 'blocker') {
+        this.drawingBlocker2d = true;
         this.editStart(w);
         stage.setPointerCapture(ev.pointerId);
         return;
@@ -2031,7 +2357,7 @@ export class EditorApp {
       const dy = s.sy - this.lastPointer.sy;
       this.lastPointer = s;
       this.cursorWorld = this.cam.screenToWorld(s, this.vp());
-      if (this.selectingRegion) {
+      if (this.selectingRegion || this.drawingBlocker2d) {
         this.editMove(this.cursorWorld);
       } else if (this.painting2d) {
         this.editMove(this.cursorWorld);
@@ -2074,6 +2400,10 @@ export class EditorApp {
       }
       if (this.selectingRegion) {
         this.selectingRegion = false;
+        this.editEnd();
+      }
+      if (this.drawingBlocker2d) {
+        this.drawingBlocker2d = false;
         this.editEnd();
       }
       if (this.painting2d) {

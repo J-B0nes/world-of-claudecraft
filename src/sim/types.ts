@@ -1767,6 +1767,17 @@ export interface PlacedAsset {
   collideRadius?: number;
 }
 
+// An invisible blocker wall (editor-authored, custom maps only): a world-space
+// XZ segment the sim turns into a fence-width OBB collider at playtest. Pure
+// collision data; there is NO render mesh for it in the shipped game, so map
+// makers can wall off areas without visible geometry.
+export interface BlockerDef {
+  x1: number;
+  z1: number;
+  x2: number;
+  z2: number;
+}
+
 // A coarse 2D biome paint grid (editor). Each cell holds a biome id (0=vale,
 // 1=marsh, 2=peaks) or 255 for unpainted. Where painted, it overrides both the
 // terrain SHAPE (sim, in shapeAt) and the ground COLOR (render). Absent for the
@@ -1801,6 +1812,9 @@ export interface WorldContent {
   // Freely placed GLB models (editor). Rendered by the placed-asset instancer;
   // records with collideRadius also feed the sim's static colliders.
   placements?: PlacedAsset[];
+  // Invisible blocker walls (editor). Collision-only OBBs in the sim's static
+  // colliders; never rendered. Absent for the built-in world.
+  blockers?: BlockerDef[];
   // 2D biome paint overriding terrain shape (sim) and color (render).
   biomePaint?: BiomePaint;
   // Water surface height for this map; absent = the built-in WATER_LEVEL (-4.5).

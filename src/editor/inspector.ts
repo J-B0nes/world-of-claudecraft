@@ -4,9 +4,16 @@
 // procedural generators, and the 2D layer/frame controls. Owns no state: it
 // reads and writes through the injected deps and re-renders on refresh().
 
-import { MAX_WATER_LEVEL, MIN_WATER_LEVEL } from '../sim/map_doc';
+import {
+  collideRadiusFor,
+  MAX_COLLIDE_RADIUS,
+  MAX_WATER_LEVEL,
+  MIN_COLLIDE_RADIUS,
+  MIN_WATER_LEVEL,
+} from '../sim/map_doc';
 import { formatNumber, t } from '../ui/i18n';
 import { button, checkbox, el, slider } from './dom';
+import { PLACEMENT_SCALE_MAX, PLACEMENT_SCALE_MIN } from './placement_transform_core';
 import type { EditorTool } from './toolbar';
 
 export interface CampSelection {
@@ -24,6 +31,8 @@ export interface PlacementSelection {
   rotY: number;
   scale: number;
   collide: boolean;
+  /** Authored collision-radius override (yards), or null = derived from scale. */
+  collideRadius: number | null;
 }
 
 export interface MarkerSelection {
@@ -73,10 +82,20 @@ export interface InspectorDeps {
   copyRegion(): void;
   pasteBeside(): void;
 
+  getBlockerStats(): { count: number; max: number };
+
   getSelection(): PlacementSelection | null;
-  /** Live update (slider drag); commit=false does not push an undo entry. */
+  /** Live update (slider drag); commit=false does not push an undo entry.
+   *  collideRadius: number sets the override, null clears it (back to auto). */
   updateSelection(
-    change: { x?: number; z?: number; rotY?: number; scale?: number; collide?: boolean },
+    change: {
+      x?: number;
+      z?: number;
+      rotY?: number;
+      scale?: number;
+      collide?: boolean;
+      collideRadius?: number | null;
+    },
     commit: boolean,
   ): void;
   duplicateSelection(): void;
@@ -168,6 +187,9 @@ export class Inspector {
       case 'place':
         this.placePanel();
         this.procgenPanel();
+        break;
+      case 'blocker':
+        this.blockerPanel();
         break;
       case 'camp':
         this.campPanel();
@@ -316,8 +338,8 @@ export class Inspector {
     );
     s.appendChild(
       slider(t('editor.place.scale'), {
-        min: 0.2,
-        max: 5,
+        min: PLACEMENT_SCALE_MIN,
+        max: PLACEMENT_SCALE_MAX,
         step: 0.1,
         value: d.getPlaceScale(),
         onInput: (v) => d.setPlaceScale(v),
@@ -445,6 +467,23 @@ export class Inspector {
   private erasePanel(): void {
     const s = section(t('editor.eraseTool.title'));
     s.appendChild(hint(t('editor.eraseTool.hint')));
+    s.appendChild(hint(t('editor.eraseTool.blockerHint')));
+    this.root.appendChild(s);
+  }
+
+  private blockerPanel(): void {
+    const d = this.deps;
+    const s = section(t('editor.blockerTool.title'));
+    s.appendChild(hint(t('editor.blockerTool.hint')));
+    const stats = d.getBlockerStats();
+    s.appendChild(
+      hint(
+        t('editor.blockerTool.count', {
+          count: formatNumber(stats.count, { useGrouping: false }),
+          max: formatNumber(stats.max, { useGrouping: false }),
+        }),
+      ),
+    );
     this.root.appendChild(s);
   }
 
@@ -479,8 +518,8 @@ export class Inspector {
       );
       s.appendChild(
         slider(t('editor.selection.scale'), {
-          min: 0.2,
-          max: 5,
+          min: PLACEMENT_SCALE_MIN,
+          max: PLACEMENT_SCALE_MAX,
           step: 0.1,
           value: sel.scale,
           onInput: (v) => d.updateSelection({ scale: v }, false),
@@ -489,16 +528,45 @@ export class Inspector {
         }).root,
       );
       s.appendChild(
-        checkbox(t('editor.selection.collide'), sel.collide, (on) =>
-          d.updateSelection({ collide: on }, true),
-        ).root,
+        checkbox(t('editor.selection.collide'), sel.collide, (on) => {
+          d.updateSelection({ collide: on }, true);
+          this.refresh(); // the radius controls appear/disappear with collide
+        }).root,
       );
+      if (sel.collide) {
+        s.appendChild(
+          slider(t('editor.selection.radius'), {
+            min: MIN_COLLIDE_RADIUS,
+            max: MAX_COLLIDE_RADIUS,
+            step: 0.1,
+            value: sel.collideRadius ?? collideRadiusFor(sel.scale),
+            onInput: (v) => d.updateSelection({ collideRadius: v }, false),
+            onChange: (v) => d.updateSelection({ collideRadius: v }, true),
+            format: num1,
+          }).root,
+        );
+        s.appendChild(
+          button(
+            t('editor.selection.radiusAuto'),
+            () => {
+              d.updateSelection({ collideRadius: null }, true);
+              this.refresh();
+            },
+            'small',
+            t('editor.selection.radiusAutoTitle'),
+          ),
+        );
+        s.appendChild(hint(t('editor.selection.radiusHint')));
+      }
       const row = el('div', 'ed-row');
       row.append(
         button(t('editor.selection.duplicate'), () => d.duplicateSelection()),
         button(t('editor.selection.delete'), () => d.deleteSelection(), 'danger'),
       );
       s.appendChild(row);
+      // Teach the direct-manipulation paths (drag-move, wheel, nudge keys).
+      s.appendChild(hint(t('editor.selection.moveHint')));
+      s.appendChild(hint(t('editor.selection.wheelHint')));
       s.appendChild(hint(t('editor.selection.deleteHint')));
     } else {
       const marker = d.getMarkerSelection();

@@ -5032,6 +5032,22 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'editor.tool.spawn': 'スポーン地点',
   'editor.tool.region': '範囲',
   'editor.tool.erase': '消去',
+  'editor.tool.blocker': 'ブロッカー壁',
+  'editor.blockerTool.title': 'ブロッカー壁',
+  'editor.blockerTool.hint':
+    '地面に沿ってドラッグすると、プレイヤーが歩いても跳んでも通れない見えない壁を描けます。離すと設置されます。半ヤード未満の壁は破棄されます。',
+  'editor.blockerTool.count': 'ブロッカー壁：{count} / {max}',
+  'editor.eraseTool.blockerHint':
+    'ブロッカー壁の近くをクリックすると、代わりにその壁を削除します。',
+  'editor.selection.radius': '衝突半径',
+  'editor.selection.radiusAuto': '自動',
+  'editor.selection.radiusAutoTitle': '衝突半径をアセットのスケールに追従するようリセット',
+  'editor.selection.radiusHint':
+    '「自動」はアセットのスケールから衝突半径を導きます。スライダーをドラッグすると上書きできます。',
+  'editor.layers.blocker': 'ブロッカー壁',
+  'editor.status.blockerCapReached':
+    'ブロッカー壁の上限（{max}）に達しました。新しい壁は追加されませんでした。',
+  'editor.help.tool.blocker': 'プレイテストで移動を妨げる見えない壁をドラッグで描きます。',
   'editor.inspector.label': 'ツールオプション',
   'editor.brush.title': 'ブラシ',
   'editor.brush.size': 'ブラシサイズ',
@@ -5263,4 +5279,82 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'editor.a11y.stage': 'マップビューポート',
   'editor.a11y.toasts': 'エディター通知',
   'editor.a11y.dialog': 'エディターダイアログ',
+  'editor.topbar.help': 'ヘルプ',
+  'editor.topbar.helpTitle': 'エディターガイド：ツール、ショートカット、チュートリアル',
+  'editor.selection.moveHint':
+    '移動：3D ビューで地面に沿ってアセットをドラッグするか、矢印キーで微調整します（0.5 ヤード、Shift で 2 ヤード）。',
+  'editor.selection.wheelHint':
+    'Shift+スクロールで回転、Alt+スクロールで拡大縮小、Ctrl+D で複製します。',
+  'editor.help.title': 'エディターヘルプ',
+  'editor.help.toolsTitle': 'ツール',
+  'editor.help.shortcutsTitle': 'キーボードショートカット',
+  'editor.help.mouseTitle': 'マウスとナビゲーション',
+  'editor.help.flowTitle': '保存とプレイテスト',
+  'editor.help.beginTutorial': 'チュートリアルを開始',
+  'editor.help.close': '閉じる',
+  'editor.help.tool.select':
+    '配置済みアセットを選択して移動、回転、拡大縮小します。2D マーカーはクリックで編集できます。',
+  'editor.help.tool.raise': 'ブラシの下の地形を盛り上げます。',
+  'editor.help.tool.lower': 'ブラシの下の地形を下げます。',
+  'editor.help.tool.smooth': '起伏を周囲の平均の高さへならします。',
+  'editor.help.tool.flatten': 'ドラッグ開始地点の高さに地面を平らにします。',
+  'editor.help.tool.paint': 'ゾーンの既定の上にバイオームの地表を塗ります。',
+  'editor.help.tool.water': 'マップ全体の水面の高さを設定します。',
+  'editor.help.tool.place': 'カタログまたはアップロードしたアセットを地面に配置します。',
+  'editor.help.tool.camp': 'プレイテストで出現するモブキャンプを追加、編集します。',
+  'editor.help.tool.spawn': 'プレイテストでプレイヤーが降り立つ場所を設定します。',
+  'editor.help.tool.region': '地形とアセットをボックス選択してコピー、貼り付けします。',
+  'editor.help.tool.erase': 'カーソル下の配置済みアセットや彫刻スタンプを取り除きます。',
+  'editor.help.key.tools':
+    'すべてのツールには 1 文字のショートカットがあり、ツールレールのボタンに表示されます。',
+  'editor.help.key.brush': '[ と ] でブラシサイズを変更、Shift+[ と Shift+] で強さを変更します。',
+  'editor.help.key.undo': 'Ctrl+Z で元に戻す、Ctrl+Y または Ctrl+Shift+Z でやり直します。',
+  'editor.help.key.save': 'Ctrl+S でマップを保存します。',
+  'editor.help.key.duplicate': 'Ctrl+D で選択中のアセットを複製します。',
+  'editor.help.key.nudge':
+    '矢印キーで選択中のアセットを 0.5 ヤード動かします。Shift を押しながらで 2 ヤードです。',
+  'editor.help.key.wheel':
+    'Shift+スクロールで選択中のアセットを回転、Alt+スクロールで拡大縮小します。',
+  'editor.help.key.delete': 'Delete で選択中のアセットまたはキャンプを削除します。',
+  'editor.help.key.escape': 'Esc はまず選択を解除し、その後選択ツールに戻ります。',
+  'editor.help.mouse.orbit3d':
+    '3D ビュー：ドラッグで旋回、スクロールでズーム。中ボタンドラッグまたは Shift+ドラッグでパンします。',
+  'editor.help.mouse.fly3d':
+    '3D でドラッグしている間、WASD でカメラが飛行し、Q/E で高さを変えます。',
+  'editor.help.mouse.move':
+    '選択ツールが有効なとき、配置済みアセットをドラッグして地面の上を移動できます。',
+  'editor.help.mouse.pan2d': '2D ビュー：ドラッグでパン、スクロールでズームします。',
+  'editor.help.flow.save':
+    '保存はこのブラウザーにマップを保存し、サインイン中はサーバーにも保存します。',
+  'editor.help.flow.draft':
+    '未保存の変更がある間、30 秒ごとに下書きが自動保存されます。開くから復元できます。',
+  'editor.help.flow.playtest':
+    'プレイテストは未保存の編集も含めて、このマップで実際のゲームを起動します。',
+  'editor.tutorial.title': 'エディターチュートリアル',
+  'editor.tutorial.back': '戻る',
+  'editor.tutorial.next': '次へ',
+  'editor.tutorial.finish': '完了',
+  'editor.tutorial.skip': 'ツアーをスキップ',
+  'editor.tutorial.counter': 'ステップ {current} / {total}',
+  'editor.tutorial.steps.toolbar.title': 'ツールレール',
+  'editor.tutorial.steps.toolbar.body':
+    'すべての編集ツールがここにあります：彫刻ブラシ、バイオームペイント、水面、アセット配置、キャンプなど。各ツールには単キーのショートカットがあり、ボタンの隅に表示されます。',
+  'editor.tutorial.steps.stage.title': 'ワールド',
+  'editor.tutorial.steps.stage.body':
+    '実際のゲームエンジンで描画されたあなたのマップです。ドラッグで旋回、スクロールでズーム、中ボタンドラッグまたは Shift+ドラッグでパン。ツールを選んで地面をクリックすると編集できます。',
+  'editor.tutorial.steps.inspector.title': 'ツールオプション',
+  'editor.tutorial.steps.inspector.body':
+    '有効なツールのオプションがここに表示されます：ブラシサイズ、バイオームパレット、アセットの拡大縮小、キャンプ設定、そして選択中のもののプロパティです。',
+  'editor.tutorial.steps.viewToggle.title': '3D と 2D',
+  'editor.tutorial.steps.viewToggle.body':
+    '描画された 3D ワールドと記号的な俯瞰 2D マップを切り替えます。2D ビューはゾーンマーカーの移動や広い範囲の確認に最適です。',
+  'editor.tutorial.steps.save.title': '作品を保存',
+  'editor.tutorial.steps.save.body':
+    '保存はマップをこのブラウザーに、サインイン中はサーバーにも保存します。エクスポートで JSON バックアップをダウンロードし、開くから保存済みマップや下書きを呼び出せます。',
+  'editor.tutorial.steps.playtest.title': 'プレイテスト',
+  'editor.tutorial.steps.playtest.body':
+    '現在の編集を含めて、いつでもマップ上で実際のゲームを起動できます。プレイテストのタブを閉じれば戻って編集を続けられます。',
+  'editor.tutorial.steps.help.title': 'ヘルプはここに',
+  'editor.tutorial.steps.help.body':
+    'これで一連の流れは終わりです。完全なツール一覧とすべてのショートカットを見るには、いつでもヘルプを開いてください。このツアーももう一度実行できます。',
 };

@@ -1,7 +1,8 @@
 // Free/orbit editor camera for the 3D map editor. Terrain-agnostic: it owns yaw/
-// pitch/dist around a ground `target`; the viewport grounds the target on the
-// terrain each frame and writes the derived pose to Renderer.editorCam. Hand-rolled
-// (not OrbitControls) so it never fights the Renderer's own camera writes.
+// pitch/dist around a free-floating `target`; the viewport only soft-floors the
+// target above the terrain and writes the derived pose to Renderer.editorCam.
+// Hand-rolled (not OrbitControls) so it never fights the Renderer's own camera
+// writes.
 
 import * as THREE from 'three';
 
@@ -61,6 +62,8 @@ export class EditorCamera {
   }
 
   // WASD/QE fly: forward/right in the ground plane, up vertical. `dt` seconds.
+  // E/Q move the target itself up/down (a true free camera); the wheel keeps
+  // owning the orbit distance.
   fly(forward: number, right: number, up: number, dt: number): void {
     const speed = this.dist * dt * 1.4;
     const fx = Math.sin(this.yaw);
@@ -69,6 +72,6 @@ export class EditorCamera {
     const rz = -Math.sin(this.yaw);
     this.target.x += (forward * fx + right * rx) * speed;
     this.target.z += (forward * fz + right * rz) * speed;
-    if (up !== 0) this.dist = clamp(this.dist * (1 - up * dt * 1.5), this.minDist, this.maxDist);
+    this.target.y += up * speed;
   }
 }

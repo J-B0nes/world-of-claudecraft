@@ -70,6 +70,7 @@ export function customMapFromContent(
   layers: {
     terrainEdits?: CustomMap['terrainEdits'];
     placements?: AssetPlacement[];
+    blockers?: CustomMap['blockers'];
     meta: CustomMapMeta;
     waterLevel?: number;
     playerStart?: { x: number; z: number };
@@ -88,6 +89,7 @@ export function customMapFromContent(
     terrainEdits: deepClone(layers.terrainEdits ?? []),
     placements: deepClone(layers.placements ?? []),
   };
+  if (layers.blockers && layers.blockers.length > 0) map.blockers = deepClone(layers.blockers);
   if (layers.waterLevel !== undefined && layers.waterLevel !== WATER_LEVEL) {
     map.waterLevel = layers.waterLevel;
   }
@@ -113,8 +115,16 @@ export function customMapToWorldContent(map: CustomMap): WorldContent {
     placements: placementsToPlayAssets(map.placements),
     biomePaint: map.biomePaint ? deepClone(map.biomePaint) : undefined,
   };
+  if (map.blockers && map.blockers.length > 0) world.blockers = deepClone(map.blockers);
   if (map.waterLevel !== undefined) world.waterLevel = map.waterLevel;
   return world;
+}
+
+// The collision radius a colliding placement actually gets: the per-placement
+// override when authored, else the scale-derived default. The ONE resolution
+// used by both the render footprint and the playtest colliders.
+export function effectiveCollideRadius(p: Pick<MapPlacement, 'scale' | 'collideRadius'>): number {
+  return p.collideRadius ?? collideRadiusFor(p.scale);
 }
 
 // Resolve editor placements (catalogue id, or an uploaded 'user/<sha256>' id)
@@ -122,8 +132,8 @@ export function customMapToWorldContent(map: CustomMap): WorldContent {
 // slot i always describes placement i, and a placement with an unknown id
 // becomes a null hole instead of being dropped, so the 3D view (which keys
 // meshes by DOCUMENT index) never drifts one slot after an unresolvable id.
-// Colliding placements get a scale-proportional footprint radius (see
-// src/sim/map_doc.ts collideRadiusFor).
+// Colliding placements get their authored collideRadius override, else the
+// scale-proportional default (see effectiveCollideRadius above).
 export function placementsToRenderAssets(
   placements: readonly AssetPlacement[],
 ): (PlacedAsset | null)[] {
@@ -131,7 +141,7 @@ export function placementsToRenderAssets(
     const path = userAssetPath(p.assetId) ?? assetById(p.assetId)?.path;
     if (!path) return null;
     const placed: PlacedAsset = { path, x: p.x, z: p.z, rotY: p.rotY, scale: p.scale };
-    if (p.collide) placed.collideRadius = collideRadiusFor(p.scale);
+    if (p.collide) placed.collideRadius = effectiveCollideRadius(p);
     return placed;
   });
 }

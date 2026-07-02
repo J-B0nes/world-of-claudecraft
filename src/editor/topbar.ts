@@ -20,6 +20,7 @@ export interface TopbarDeps {
   onViewMode(mode: '3d' | '2d'): void;
   onUndo(): void;
   onRedo(): void;
+  onHelp(): void;
 }
 
 export class Topbar {
@@ -142,6 +143,10 @@ export class Topbar {
       t('editor.topbar.uploadAssetTitle'),
     );
     actions.appendChild(this.uploadBtn);
+    // Help: the guide modal + tutorial entry (also the tour's last anchor).
+    actions.appendChild(
+      button(t('editor.topbar.help'), deps.onHelp, 'ed-help', t('editor.topbar.helpTitle')),
+    );
     this.root.appendChild(actions);
 
     // 3D / 2D segmented toggle.

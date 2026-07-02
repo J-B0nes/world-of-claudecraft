@@ -15,8 +15,9 @@ import * as THREE from 'three';
 import { assetsReady } from '../../render/assets/preload';
 import { type SeatRegion, unionRegion } from '../../render/placed_assets';
 import { Renderer } from '../../render/renderer';
+import { FENCE_HALF_DEPTH } from '../../sim/colliders';
 import { Sim } from '../../sim/sim';
-import { DT } from '../../sim/types';
+import { type BlockerDef, DT } from '../../sim/types';
 import { terrainHeight } from '../../sim/world';
 import { type CustomMap, customMapToWorldContent, placementsToRenderAssets } from '../custom_map';
 import { EditorCamera } from './editor_camera';
@@ -41,11 +42,32 @@ export interface Editor3DHooks {
   // A left-click that did not turn into a drag while no edit tool was active
   // (Select mode picking). Client coords + the terrain point under the cursor.
   onTap(clientX: number, clientY: number, world: { x: number; z: number } | null): void;
+  // Direct manipulation of placements in Select mode. When enabled, a left
+  // pointerdown on a pickable placement offers the drag to the app; a true
+  // return claims it (the app selects the placement) and the viewport streams
+  // the terrain point under the cursor until release. A false return falls
+  // back to the normal orbit.
+  placementDragEnabled(): boolean;
+  onPlacementDragStart(index: number): boolean;
+  onPlacementDragMove(world: { x: number; z: number }): void;
+  onPlacementDragEnd(): void;
+  // Shift+wheel (rotate) / Alt+wheel (scale) over the stage while a placement
+  // is selected. True consumes the event; false falls through to camera zoom.
+  onTransformWheel(kind: 'rotate' | 'scale', deltaY: number): boolean;
 }
 
 const SPAWN_RING_COLOR = 0x3fd0ff;
 const SPAWN_RING_SEGMENTS = 40;
+// Editor-only blocker-wall overlay: translucent boxes over the collision
+// segments (the shipped game renders nothing for a blocker). Height is
+// presentational; the wall thickness reuses the sim's fence half-depth so the
+// drawn box matches the collider exactly.
+const BLOCKER_OVERLAY_HEIGHT = 3;
+const BLOCKER_COLOR = 0xe0503c;
 const TAP_SLOP_PX = 5;
+// Hover-cursor pick throttle (Select mode only): the placement raycast is the
+// same cost as a tap pick, so cap it well below the pointer-move rate.
+const HOVER_PICK_MS = 90;
 // Analytic surface pick: march the pointer ray against the sim terrainHeight
 // (render terrain == sim height invariant) instead of raycasting every terrain
 // chunk per pointer-move. Coarse steps find the crossing; bisection refines it.
@@ -89,13 +111,33 @@ export class Editor3DViewport {
     depthWrite: false,
     side: THREE.DoubleSide,
   });
+
+  // Blocker-wall overlay (spawnRing ownership pattern: build/refresh/dispose).
+  private blockersGroup: THREE.Group | null = null;
+  private blockerPreviewMesh: THREE.Mesh | null = null;
+  private hiddenBlockers = false;
+  private readonly blockerMat = new THREE.MeshBasicMaterial({
+    color: BLOCKER_COLOR,
+    transparent: true,
+    opacity: 0.3,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  private readonly blockerPreviewMat = new THREE.MeshBasicMaterial({
+    color: BLOCKER_COLOR,
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
   private readonly picker = new THREE.Raycaster();
   private readonly pickNdc = new THREE.Vector2(); // scratch, per pointer-move
 
   // Interaction state.
-  private dragMode: 'none' | 'orbit' | 'pan' | 'edit' = 'none';
+  private dragMode: 'none' | 'orbit' | 'pan' | 'edit' | 'moveplacement' = 'none';
   private lastPointer = { x: 0, y: 0 };
   private dragDist = 0;
+  private lastHoverPickAt = 0;
   private readonly keys = new Set<string>();
 
   constructor(
@@ -144,6 +186,7 @@ export class Editor3DViewport {
     const start = this.map.playerStart ?? null;
     this.spawnPoint = start ? { x: start.x, z: start.z } : null;
     this.refreshSpawnRing();
+    this.rebuildBlockers();
     // Frame the world hub to start.
     const hub = this.map.content.zones[0]?.hub ?? { x: 0, z: 0 };
     this.cam.target.set(hub.x, terrainHeight(hub.x, hub.z, this.seed), hub.z);
@@ -214,6 +257,11 @@ export class Editor3DViewport {
     return this.dragMode === 'orbit' || this.dragMode === 'pan';
   }
 
+  /** Current orbit yaw (radians); the app's screen-relative nudges read it. */
+  cameraYaw(): number {
+    return this.cam.yaw;
+  }
+
   // ---- live edit application -----------------------------------------------
 
   /** Chunk-local terrain re-mesh over the edited region (cheap; per drag sample). */
@@ -236,6 +284,7 @@ export class Editor3DViewport {
     this.renderer.rebakeTerrainNormals(region);
     this.renderer.placedAssets.reSeat(region);
     this.refreshSpawnRing();
+    this.rebuildBlockers(); // walls sit on terrainHeight: re-seat after a sculpt
   }
 
   /** Full terrain rebuild (map load / clear-all / undo of a large batch). */
@@ -249,6 +298,7 @@ export class Editor3DViewport {
     this.renderer.rebuildWater();
     this.renderer.placedAssets.reSeat();
     this.refreshSpawnRing();
+    this.rebuildBlockers();
   }
 
   /** Re-seat the water surface at the ACTIVE waterLevel(). */
@@ -283,7 +333,7 @@ export class Editor3DViewport {
 
   placementUpdated(
     index: number,
-    change: { x?: number; z?: number; rotY?: number; scale?: number },
+    change: { x?: number; z?: number; rotY?: number; scale?: number; collideRadius?: number },
   ): void {
     if (!this.visible) {
       this.hiddenPlacements = true;
@@ -397,6 +447,65 @@ export class Editor3DViewport {
     this.renderer.scene.add(this.spawnRing);
   }
 
+  // ---- blocker walls (editor-only overlay) -----------------------------------
+
+  /** Rebuild the translucent wall boxes from this.map.blockers (any change:
+   *  add, erase, undo/redo, map load). Disposes the previous geometries. */
+  rebuildBlockers(): void {
+    if (!this.visible) {
+      this.hiddenBlockers = true;
+      return;
+    }
+    if (!this.renderer) return;
+    this.disposeBlockers();
+    const blockers = this.map.blockers ?? [];
+    if (blockers.length === 0) return;
+    const group = new THREE.Group();
+    group.name = 'editor-blockers';
+    for (const b of blockers) group.add(this.blockerMesh(b, this.blockerMat));
+    this.blockersGroup = group;
+    this.renderer.scene.add(group);
+  }
+
+  /** Live drag preview of the wall being drawn (null clears it). */
+  setBlockerPreview(seg: BlockerDef | null): void {
+    if (!this.renderer) return;
+    if (this.blockerPreviewMesh) {
+      this.renderer.scene.remove(this.blockerPreviewMesh);
+      this.blockerPreviewMesh.geometry.dispose();
+      this.blockerPreviewMesh = null;
+    }
+    if (!seg) return;
+    this.blockerPreviewMesh = this.blockerMesh(seg, this.blockerPreviewMat);
+    this.renderer.scene.add(this.blockerPreviewMesh);
+  }
+
+  // One box per segment: fence-thick, seated on the terrain at the midpoint,
+  // yawed with the same convention the sim's OBB collider uses.
+  private blockerMesh(b: BlockerDef, mat: THREE.Material): THREE.Mesh {
+    const dx = b.x2 - b.x1;
+    const dz = b.z2 - b.z1;
+    const len = Math.max(0.1, Math.hypot(dx, dz));
+    const geo = new THREE.BoxGeometry(len, BLOCKER_OVERLAY_HEIGHT, FENCE_HALF_DEPTH * 2);
+    const mesh = new THREE.Mesh(geo, mat);
+    const x = (b.x1 + b.x2) / 2;
+    const z = (b.z1 + b.z2) / 2;
+    mesh.position.set(x, terrainHeight(x, z, this.seed) + BLOCKER_OVERLAY_HEIGHT / 2, z);
+    mesh.rotation.y = Math.atan2(-dz, dx);
+    mesh.renderOrder = 2;
+    return mesh;
+  }
+
+  private disposeBlockers(): void {
+    if (this.blockersGroup) {
+      this.renderer?.scene.remove(this.blockersGroup);
+      for (const child of this.blockersGroup.children) {
+        (child as THREE.Mesh).geometry.dispose();
+      }
+      this.blockersGroup = null;
+    }
+  }
+
   // Swap to a different document (load/new/import) without leaking: rebuild the
   // Sim+Renderer since spawns come from the map (and the GL context is replaced).
   // Bumping the generation first abandons any start() still awaiting assets, so
@@ -465,6 +574,10 @@ export class Editor3DViewport {
       this.hiddenSpawn = false;
       this.refreshSpawnRing();
     }
+    if (this.hiddenBlockers) {
+      this.hiddenBlockers = false;
+      this.rebuildBlockers();
+    }
   }
 
   private clearHiddenWork(): void {
@@ -473,6 +586,7 @@ export class Editor3DViewport {
     this.hiddenWater = false;
     this.hiddenPlacements = false;
     this.hiddenSpawn = false;
+    this.hiddenBlockers = false;
   }
 
   dispose(): void {
@@ -501,6 +615,9 @@ export class Editor3DViewport {
     this.renderer = null;
     this.sim = null;
     this.spawnRing = null;
+    // The scene died with the GL context; just drop the overlay handles.
+    this.blockersGroup = null;
+    this.blockerPreviewMesh = null;
     this.canvas?.remove();
     this.nameplates?.remove();
   }
@@ -515,18 +632,27 @@ export class Editor3DViewport {
     this.lastT = now;
 
     this.applyKeys(dt);
-    // Keep the look target grounded on the (possibly sculpted) terrain.
-    this.cam.target.y = terrainHeight(this.cam.target.x, this.cam.target.z, this.seed);
-    // Teleport the frozen player to the camera target so foliage/critter LOD stays
-    // populated under the cursor (the renderer re-centers dressing on the player).
+    // Free camera: the target floats; only soft-floor it just above the
+    // (possibly sculpted) terrain so it can never dive under the ground.
+    const ground = terrainHeight(this.cam.target.x, this.cam.target.z, this.seed);
+    if (this.cam.target.y < ground + 0.5) this.cam.target.y = ground + 0.5;
+    // Teleport the frozen player (hidden below) to the ground under the camera
+    // target so foliage/critter LOD stays populated under the cursor (the
+    // renderer re-centers dressing on the player).
     const player = this.sim.player;
     if (player) {
       player.pos.x = this.cam.target.x;
       player.pos.z = this.cam.target.z;
-      player.pos.y = this.cam.target.y;
+      player.pos.y = ground;
     }
     this.renderer.editorCam = this.cam.pose();
     this.renderer.sync(1, DT, null);
+    // The player is an LOD anchor, not editable content: keep its model out of
+    // the scene (its view is built lazily by sync, so re-hide every frame).
+    if (player) {
+      const view = this.renderer.views.get(player.id);
+      if (view && view.group.visible) view.group.visible = false;
+    }
     this.raf = requestAnimationFrame(this.loop);
   };
 
@@ -579,6 +705,22 @@ export class Editor3DViewport {
         return;
       }
     }
+    // Select-mode direct move: a left press on a pickable placement starts a
+    // drag-move (the app claims it and selects); empty ground orbits as before.
+    if (
+      ev.button === 0 &&
+      !ev.shiftKey &&
+      !this.hooks.toolActive() &&
+      this.hooks.placementDragEnabled()
+    ) {
+      const idx = this.pickPlacement(ev.clientX, ev.clientY);
+      if (idx !== null && this.hooks.onPlacementDragStart(idx)) {
+        this.dragMode = 'moveplacement';
+        this.canvas.style.cursor = 'grabbing';
+        this.canvas.setPointerCapture(ev.pointerId);
+        return;
+      }
+    }
     // Middle or shift+drag pans; otherwise orbit (left-drag in Select, right-drag always).
     this.dragMode = ev.button === 1 || ev.shiftKey ? 'pan' : 'orbit';
     this.canvas.setPointerCapture(ev.pointerId);
@@ -594,10 +736,27 @@ export class Editor3DViewport {
     else if (this.dragMode === 'edit') {
       const w = this.surfaceAt(ev.clientX, ev.clientY);
       if (w) this.hooks.onEditMove(w, ev);
+    } else if (this.dragMode === 'moveplacement') {
+      const w = this.surfaceAt(ev.clientX, ev.clientY);
+      if (w) this.hooks.onPlacementDragMove(w);
     } else {
       this.hooks.onHover(this.surfaceAt(ev.clientX, ev.clientY));
+      this.updateHoverCursor(ev.clientX, ev.clientY);
     }
   };
+
+  /** Grab-cursor feedback over pickable placements (Select mode, throttled). */
+  private updateHoverCursor(clientX: number, clientY: number): void {
+    if (!this.hooks.placementDragEnabled()) {
+      if (this.canvas.style.cursor) this.canvas.style.cursor = '';
+      return;
+    }
+    const now = performance.now();
+    if (now - this.lastHoverPickAt < HOVER_PICK_MS) return;
+    this.lastHoverPickAt = now;
+    const want = this.pickPlacement(clientX, clientY) !== null ? 'grab' : '';
+    if (this.canvas.style.cursor !== want) this.canvas.style.cursor = want;
+  }
 
   private onPointerLeave = (): void => {
     if (this.dragMode === 'none') this.hooks.onHover(null);
@@ -606,6 +765,10 @@ export class Editor3DViewport {
   private onPointerUp = (ev: PointerEvent): void => {
     if (this.dragMode === 'edit') {
       this.hooks.onEditEnd(ev);
+    } else if (this.dragMode === 'moveplacement') {
+      this.hooks.onPlacementDragEnd();
+      // The pointer is usually still over the moved placement.
+      this.canvas.style.cursor = this.hooks.placementDragEnabled() ? 'grab' : '';
     } else if (this.dragMode === 'orbit' && ev.button === 0 && this.dragDist <= TAP_SLOP_PX) {
       // A left tap with no edit tool armed: a Select-mode pick.
       this.hooks.onTap(ev.clientX, ev.clientY, this.surfaceAt(ev.clientX, ev.clientY));
@@ -615,7 +778,16 @@ export class Editor3DViewport {
 
   private onWheel = (ev: WheelEvent): void => {
     ev.preventDefault();
-    this.cam.zoom(ev.deltaY);
+    // Some platforms report Shift+wheel as a horizontal delta.
+    const delta = ev.deltaY !== 0 ? ev.deltaY : ev.deltaX;
+    if (delta === 0) return;
+    if (
+      (ev.shiftKey || ev.altKey) &&
+      this.hooks.onTransformWheel(ev.altKey ? 'scale' : 'rotate', delta)
+    ) {
+      return;
+    }
+    this.cam.zoom(delta);
   };
 
   private onKeyDown = (ev: KeyboardEvent): void => {

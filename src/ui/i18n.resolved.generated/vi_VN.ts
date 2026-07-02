@@ -1832,7 +1832,9 @@ export const vi_VN: EnTranslations = {
       "offline": "Offline",
       "offlineTitle": "Not signed in: maps save to this browser only. Sign in from the game to save online.",
       "signIn": "Sign in",
-      "signInTitle": "Open the game login screen in a new tab"
+      "signInTitle": "Open the game login screen in a new tab",
+      "help": "Help",
+      "helpTitle": "Editor guide: tools, shortcuts, and the tutorial"
     },
     "tool": {
       "listLabel": "Editor tools",
@@ -1845,6 +1847,7 @@ export const vi_VN: EnTranslations = {
       "paint": "Paint Biome",
       "water": "Water",
       "place": "Place Asset",
+      "blocker": "Blocker Wall",
       "camp": "Camp",
       "spawn": "Spawn Point",
       "region": "Region",
@@ -1894,6 +1897,11 @@ export const vi_VN: EnTranslations = {
       "chosen": "Placing: {name}",
       "none": "Pick an asset from the browser below, then click the ground to place it."
     },
+    "blockerTool": {
+      "title": "Blocker Wall",
+      "hint": "Drag along the ground to draw an invisible wall players cannot walk or jump through. Release to place it; a wall shorter than half a yard is discarded.",
+      "count": "Blocker walls: {count} / {max}"
+    },
     "camp": {
       "title": "Mob Camp",
       "mob": "Mob",
@@ -1925,7 +1933,8 @@ export const vi_VN: EnTranslations = {
     },
     "eraseTool": {
       "title": "Erase",
-      "hint": "Click a placed asset to remove it, or click sculpted ground to remove the newest stamp under the cursor."
+      "hint": "Click a placed asset to remove it, or click sculpted ground to remove the newest stamp under the cursor.",
+      "blockerHint": "Clicking near a blocker wall removes that wall instead."
     },
     "selection": {
       "title": "Selection",
@@ -1936,10 +1945,16 @@ export const vi_VN: EnTranslations = {
       "rotation": "Rotation",
       "scale": "Scale",
       "collide": "Blocks movement",
+      "radius": "Collision radius",
+      "radiusAuto": "Auto",
+      "radiusAutoTitle": "Reset the collision radius to follow the asset scale",
+      "radiusHint": "Auto derives the collision radius from the asset scale; drag the slider to override it.",
       "footprints": "Show collision footprints",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "deleteHint": "Delete removes the selection; Ctrl+Z restores it."
+      "deleteHint": "Delete removes the selection; Ctrl+Z restores it.",
+      "moveHint": "Move: drag the asset along the ground in the 3D view, or nudge it with the arrow keys (0.5 yd, Shift for 2 yd).",
+      "wheelHint": "Shift+scroll rotates the asset, Alt+scroll scales it, Ctrl+D duplicates it."
     },
     "marker": {
       "title": "Marker",
@@ -1954,7 +1969,8 @@ export const vi_VN: EnTranslations = {
       "poi": "Points of interest",
       "camp": "Camps",
       "npc": "NPCs",
-      "object": "Objects"
+      "object": "Objects",
+      "blocker": "Blocker walls"
     },
     "frame": {
       "title": "Frame",
@@ -2054,7 +2070,8 @@ export const vi_VN: EnTranslations = {
       "draftRestored": "Restored the autosaved draft.",
       "autosaveFailed": "Autosave failed (browser storage is full or blocked). Export the map to keep a backup.",
       "terrainCapReached": "Terrain edit limit reached ({max}). Extra sculpt stamps were not added.",
-      "placementCapReached": "Placement limit reached ({max}). Extra assets were not added."
+      "placementCapReached": "Placement limit reached ({max}). Extra assets were not added.",
+      "blockerCapReached": "Blocker wall limit reached ({max}). The new wall was not added."
     },
     "confirm": {
       "ok": "OK",
@@ -2095,6 +2112,90 @@ export const vi_VN: EnTranslations = {
     "hints": {
       "nav3d": "Drag to orbit, scroll to zoom. While dragging, WASD flies and Q/E changes height.",
       "nav2d": "Drag to pan, scroll to zoom."
+    },
+    "help": {
+      "title": "Editor Help",
+      "toolsTitle": "Tools",
+      "shortcutsTitle": "Keyboard shortcuts",
+      "mouseTitle": "Mouse and navigation",
+      "flowTitle": "Saving and playtesting",
+      "beginTutorial": "Begin tutorial",
+      "close": "Close",
+      "tool": {
+        "select": "Pick placed assets to move, rotate, and scale them; click a 2D marker to edit it.",
+        "raise": "Raise the terrain under the brush.",
+        "lower": "Lower the terrain under the brush.",
+        "smooth": "Smooth bumps toward the local average height.",
+        "flatten": "Level the ground to the height where the drag starts.",
+        "paint": "Paint biome ground cover over the zone default.",
+        "water": "Set the map-wide water level.",
+        "place": "Place catalog or uploaded assets on the ground.",
+        "blocker": "Drag invisible walls that block movement in playtest.",
+        "camp": "Add and edit mob camps that spawn in playtest.",
+        "spawn": "Set where playtest drops the player.",
+        "region": "Box-select terrain and assets to copy and paste.",
+        "erase": "Remove placed assets or sculpt stamps under the cursor."
+      },
+      "key": {
+        "tools": "Every tool has a single-letter shortcut, shown on its button in the tool rail.",
+        "brush": "[ and ] resize the brush; Shift+[ and Shift+] change its strength.",
+        "undo": "Ctrl+Z undoes the last change; Ctrl+Y or Ctrl+Shift+Z redoes it.",
+        "save": "Ctrl+S saves the map.",
+        "duplicate": "Ctrl+D duplicates the selected asset.",
+        "nudge": "Arrow keys nudge the selected asset by 0.5 yards; hold Shift for 2 yards.",
+        "wheel": "Shift+scroll rotates the selected asset; Alt+scroll scales it.",
+        "delete": "Delete removes the selected asset or camp.",
+        "escape": "Esc clears the selection first, then returns to the Select tool."
+      },
+      "mouse": {
+        "orbit3d": "3D view: drag to orbit and scroll to zoom; middle-drag or Shift+drag pans.",
+        "fly3d": "While holding a drag in 3D, WASD flies the camera and Q/E changes height.",
+        "move": "With Select active, drag a placed asset to move it across the ground.",
+        "pan2d": "2D view: drag to pan and scroll to zoom."
+      },
+      "flow": {
+        "save": "Save keeps the map in this browser, and on the server when you are signed in.",
+        "draft": "While you have unsaved changes, a draft is autosaved every 30 seconds; Open restores it.",
+        "playtest": "Playtest boots the real game on this map, including your unsaved edits."
+      }
+    },
+    "tutorial": {
+      "title": "Editor tutorial",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish",
+      "skip": "Skip tour",
+      "counter": "Step {current} of {total}",
+      "steps": {
+        "toolbar": {
+          "title": "The tool rail",
+          "body": "Every editing tool lives here: sculpting brushes, biome paint, water, asset placement, camps, and more. Each one has a single-key shortcut, shown in its corner."
+        },
+        "stage": {
+          "title": "The world",
+          "body": "This is your map, rendered with the real game engine. Drag to orbit, scroll to zoom, and middle-drag or Shift+drag to pan. Click the ground with a tool to edit."
+        },
+        "inspector": {
+          "title": "Tool options",
+          "body": "The options for the active tool appear here: brush size, the biome palette, asset scale, camp settings, and the properties of whatever you select."
+        },
+        "viewToggle": {
+          "title": "3D and 2D",
+          "body": "Switch between the rendered 3D world and the symbolic overhead 2D map. The 2D view is best for moving zone markers and framing large areas."
+        },
+        "save": {
+          "title": "Save your work",
+          "body": "Save stores the map in this browser, and on the server when you are signed in. Export downloads a JSON backup, and Open brings back saved maps and drafts."
+        },
+        "playtest": {
+          "title": "Playtest",
+          "body": "Boot the real game on your map at any time, with your current edits included. Close the playtest tab to come back and keep editing."
+        },
+        "help": {
+          "title": "Help is here",
+          "body": "That is the whole loop. Open Help any time for the full tool list and every shortcut, or to run this tour again."
+        }
+      }
     },
     "a11y": {
       "stage": "Map viewport",

@@ -225,6 +225,30 @@ function staticWorldColliders(seed: number): Collider[] {
       camGhost: true,
     });
   }
+
+  // Editor-authored invisible blocker walls (custom maps only): one fence-width
+  // OBB per segment, exactly the PROPS.fences math above, but NOT isFence (a
+  // jump never clears a blocker) and camGhost (there is no mesh, so the chase
+  // cam must never pull in for an invisible wall). Purely static data: no rng
+  // draws, no tick-order impact, and no render mesh in playtest.
+  for (const b of content.blockers ?? []) {
+    const dx = b.x2 - b.x1,
+      dz = b.z2 - b.z1;
+    const len = Math.hypot(dx, dz);
+    if (len < 1e-6) continue;
+    const x = (b.x1 + b.x2) / 2,
+      z = (b.z1 + b.z2) / 2;
+    out.push({
+      type: 'obb',
+      x,
+      z,
+      hw: len / 2 + FENCE_END_PAD,
+      hd: FENCE_HALF_DEPTH,
+      rot: Math.atan2(-dz, dx),
+      cameraTopY: topY(seed, x, z, BLOCKER_WALL_HEIGHT),
+      camGhost: true,
+    });
+  }
   return out;
 }
 
@@ -252,8 +276,13 @@ const INTERIOR_COLLIDERS: Record<string, Collider[]> = {
 
 const GRID_CELL = 16;
 const MAX_BODY_RADIUS = 0.8; // largest mover we resolve for
-const FENCE_HALF_DEPTH = 0.35;
+/** Fence/blocker wall half-thickness (yards); the editor's blocker overlay
+ * reuses it so the drawn wall matches the collider exactly. */
+export const FENCE_HALF_DEPTH = 0.35;
 const FENCE_END_PAD = 0.35;
+/** Blocker walls are full-height (a jump never clears one, unlike a fence);
+ * this is only the camera-occlusion top for the record. */
+const BLOCKER_WALL_HEIGHT = 6;
 /** Rail height of a fence (yards), used for camera occlusion. A jump passes
  * through fences while airborne regardless (see sim `Entity.jumping`). */
 const FENCE_RAIL_HEIGHT = 2.8;

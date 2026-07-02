@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAP_DOC_VERSION,
+  MAX_BLOCKER_LENGTH,
+  MAX_BLOCKERS,
   MAX_CAMP_COUNT,
   MAX_CAMP_RADIUS,
+  MAX_COLLIDE_RADIUS,
   MAX_OBJECT_POSITIONS,
   MAX_STR_ARRAY,
   MAX_WORLD_COORD,
   MAX_ZONE_LAKES,
   MAX_ZONE_POIS,
+  MIN_COLLIDE_RADIUS,
   sanitizeMapDoc,
 } from '../src/sim/map_doc';
 
@@ -334,6 +338,144 @@ describe('non-finite numbers are rejected everywhere', () => {
   });
 });
 
+describe('placement collideRadius override', () => {
+  function withPlacement(extra: Record<string, unknown>): Record<string, unknown> {
+    return {
+      ...rawDoc(),
+      placements: [
+        { assetId: 'props/well', x: 1, z: 2, rotY: 0, scale: 1, collide: true, ...extra },
+      ],
+    };
+  }
+
+  it('clamps the override into [MIN, MAX]', () => {
+    expect(
+      sanitizeMapDoc(withPlacement({ collideRadius: 0.01 }))?.placements[0].collideRadius,
+    ).toBe(MIN_COLLIDE_RADIUS);
+    expect(sanitizeMapDoc(withPlacement({ collideRadius: 500 }))?.placements[0].collideRadius).toBe(
+      MAX_COLLIDE_RADIUS,
+    );
+    expect(sanitizeMapDoc(withPlacement({ collideRadius: 4.5 }))?.placements[0].collideRadius).toBe(
+      4.5,
+    );
+  });
+
+  it('drops a non-finite or non-numeric override, keeping the placement', () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 'wide', null]) {
+      const doc = sanitizeMapDoc(withPlacement({ collideRadius: bad }));
+      expect(doc?.placements).toHaveLength(1);
+      expect(doc?.placements[0].collideRadius).toBeUndefined();
+    }
+  });
+
+  it('is kept even while collide is false (survives a re-toggle)', () => {
+    const doc = sanitizeMapDoc(withPlacement({ collide: false, collideRadius: 3 }));
+    expect(doc?.placements[0].collide).toBe(false);
+    expect(doc?.placements[0].collideRadius).toBe(3);
+  });
+
+  it('absence round-trips as absence', () => {
+    const first = sanitizeMapDoc(withPlacement({}));
+    expect(first?.placements[0].collideRadius).toBeUndefined();
+    const second = sanitizeMapDoc(JSON.parse(JSON.stringify(first)));
+    expect(second).toEqual(first);
+  });
+});
+
+describe('blockers', () => {
+  it('caps the list at MAX_BLOCKERS', () => {
+    const doc = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: Array.from({ length: 500 }, (_, i) => ({ x1: i, z1: 0, x2: i, z2: 10 })),
+    });
+    expect(doc?.blockers).toHaveLength(MAX_BLOCKERS);
+  });
+
+  it('drops entries with non-finite or missing coordinates', () => {
+    const doc = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: [
+        null,
+        'nope',
+        { x1: 0, z1: 0, x2: 10 }, // missing z2
+        { x1: Number.NaN, z1: 0, x2: 10, z2: 0 },
+        { x1: 0, z1: Number.POSITIVE_INFINITY, x2: 10, z2: 0 },
+        { x1: 0, z1: 0, x2: 10, z2: 0 }, // kept
+      ],
+    });
+    expect(doc?.blockers).toEqual([{ x1: 0, z1: 0, x2: 10, z2: 0 }]);
+  });
+
+  it('drops segments shorter than half a yard', () => {
+    const doc = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: [
+        { x1: 0, z1: 0, x2: 0.3, z2: 0 },
+        { x1: 5, z1: 5, x2: 5, z2: 5 },
+      ],
+    });
+    expect(doc?.blockers).toBeUndefined();
+  });
+
+  it('clamps coordinates to the world bound and truncates over-long segments', () => {
+    const doc = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: [{ x1: -1e8, z1: 3, x2: 1e8, z2: 3 }],
+    });
+    const b = doc?.blockers?.[0];
+    expect(b?.x1).toBe(-MAX_WORLD_COORD);
+    expect(Math.hypot((b?.x2 ?? 0) - (b?.x1 ?? 0), (b?.z2 ?? 0) - (b?.z1 ?? 0))).toBeCloseTo(
+      MAX_BLOCKER_LENGTH,
+      6,
+    );
+  });
+
+  it('the truncated result is round-trip stable', () => {
+    const first = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: [{ x1: 0, z1: 0, x2: 300, z2: 400 }],
+    });
+    const second = sanitizeMapDoc(JSON.parse(JSON.stringify(first)));
+    expect(second).toEqual(first);
+  });
+
+  it('truncation is idempotent for non-Pythagorean segments (hypot ~1 ulp over the cap)', () => {
+    // {0,0,300,300} truncates to length 200.00000000000003 without the epsilon
+    // tolerance, so a second sanitize pass would re-truncate and re-dirty the
+    // stored bytes.
+    const first = sanitizeMapDoc({
+      ...rawDoc(),
+      blockers: [{ x1: 0, z1: 0, x2: 300, z2: 300 }],
+    });
+    const second = sanitizeMapDoc(JSON.parse(JSON.stringify(first)));
+    expect(second).toEqual(first);
+  });
+});
+
+describe('v1 documents (neither collideRadius nor blockers)', () => {
+  it('parses unchanged: no blockers field, no radius override', () => {
+    const v1 = {
+      version: 1,
+      meta: { id: 'legacy', name: 'Old Map', seed: 7 },
+      content: { zones: [ZONE], camps: [], npcs: {}, objects: [], roads: [] },
+      terrainEdits: [{ x: 0, z: 0, radius: 10, delta: 3, falloff: 'smooth' }],
+      placements: [{ assetId: 'props/well', x: 1, z: 2, rotY: 0, scale: 1, collide: true }],
+    };
+    const doc = sanitizeMapDoc(v1);
+    expect(doc).not.toBeNull();
+    expect(doc?.blockers).toBeUndefined();
+    expect(doc?.placements[0]).toEqual({
+      assetId: 'props/well',
+      x: 1,
+      z: 2,
+      rotY: 0,
+      scale: 1,
+      collide: true,
+    });
+    expect('collideRadius' in (doc?.placements[0] ?? {})).toBe(false);
+  });
+});
+
 describe('version', () => {
   it('is always the sanitizer version, never round-tripped from the input', () => {
     expect(sanitizeMapDoc(rawDoc())?.version).toBe(MAP_DOC_VERSION);
@@ -372,7 +514,14 @@ describe('round trip (the server never stores an unloadable byte)', () => {
     });
     Object.assign(nasty, {
       terrainEdits: [{ x: 0, z: 0, radius: 10, delta: 3, falloff: 'smooth', mode: 'level' }],
-      placements: [{ assetId: 'props/well', x: 1, z: 2, rotY: 0.5, scale: 2, collide: true }],
+      placements: [
+        { assetId: 'props/well', x: 1, z: 2, rotY: 0.5, scale: 2, collide: true },
+        { assetId: 'props/rock', x: 4, z: 5, rotY: 0, scale: 1, collide: true, collideRadius: 6 },
+      ],
+      blockers: [
+        { x1: 0, z1: 0, x2: 20, z2: 0 },
+        { x1: 0, z1: 0, x2: 0.1, z2: 0 }, // too short: dropped
+      ],
       waterLevel: 3,
       playerStart: { x: 3, z: 4 },
       biomePaint: { cell: 20, cols: 2, rows: 2, originX: 0, originZ: 0, ids: [0, 1, 2, 255] },

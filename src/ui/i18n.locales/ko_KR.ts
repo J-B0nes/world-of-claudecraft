@@ -5040,6 +5040,21 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'editor.tool.spawn': '시작 지점',
   'editor.tool.region': '영역',
   'editor.tool.erase': '지우기',
+  'editor.tool.blocker': '차단벽',
+  'editor.blockerTool.title': '차단벽',
+  'editor.blockerTool.hint':
+    '지면을 따라 드래그하면 플레이어가 걸어서도 뛰어서도 통과할 수 없는 보이지 않는 벽을 그립니다. 놓으면 설치됩니다. 반 야드보다 짧은 벽은 버려집니다.',
+  'editor.blockerTool.count': '차단벽: {count} / {max}',
+  'editor.eraseTool.blockerHint': '차단벽 근처를 클릭하면 대신 그 벽이 제거됩니다.',
+  'editor.selection.radius': '충돌 반경',
+  'editor.selection.radiusAuto': '자동',
+  'editor.selection.radiusAutoTitle': '충돌 반경을 에셋 크기에 따라가도록 재설정',
+  'editor.selection.radiusHint':
+    "'자동'은 에셋 크기에서 충돌 반경을 계산합니다. 슬라이더를 드래그하면 덮어쓸 수 있습니다.",
+  'editor.layers.blocker': '차단벽',
+  'editor.status.blockerCapReached':
+    '차단벽 한도({max})에 도달했습니다. 새 벽이 추가되지 않았습니다.',
+  'editor.help.tool.blocker': '플레이테스트에서 이동을 막는 보이지 않는 벽을 드래그로 그립니다.',
   'editor.inspector.label': '도구 옵션',
   'editor.brush.title': '브러시',
   'editor.brush.size': '브러시 크기',
@@ -5261,4 +5276,78 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'editor.a11y.stage': '맵 뷰포트',
   'editor.a11y.toasts': '편집기 알림',
   'editor.a11y.dialog': '편집기 대화 상자',
+  'editor.topbar.help': '도움말',
+  'editor.topbar.helpTitle': '편집기 가이드: 도구, 단축키, 튜토리얼',
+  'editor.selection.moveHint':
+    '이동: 3D 뷰에서 애셋을 지면을 따라 드래그하거나 방향키로 미세 이동합니다(0.5야드, Shift를 누르면 2야드).',
+  'editor.selection.wheelHint': 'Shift+스크롤은 회전, Alt+스크롤은 크기 조절, Ctrl+D는 복제합니다.',
+  'editor.help.title': '편집기 도움말',
+  'editor.help.toolsTitle': '도구',
+  'editor.help.shortcutsTitle': '키보드 단축키',
+  'editor.help.mouseTitle': '마우스와 탐색',
+  'editor.help.flowTitle': '저장과 플레이테스트',
+  'editor.help.beginTutorial': '튜토리얼 시작',
+  'editor.help.close': '닫기',
+  'editor.help.tool.select':
+    '배치된 애셋을 선택해 이동, 회전, 크기 조절합니다. 2D 마커는 클릭해서 편집합니다.',
+  'editor.help.tool.raise': '브러시 아래의 지형을 올립니다.',
+  'editor.help.tool.lower': '브러시 아래의 지형을 낮춥니다.',
+  'editor.help.tool.smooth': '굴곡을 주변 평균 높이로 부드럽게 만듭니다.',
+  'editor.help.tool.flatten': '드래그를 시작한 지점의 높이로 지면을 평탄하게 만듭니다.',
+  'editor.help.tool.paint': '지역 기본값 위에 생태 지표를 칠합니다.',
+  'editor.help.tool.water': '맵 전체의 수면 높이를 설정합니다.',
+  'editor.help.tool.place': '카탈로그 또는 업로드한 애셋을 지면에 배치합니다.',
+  'editor.help.tool.camp': '플레이테스트에서 생성되는 몹 캠프를 추가하고 편집합니다.',
+  'editor.help.tool.spawn': '플레이테스트에서 플레이어가 시작할 위치를 설정합니다.',
+  'editor.help.tool.region': '지형과 애셋을 상자로 선택해 복사하고 붙여넣습니다.',
+  'editor.help.tool.erase': '커서 아래의 배치된 애셋이나 조각 스탬프를 제거합니다.',
+  'editor.help.key.tools': '모든 도구에는 한 글자 단축키가 있으며 도구 모음 버튼에 표시됩니다.',
+  'editor.help.key.brush': '[ 와 ] 로 브러시 크기를, Shift+[ 와 Shift+] 로 강도를 조절합니다.',
+  'editor.help.key.undo': 'Ctrl+Z는 실행 취소, Ctrl+Y 또는 Ctrl+Shift+Z는 다시 실행합니다.',
+  'editor.help.key.save': 'Ctrl+S로 맵을 저장합니다.',
+  'editor.help.key.duplicate': 'Ctrl+D로 선택한 애셋을 복제합니다.',
+  'editor.help.key.nudge': '방향키는 선택한 애셋을 0.5야드 이동합니다. Shift를 누르면 2야드입니다.',
+  'editor.help.key.wheel': 'Shift+스크롤은 선택한 애셋을 회전하고 Alt+스크롤은 크기를 조절합니다.',
+  'editor.help.key.delete': 'Delete는 선택한 애셋이나 캠프를 제거합니다.',
+  'editor.help.key.escape': 'Esc는 먼저 선택을 해제한 다음 선택 도구로 돌아갑니다.',
+  'editor.help.mouse.orbit3d':
+    '3D 뷰: 드래그로 회전, 스크롤로 확대/축소. 가운데 버튼 드래그 또는 Shift+드래그로 이동합니다.',
+  'editor.help.mouse.fly3d':
+    '3D에서 드래그를 유지하는 동안 WASD로 카메라를 비행시키고 Q/E로 높이를 바꿉니다.',
+  'editor.help.mouse.move':
+    '선택 도구가 켜져 있으면 배치된 애셋을 드래그해 지면 위에서 옮길 수 있습니다.',
+  'editor.help.mouse.pan2d': '2D 뷰: 드래그로 이동, 스크롤로 확대/축소합니다.',
+  'editor.help.flow.save':
+    '저장은 이 브라우저에 맵을 저장하고, 로그인 상태라면 서버에도 저장합니다.',
+  'editor.help.flow.draft':
+    '저장하지 않은 변경이 있는 동안 30초마다 초안이 자동 저장됩니다. 열기에서 복원할 수 있습니다.',
+  'editor.help.flow.playtest':
+    '플레이테스트는 저장하지 않은 편집까지 포함해 이 맵에서 실제 게임을 실행합니다.',
+  'editor.tutorial.title': '편집기 튜토리얼',
+  'editor.tutorial.back': '뒤로',
+  'editor.tutorial.next': '다음',
+  'editor.tutorial.finish': '완료',
+  'editor.tutorial.skip': '투어 건너뛰기',
+  'editor.tutorial.counter': '{total}단계 중 {current}단계',
+  'editor.tutorial.steps.toolbar.title': '도구 모음',
+  'editor.tutorial.steps.toolbar.body':
+    '모든 편집 도구가 여기에 있습니다: 조각 브러시, 생태 페인트, 수면, 애셋 배치, 캠프 등. 각 도구에는 버튼 모서리에 표시되는 단일 키 단축키가 있습니다.',
+  'editor.tutorial.steps.stage.title': '월드',
+  'editor.tutorial.steps.stage.body':
+    '실제 게임 엔진으로 렌더링된 당신의 맵입니다. 드래그로 회전, 스크롤로 확대/축소, 가운데 버튼 드래그 또는 Shift+드래그로 이동합니다. 도구를 들고 지면을 클릭하면 편집됩니다.',
+  'editor.tutorial.steps.inspector.title': '도구 옵션',
+  'editor.tutorial.steps.inspector.body':
+    '활성 도구의 옵션이 여기에 표시됩니다: 브러시 크기, 생태 팔레트, 애셋 크기, 캠프 설정, 그리고 선택한 대상의 속성입니다.',
+  'editor.tutorial.steps.viewToggle.title': '3D와 2D',
+  'editor.tutorial.steps.viewToggle.body':
+    '렌더링된 3D 월드와 기호화된 상공 2D 맵 사이를 전환합니다. 2D 뷰는 지역 마커를 옮기고 넓은 영역을 보는 데 가장 좋습니다.',
+  'editor.tutorial.steps.save.title': '작업 저장',
+  'editor.tutorial.steps.save.body':
+    '저장은 맵을 이 브라우저에, 로그인 상태라면 서버에도 저장합니다. 내보내기는 JSON 백업을 내려받고, 열기는 저장된 맵과 초안을 다시 불러옵니다.',
+  'editor.tutorial.steps.playtest.title': '플레이테스트',
+  'editor.tutorial.steps.playtest.body':
+    '현재 편집을 포함해 언제든지 맵에서 실제 게임을 실행할 수 있습니다. 플레이테스트 탭을 닫으면 돌아와서 계속 편집할 수 있습니다.',
+  'editor.tutorial.steps.help.title': '도움말이 있는 곳',
+  'editor.tutorial.steps.help.body':
+    '이것이 전체 흐름입니다. 전체 도구 목록과 모든 단축키를 보려면 언제든 도움말을 열고, 이 투어를 다시 실행할 수도 있습니다.',
 };

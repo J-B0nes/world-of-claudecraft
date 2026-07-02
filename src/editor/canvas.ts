@@ -2,7 +2,7 @@
 // roads and draws them; it owns no editing state. All hit-testing and math live in
 // view.ts, so this stays a pure render pass over the current model.
 
-import type { BiomePaint, HeightStamp } from '../sim/types';
+import type { BiomePaint, BlockerDef, HeightStamp } from '../sim/types';
 import type { AssetPlacement } from './custom_map';
 import type { EditorEntity, EntityKind } from './model';
 import type { Camera, Vec2, Viewport } from './view';
@@ -46,6 +46,8 @@ export interface DrawState {
   terrainEdits: readonly HeightStamp[];
   placements: readonly AssetPlacement[];
   biomePaint: BiomePaint | null;
+  blockers: readonly BlockerDef[];
+  blockerPreview: BlockerDef | null;
   region: { minX: number; minZ: number; maxX: number; maxZ: number } | null;
   brush: BrushCursor | null;
   spawn: Vec2 | null;
@@ -81,6 +83,7 @@ export function draw(
       drawAreaSelection(ctx, cam, vp, e);
     }
   }
+  drawBlockers(ctx, cam, vp, state.blockers, state.blockerPreview);
   drawPlacements(ctx, cam, vp, state.placements);
   if (state.region) {
     const a = cam.worldToScreen({ x: state.region.minX, z: state.region.minZ }, vp);
@@ -133,6 +136,40 @@ function drawBiomePaint(
       ctx.fillStyle = BIOME_PAINT_COLOR[id];
       ctx.fillRect(s.sx, s.sy, sizePx + 1, sizePx + 1);
     }
+  }
+  ctx.restore();
+}
+
+// Invisible blocker walls: a red segment per wall (dashed while previewing a
+// drag), following the roads stroke pattern above.
+function drawBlockers(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  vp: Viewport,
+  blockers: readonly BlockerDef[],
+  preview: BlockerDef | null,
+): void {
+  if (blockers.length === 0 && !preview) return;
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(224,80,60,0.9)';
+  for (const b of blockers) {
+    const a = cam.worldToScreen({ x: b.x1, z: b.z1 }, vp);
+    const c = cam.worldToScreen({ x: b.x2, z: b.z2 }, vp);
+    ctx.beginPath();
+    ctx.moveTo(a.sx, a.sy);
+    ctx.lineTo(c.sx, c.sy);
+    ctx.stroke();
+  }
+  if (preview) {
+    ctx.setLineDash([6, 4]);
+    const a = cam.worldToScreen({ x: preview.x1, z: preview.z1 }, vp);
+    const c = cam.worldToScreen({ x: preview.x2, z: preview.z2 }, vp);
+    ctx.beginPath();
+    ctx.moveTo(a.sx, a.sy);
+    ctx.lineTo(c.sx, c.sy);
+    ctx.stroke();
   }
   ctx.restore();
 }

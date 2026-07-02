@@ -819,10 +819,108 @@ input[type="range"] {
   padding: 10px;
 }
 
+/* ---- help modal + tutorial tour ------------------------------------------------------ */
+
+.ed-help-modal {
+  width: min(640px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+}
+
+.ed-help-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ed-muted);
+  margin: 14px 0 6px;
+  border-bottom: 1px solid var(--ed-line);
+  padding-bottom: 4px;
+}
+
+.ed-help-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ed-help-list li {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--ed-text);
+}
+
+.ed-help-term {
+  color: var(--ed-accent);
+  font-weight: 600;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.ed-help-modal .ed-modal-actions {
+  margin-top: 14px;
+}
+
+/* Highlight ring: the huge shadow dims everything around the anchored region;
+   pointer-events stay off so the UI underneath remains usable. */
+.ed-tour-ring {
+  position: fixed;
+  z-index: 70;
+  border: 2px solid var(--ed-accent);
+  border-radius: 8px;
+  box-shadow: 0 0 0 200vmax rgba(4, 6, 10, 0.55);
+  pointer-events: none;
+  transition:
+    left 160ms ease,
+    top 160ms ease,
+    width 160ms ease,
+    height 160ms ease;
+}
+
+.ed-tour-card {
+  position: fixed;
+  z-index: 71;
+  width: min(340px, 88vw);
+  background: var(--ed-panel);
+  border: 1px solid var(--ed-line-strong);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+.ed-tour-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--ed-accent);
+}
+
+.ed-tour-body {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ed-text);
+}
+
+.ed-tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ed-tour-count {
+  color: var(--ed-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ed-tour-spacer {
+  flex: 1;
+}
+
 /* ---- reduced motion ----------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
   .ed-toast,
+  .ed-tour-ring,
+  .ed-tour-card,
   button {
     transition: none;
   }

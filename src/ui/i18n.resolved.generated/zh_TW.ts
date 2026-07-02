@@ -1832,7 +1832,9 @@ export const zh_TW: EnTranslations = {
       "offline": "離線",
       "offlineTitle": "未登入：地圖只會儲存到此瀏覽器。請在遊戲中登入以線上儲存。",
       "signIn": "登入",
-      "signInTitle": "在新分頁開啟遊戲登入畫面"
+      "signInTitle": "在新分頁開啟遊戲登入畫面",
+      "help": "說明",
+      "helpTitle": "編輯器指南：工具、快捷鍵與教學"
     },
     "tool": {
       "listLabel": "編輯器工具",
@@ -1845,6 +1847,7 @@ export const zh_TW: EnTranslations = {
       "paint": "繪製生態",
       "water": "水面",
       "place": "放置資源",
+      "blocker": "空氣牆",
       "camp": "營地",
       "spawn": "出生點",
       "region": "區域",
@@ -1894,6 +1897,11 @@ export const zh_TW: EnTranslations = {
       "chosen": "正在放置：{name}",
       "none": "先在下方瀏覽器中選擇一個資源，然後點擊地面放置。"
     },
+    "blockerTool": {
+      "title": "空氣牆",
+      "hint": "沿地面拖曳即可繪製一堵玩家無法穿過或跳過的隱形牆。放開即放置；短於半碼的牆會被捨棄。",
+      "count": "空氣牆：{count} / {max}"
+    },
     "camp": {
       "title": "怪物營地",
       "mob": "怪物",
@@ -1925,7 +1933,8 @@ export const zh_TW: EnTranslations = {
     },
     "eraseTool": {
       "title": "擦除",
-      "hint": "點擊已放置的資源可移除它；點擊雕塑過的地面可移除游標下最新的印記。"
+      "hint": "點擊已放置的資源可移除它；點擊雕塑過的地面可移除游標下最新的印記。",
+      "blockerHint": "在空氣牆附近點擊會改為移除該牆。"
     },
     "selection": {
       "title": "選取項目",
@@ -1936,10 +1945,16 @@ export const zh_TW: EnTranslations = {
       "rotation": "旋轉",
       "scale": "縮放",
       "collide": "阻擋移動",
+      "radius": "碰撞半徑",
+      "radiusAuto": "自動",
+      "radiusAutoTitle": "將碰撞半徑重設為跟隨資源縮放",
+      "radiusHint": "「自動」依資源縮放推導碰撞半徑；拖曳滑桿可覆寫它。",
       "footprints": "顯示碰撞範圍",
       "duplicate": "再複製一份",
       "delete": "刪除",
-      "deleteHint": "刪除會移除選取項目；Ctrl+Z 可復原。"
+      "deleteHint": "刪除會移除選取項目；Ctrl+Z 可復原。",
+      "moveHint": "移動：在 3D 檢視中沿地面拖曳資產，或用方向鍵微調（0.5 碼，按住 Shift 為 2 碼）。",
+      "wheelHint": "Shift+滾輪旋轉資產，Alt+滾輪縮放資產，Ctrl+D 複製資產。"
     },
     "marker": {
       "title": "標記",
@@ -1954,7 +1969,8 @@ export const zh_TW: EnTranslations = {
       "poi": "興趣點",
       "camp": "營地",
       "npc": "NPC",
-      "object": "物件"
+      "object": "物件",
+      "blocker": "空氣牆"
     },
     "frame": {
       "title": "取景",
@@ -2054,7 +2070,8 @@ export const zh_TW: EnTranslations = {
       "draftRestored": "已還原自動儲存的草稿。",
       "autosaveFailed": "自動儲存失敗（瀏覽器儲存空間已滿或被封鎖）。請匯出地圖以保留備份。",
       "terrainCapReached": "已達到地形編輯上限（{max}）。多餘的雕刻印記未被加入。",
-      "placementCapReached": "已達到放置上限（{max}）。多餘的資源未被加入。"
+      "placementCapReached": "已達到放置上限（{max}）。多餘的資源未被加入。",
+      "blockerCapReached": "已達到空氣牆上限（{max}）。新牆未被加入。"
     },
     "confirm": {
       "ok": "確定",
@@ -2095,6 +2112,90 @@ export const zh_TW: EnTranslations = {
     "hints": {
       "nav3d": "拖曳旋轉視角，滾輪縮放。按住拖曳時，WASD 飛行，Q/E 調整高度。",
       "nav2d": "拖曳平移，滾輪縮放。"
+    },
+    "help": {
+      "title": "編輯器說明",
+      "toolsTitle": "工具",
+      "shortcutsTitle": "鍵盤快捷鍵",
+      "mouseTitle": "滑鼠與導覽",
+      "flowTitle": "儲存與試玩",
+      "beginTutorial": "開始教學",
+      "close": "關閉",
+      "tool": {
+        "select": "選取已放置的資產以移動、旋轉和縮放；點擊 2D 標記可進行編輯。",
+        "raise": "抬高筆刷下方的地形。",
+        "lower": "降低筆刷下方的地形。",
+        "smooth": "將起伏平滑到局部平均高度。",
+        "flatten": "將地面整平到拖曳起點的高度。",
+        "paint": "在區域預設地表上塗刷生態域。",
+        "water": "設定全圖水面高度。",
+        "place": "將目錄資產或上傳的資產放置到地面上。",
+        "blocker": "拖曳繪製在試玩中阻擋移動的隱形牆。",
+        "camp": "新增並編輯在試玩中重生的怪物營地。",
+        "spawn": "設定試玩時玩家的落點。",
+        "region": "框選地形和資產以複製貼上。",
+        "erase": "移除游標下已放置的資產或雕刻印記。"
+      },
+      "key": {
+        "tools": "每個工具都有一個單字母快捷鍵，顯示在工具列按鈕上。",
+        "brush": "[ 和 ] 調整筆刷大小；Shift+[ 和 Shift+] 調整強度。",
+        "undo": "Ctrl+Z 復原上一步；Ctrl+Y 或 Ctrl+Shift+Z 重做。",
+        "save": "Ctrl+S 儲存地圖。",
+        "duplicate": "Ctrl+D 複製選取的資產。",
+        "nudge": "方向鍵將選取的資產微調 0.5 碼；按住 Shift 為 2 碼。",
+        "wheel": "Shift+滾輪旋轉選取的資產；Alt+滾輪縮放。",
+        "delete": "Delete 移除選取的資產或營地。",
+        "escape": "Esc 先清除選取，然後返回選取工具。"
+      },
+      "mouse": {
+        "orbit3d": "3D 檢視：拖曳環繞視角，滾輪縮放；中鍵拖曳或 Shift+拖曳平移。",
+        "fly3d": "在 3D 中按住拖曳時，WASD 飛行移動鏡頭，Q/E 調整高度。",
+        "move": "選取工具啟用時，拖曳已放置的資產可在地面上移動它。",
+        "pan2d": "2D 檢視：拖曳平移，滾輪縮放。"
+      },
+      "flow": {
+        "save": "儲存會把地圖存到此瀏覽器；登入後也會存到伺服器。",
+        "draft": "有未儲存的變更時，每 30 秒自動儲存一份草稿；用開啟可以還原。",
+        "playtest": "試玩會在此地圖上啟動真實遊戲，包含你未儲存的編輯。"
+      }
+    },
+    "tutorial": {
+      "title": "編輯器教學",
+      "back": "上一步",
+      "next": "下一步",
+      "finish": "完成",
+      "skip": "跳過導覽",
+      "counter": "第 {current} 步，共 {total} 步",
+      "steps": {
+        "toolbar": {
+          "title": "工具列",
+          "body": "所有編輯工具都在這裡：雕刻筆刷、生態域塗刷、水面、資產放置、營地等。每個工具都有單鍵快捷鍵，顯示在按鈕角落。"
+        },
+        "stage": {
+          "title": "世界檢視",
+          "body": "這是用真實遊戲引擎算繪的你的地圖。拖曳環繞視角，滾輪縮放，中鍵拖曳或 Shift+拖曳平移。用工具點擊地面即可編輯。"
+        },
+        "inspector": {
+          "title": "工具選項",
+          "body": "目前工具的選項顯示在這裡：筆刷大小、生態域調色盤、資產縮放、營地設定，以及所選物件的屬性。"
+        },
+        "viewToggle": {
+          "title": "3D 與 2D",
+          "body": "在算繪的 3D 世界和符號化的俯視 2D 地圖之間切換。2D 檢視最適合移動區域標記和查看大範圍。"
+        },
+        "save": {
+          "title": "儲存你的作品",
+          "body": "儲存會把地圖存到此瀏覽器，登入後也會存到伺服器。匯出可下載 JSON 備份，開啟可找回已儲存的地圖和草稿。"
+        },
+        "playtest": {
+          "title": "試玩",
+          "body": "隨時在你的地圖上啟動真實遊戲，包含目前的編輯。關閉試玩分頁即可回來繼續編輯。"
+        },
+        "help": {
+          "title": "說明就在這裡",
+          "body": "這就是完整流程。隨時開啟說明查看完整工具清單和所有快捷鍵，或再次執行本導覽。"
+        }
+      }
     },
     "a11y": {
       "stage": "地圖檢視區",

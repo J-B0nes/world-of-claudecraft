@@ -6,9 +6,17 @@
 // field is validated, clamped, and def-filled; an unsalvageable input returns
 // null. The wire/storage shape is CustomMap v1 plus the optional v2 fields
 // (waterLevel, playerStart, meta.description/parentId, stamp mode, placement
-// collide), so every v1 document parses unchanged.
+// collide + collideRadius, blockers), so every v1 document parses unchanged.
 
-import type { BiomePaint, CampDef, GroundObjectDef, HeightStamp, NpcDef, ZoneDef } from './types';
+import type {
+  BiomePaint,
+  BlockerDef,
+  CampDef,
+  GroundObjectDef,
+  HeightStamp,
+  NpcDef,
+  ZoneDef,
+} from './types';
 import { BIOME_BY_ID } from './world';
 
 export const MAP_DOC_VERSION = 2;
@@ -44,6 +52,18 @@ export const MAX_WORLD_COORD = 10_000;
 export const MAX_ZONE_LAKES = 32;
 export const MAX_ZONE_POIS = 64;
 export const MAX_STR_ARRAY = 64;
+// Per-placement collision-radius override bounds (yards). The derived
+// collideRadiusFor(scale) tops out at 8; the override may go wider for big
+// walk-around set pieces but stays bounded so a hostile document cannot wall
+// off the world with one placement.
+export const MIN_COLLIDE_RADIUS = 0.1;
+export const MAX_COLLIDE_RADIUS = 30;
+// Invisible blocker walls: entry cap and per-segment length bounds (yards).
+// Each blocker becomes one static OBB collider at playtest, so both the count
+// and the segment length are hard-clamped here.
+export const MAX_BLOCKERS = 128;
+export const MIN_BLOCKER_LENGTH = 0.5;
+export const MAX_BLOCKER_LENGTH = 200;
 
 // A free-form GLB placement from the asset catalogue. `collide` opts the
 // placement into a sim circle collider at playtest (see collideRadiusFor).
@@ -54,6 +74,11 @@ export interface MapPlacement {
   rotY: number; // radians
   scale: number;
   collide: boolean;
+  // Optional collision-radius override in yards (clamped to
+  // [MIN_COLLIDE_RADIUS, MAX_COLLIDE_RADIUS]); absent = derive from scale via
+  // collideRadiusFor. Only meaningful while collide is true, but stored either
+  // way so toggling collide off and back on keeps the authored radius.
+  collideRadius?: number;
 }
 
 export interface MapDocMeta {
@@ -84,6 +109,8 @@ export interface MapDoc {
   terrainEdits: HeightStamp[];
   placements: MapPlacement[];
   biomePaint?: BiomePaint;
+  // v2: invisible blocker walls (collision-only segments); absent = none.
+  blockers?: BlockerDef[];
   // v2: map-wide water surface height; absent = the built-in WATER_LEVEL.
   waterLevel?: number;
   // v2: where playtest drops the player; absent = the built-in start.
@@ -159,7 +186,7 @@ function sanitizePlacement(v: unknown): MapPlacement | null {
   if (typeof p.assetId !== 'string' || p.assetId.length > 128) return null;
   if (typeof p.x !== 'number' || typeof p.z !== 'number') return null;
   if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) return null;
-  return {
+  const out: MapPlacement = {
     assetId: p.assetId,
     x: p.x,
     z: p.z,
@@ -167,6 +194,48 @@ function sanitizePlacement(v: unknown): MapPlacement | null {
     scale: clamp(num(p.scale, 1) || 1, 0.05, 40),
     collide: p.collide === true,
   };
+  // Optional radius override: accepted only finite, always clamped. Kept even
+  // while collide is false (cheap, and it survives a collide re-toggle).
+  if (finiteNum(p.collideRadius)) {
+    out.collideRadius = clamp(p.collideRadius, MIN_COLLIDE_RADIUS, MAX_COLLIDE_RADIUS);
+  }
+  return out;
+}
+
+/**
+ * Clamp a blocker segment's length: null when shorter than MIN_BLOCKER_LENGTH
+ * (too small to author deliberately), far end truncated toward the anchor when
+ * longer than MAX_BLOCKER_LENGTH. Shared by the sanitizer and the editor's
+ * live drag preview so what you see while drawing is what gets stored.
+ */
+export function clampBlockerSegment(
+  x1: number,
+  z1: number,
+  x2: number,
+  z2: number,
+): BlockerDef | null {
+  const dx = x2 - x1;
+  const dz = z2 - z1;
+  const len = Math.hypot(dx, dz);
+  if (len < MIN_BLOCKER_LENGTH) return null;
+  // The epsilon keeps the truncation idempotent: hypot rounding can leave a
+  // truncated segment ~1 ulp over the cap, and re-sanitizing the stored bytes
+  // must not produce a new byte-different (spuriously dirty) document.
+  if (len > MAX_BLOCKER_LENGTH + 1e-6) {
+    const k = MAX_BLOCKER_LENGTH / len;
+    return { x1, z1, x2: x1 + dx * k, z2: z1 + dz * k };
+  }
+  return { x1, z1, x2, z2 };
+}
+
+// A blocker wall must have four finite coordinates; they are clamped into the
+// world bound BEFORE the length rules, so a truncated far end (interpolated
+// between two in-bound points) stays in bounds too.
+function sanitizeBlocker(v: unknown): BlockerDef | null {
+  if (!v || typeof v !== 'object') return null;
+  const b = v as Record<string, unknown>;
+  if (!finiteNum(b.x1) || !finiteNum(b.z1) || !finiteNum(b.x2) || !finiteNum(b.z2)) return null;
+  return clampBlockerSegment(coord(b.x1), coord(b.z1), coord(b.x2), coord(b.z2));
 }
 
 // Validate a biome paint grid: ids length must match cols*rows and cell must be
@@ -415,6 +484,11 @@ export function sanitizeMapDoc(raw: unknown): MapDoc | null {
       .filter((p): p is MapPlacement => p !== null),
     biomePaint: sanitizeBiomePaint(o.biomePaint),
   };
+  const blockers = arr(o.blockers)
+    .slice(0, MAX_BLOCKERS)
+    .map(sanitizeBlocker)
+    .filter((b): b is BlockerDef => b !== null);
+  if (blockers.length > 0) doc.blockers = blockers;
   if (finiteNum(o.waterLevel)) {
     doc.waterLevel = clamp(o.waterLevel, MIN_WATER_LEVEL, MAX_WATER_LEVEL);
   }
