@@ -1406,6 +1406,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'abilityUi.cast.demonHeal': '악마 치유',
   'questUi.tracker.title': '퀘스트',
   'questUi.tracker.complete': '완료',
+  'questUi.tracker.showOnMap': '{name} 지도에 표시',
+  'questUi.tracker.hideFromMap': '{name} 지도에서 숨기기',
   'questUi.log.title': '퀘스트 기록',
   'questUi.log.close': '퀘스트 기록 닫기',
   'questUi.log.summary': '진행 중: {active} / 완료: {completed}',

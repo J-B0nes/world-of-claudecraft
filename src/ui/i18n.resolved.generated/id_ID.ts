@@ -3471,7 +3471,9 @@ export const id_ID: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Misi",
-      "complete": "Selesai"
+      "complete": "Selesai",
+      "showOnMap": "Show {name} on the map",
+      "hideFromMap": "Hide {name} from the map"
     },
     "log": {
       "title": "Catatan Misi",

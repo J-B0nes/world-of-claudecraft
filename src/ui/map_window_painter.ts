@@ -22,6 +22,7 @@ import type { ZoneDef } from '../sim/data';
 import { type Decoration, generateDecorations } from '../sim/world';
 import type { IWorld } from '../world_api';
 import { dungeonDisplayName, zoneDisplayName, zonePoiLabel } from './entity_i18n';
+import { formatNumber } from './i18n';
 import {
   buildOverworldMapModel,
   type MapDetail,
@@ -52,6 +53,13 @@ const PLAYER_ARROW_BASE_Y = 6;
 const BUILDING_LINE_WIDTH = 1;
 // Active-quest objective area (the translucent quest-POI blob) ring width.
 const QUEST_AREA_LINE_WIDTH = 2;
+// The numbered quest badge on each area (the WoW-style gold circle whose
+// number matches the map's quest side list, in acceptance order).
+const QUEST_BADGE_RADIUS = 9;
+const QUEST_BADGE_FONT = 'bold 12px Georgia';
+const QUEST_BADGE_GAP = 2; // px between badges when one area serves two quests
+const QUEST_BADGE_LINE_WIDTH = 1.5;
+const QUEST_BADGE_TEXT_LIFT = 4; // px above the arc center to optically center digits
 
 // The `--color-map-*` design tokens the painter resolves once per redraw. These
 // mirror the colors the inline overworld-map render used verbatim.
@@ -63,6 +71,8 @@ const MAP_COLOR_TOKENS = {
   npcQuest: '--color-map-npc-quest',
   questAreaFill: '--color-map-quest-area-fill',
   questAreaStroke: '--color-map-quest-area-stroke',
+  questBadgeFill: '--color-map-quest-badge-fill',
+  questBadgeText: '--color-map-quest-badge-text',
   player: '--color-map-player',
   allyFriend: '--color-map-ally-friend',
   allyGuild: '--color-map-ally-guild',
@@ -94,6 +104,8 @@ export interface MapPaintOptions {
   canvasSize: number;
   zoom: number;
   center: { x: number; z: number } | null;
+  /** Quest ids untracked from the map side list (their areas are not plotted). */
+  untrackedQuestIds?: ReadonlySet<string>;
 }
 
 /** What the painter reports back so Hud can update its drag state + cursor,
@@ -140,6 +152,7 @@ export class MapWindowPainter {
       center: opts.center,
       canvasSize: opts.canvasSize,
       decorations: this.decorations,
+      untrackedQuestIds: opts.untrackedQuestIds,
     });
     const colors = this.resolveColors();
     this.draw(ctx, model, opts.bg, opts.canvasSize, colors);
@@ -181,6 +194,30 @@ export class MapWindowPainter {
         ctx.arc(area.mx, area.my, area.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+      }
+      // Numbered badges: one gold circle per quest served by the area, its
+      // number matching the quest side list (acceptance order). Centered on
+      // the blob, laid out side by side when one camp serves several quests.
+      ctx.font = QUEST_BADGE_FONT;
+      ctx.textAlign = 'center';
+      ctx.lineWidth = QUEST_BADGE_LINE_WIDTH;
+      ctx.strokeStyle = colors.outline;
+      for (const area of model.questAreas) {
+        const n = area.numbers.length;
+        for (let i = 0; i < n; i++) {
+          const bx = area.mx + (i - (n - 1) / 2) * (QUEST_BADGE_RADIUS * 2 + QUEST_BADGE_GAP);
+          ctx.fillStyle = colors.questBadgeFill;
+          ctx.beginPath();
+          ctx.arc(bx, area.my, QUEST_BADGE_RADIUS, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = colors.questBadgeText;
+          ctx.fillText(
+            formatNumber(area.numbers[i], { maximumFractionDigits: 0 }),
+            bx,
+            area.my + QUEST_BADGE_TEXT_LIFT,
+          );
+        }
       }
     }
 

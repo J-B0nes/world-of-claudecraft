@@ -3471,7 +3471,9 @@ export const es_ES: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Misiones",
-      "complete": "Completada"
+      "complete": "Completada",
+      "showOnMap": "Mostrar {name} en el mapa",
+      "hideFromMap": "Ocultar {name} del mapa"
     },
     "log": {
       "title": "Diario de misiones",

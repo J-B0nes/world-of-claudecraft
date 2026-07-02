@@ -3471,7 +3471,9 @@ export const zh_TW: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "任務",
-      "complete": "完成"
+      "complete": "完成",
+      "showOnMap": "在地圖上顯示{name}",
+      "hideFromMap": "在地圖上隱藏{name}"
     },
     "log": {
       "title": "任務日誌",

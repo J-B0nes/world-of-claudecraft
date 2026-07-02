@@ -3471,7 +3471,9 @@ export const ru_RU: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Задания",
-      "complete": "Готово"
+      "complete": "Готово",
+      "showOnMap": "Показать {name} на карте",
+      "hideFromMap": "Скрыть {name} с карты"
     },
     "log": {
       "title": "Журнал заданий",

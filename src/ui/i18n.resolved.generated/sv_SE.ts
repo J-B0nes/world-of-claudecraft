@@ -3471,7 +3471,9 @@ export const sv_SE: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Uppdrag",
-      "complete": "Slutfört"
+      "complete": "Slutfört",
+      "showOnMap": "Show {name} on the map",
+      "hideFromMap": "Hide {name} from the map"
     },
     "log": {
       "title": "Uppdragslogg",

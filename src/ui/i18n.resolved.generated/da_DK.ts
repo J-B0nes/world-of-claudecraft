@@ -3471,7 +3471,9 @@ export const da_DK: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Quests",
-      "complete": "Klar"
+      "complete": "Klar",
+      "showOnMap": "Show {name} on the map",
+      "hideFromMap": "Hide {name} from the map"
     },
     "log": {
       "title": "Quest-log",

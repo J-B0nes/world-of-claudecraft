@@ -3471,7 +3471,9 @@ export const en_XA: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "[Ɋúéšţš]",
-      "complete": "[Çóɱþļéţé]"
+      "complete": "[Çóɱþļéţé]",
+      "showOnMap": "[Šĥóŵ {name} óñ ţĥé ɱáþ]",
+      "hideFromMap": "[Ĥíðé {name} ƒŕóɱ ţĥé ɱáþ]"
     },
     "log": {
       "title": "[Ɋúéšţ Ļóĝ]",

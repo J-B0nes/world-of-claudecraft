@@ -190,6 +190,7 @@ import {
 import {
   formatMoney as formatLocalizedMoney,
   formatNumber,
+  getLanguage,
   moneyParts,
   type SupportedLanguage,
   type TranslationKey,
@@ -210,6 +211,11 @@ import { lootSettingsView } from './loot_settings_view';
 import { renderLootSettingsWindow } from './loot_settings_window';
 import { lowHealthVignette } from './low_health';
 import { lowResourceView } from './low_resource';
+import {
+  mapQuestListView,
+  parseUntrackedQuests,
+  serializeUntrackedQuests,
+} from './map_quest_list_view';
 import { type MapRegion, mapCanvasHeight, paintTerrainRows } from './map_terrain';
 import { MapWindowPainter } from './map_window_painter';
 import {
@@ -943,6 +949,11 @@ export class Hud {
   // The quest-objective areas of the last overworld map paint (canvas-pixel
   // space), kept for the hover tooltip's hit-test. Empty in delve mode.
   private mapQuestAreas: MapQuestAreaMarker[] = [];
+  // The map's quest side list: quests the player untracked (their blue areas
+  // are hidden), lazily loaded per character; and the render-skip signature so
+  // the 4Hz map cadence rebuilds the list DOM only when it actually changed.
+  private mapUntrackedQuests: Set<string> | null = null;
+  private mapQuestListSig = '';
   private windowDrag: {
     el: HTMLElement;
     pointerId: number;
@@ -1318,6 +1329,22 @@ export class Hud {
     });
     mapCanvas.addEventListener('pointerleave', hideMapAreaTip);
     mapCanvas.addEventListener('pointerdown', hideMapAreaTip);
+    // The map's quest side list: one delegated click listener toggles a
+    // quest's tracking (whether its blue areas + numbered badge paint).
+    $('#map-quests').addEventListener('click', (ev) => {
+      const btn = (ev.target as HTMLElement).closest<HTMLElement>('.mapq-track');
+      const questId = btn?.dataset.quest;
+      if (!questId) return;
+      const untracked = this.untrackedQuestSet();
+      if (untracked.has(questId)) untracked.delete(questId);
+      else untracked.add(questId);
+      try {
+        localStorage.setItem(this.mapUntrackedKey(), serializeUntrackedQuests(untracked));
+      } catch {
+        /* storage unavailable */
+      }
+      this.updateMapWindow();
+    });
     $('#mm-bag').addEventListener('click', () => this.toggleBags());
     // Drop an equipped piece dragged out of the paperdoll onto the bags window.
     const bagsEl = $('#bags');
@@ -5858,6 +5885,7 @@ export class Hud {
       // The delve painter owns the full world-map schematic render (the area
       // title is drawn on-canvas, since the world map has no DOM zone label).
       this.mapQuestAreas = [];
+      this.hideMapQuestList();
       this.delvePainter.paintWorldMapDelve(ctx, this.sim, S);
       const run = this.sim.delveRun;
       const area = run ? delveDisplayName(run.delveId) : '';
@@ -5878,11 +5906,76 @@ export class Hud {
       canvasSize: S,
       zoom: this.mapZoom,
       center: this.mapCenter,
+      untrackedQuestIds: this.untrackedQuestSet(),
     });
     this.mapView = result.view;
     this.mapQuestAreas = result.questAreas;
     if (!this.mapDrag) canvas.style.cursor = result.cursor;
+    this.renderMapQuestList();
     this.setText(summaryEl, t('hud.core.mapSummary', { zone: zoneDisplayName(zone.id) }));
+  }
+
+  // ---- the map's numbered quest side list (track/untrack the blue areas) ----
+
+  private mapUntrackedKey(): string {
+    return `woc_map_untracked_${this.sim.cfg.playerClass}_${this.sim.player.name}`;
+  }
+
+  private untrackedQuestSet(): Set<string> {
+    if (!this.mapUntrackedQuests) {
+      let raw: string | null = null;
+      try {
+        raw = localStorage.getItem(this.mapUntrackedKey());
+      } catch {
+        /* storage unavailable */
+      }
+      this.mapUntrackedQuests = parseUntrackedQuests(raw);
+    }
+    return this.mapUntrackedQuests;
+  }
+
+  private hideMapQuestList(): void {
+    if (this.mapQuestListSig === '') return;
+    this.mapQuestListSig = '';
+    const el = $('#map-quests');
+    el.classList.remove('on');
+    el.replaceChildren();
+  }
+
+  // Rebuild the side list only when its content actually changed (the map
+  // repaints on the 4Hz cadence; the signature keeps the DOM quiet between
+  // real changes and covers a language switch via the current language salt).
+  private renderMapQuestList(): void {
+    const entries = mapQuestListView(this.sim.questLog, this.untrackedQuestSet());
+    if (entries.length === 0) {
+      this.hideMapQuestList();
+      return;
+    }
+    const sig = `${getLanguage()}|${entries
+      .map((e) => `${e.questId}:${e.number}:${e.ready ? 1 : 0}:${e.tracked ? 1 : 0}`)
+      .join('|')}`;
+    if (sig === this.mapQuestListSig) return;
+    this.mapQuestListSig = sig;
+    const check = String.fromCharCode(0x2713); // escaped so no literal glyph in source
+    let html = `<div class="mapq-head">${esc(t('questUi.tracker.title'))}</div>`;
+    for (const e of entries) {
+      const title = questTitle(e.questId);
+      const label = t(e.tracked ? 'questUi.tracker.hideFromMap' : 'questUi.tracker.showOnMap', {
+        name: title,
+      });
+      html +=
+        `<div class="mapq-row${e.tracked ? '' : ' untracked'}">` +
+        `<span class="mapq-num">${esc(this.questNumber(e.number))}</span>` +
+        `<span class="mapq-title">${esc(title)}</span>` +
+        (e.ready
+          ? `<span class="mapq-complete">${esc(t('questUi.tracker.complete'))}</span>`
+          : '') +
+        `<button type="button" class="mapq-track" data-quest="${esc(e.questId)}" aria-pressed="${e.tracked}" title="${esc(label)}" aria-label="${esc(label)}">${e.tracked ? check : ''}</button>` +
+        `</div>`;
+    }
+    const el = $('#map-quests');
+    el.innerHTML = html;
+    el.classList.add('on');
   }
 
   // Tooltip body for hovered quest-objective areas on the world map: per quest,

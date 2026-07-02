@@ -488,7 +488,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "pl_PL": [
     "desktop.crash.body",
@@ -543,7 +545,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "id_ID": [
     "desktop.crash.body",
@@ -598,7 +602,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "tr_TR": [
     "desktop.crash.body",
@@ -653,7 +659,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "sv_SE": [
     "desktop.crash.body",
@@ -708,7 +716,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "vi_VN": [
     "desktop.crash.body",
@@ -763,7 +773,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ],
   "da_DK": [
     "desktop.crash.body",
@@ -818,6 +830,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.nativeUpdate.bodyWithVersion",
     "hudChrome.nativeUpdate.notNow",
     "hudChrome.nativeUpdate.title",
-    "hudChrome.nativeUpdate.update"
+    "hudChrome.nativeUpdate.update",
+    "questUi.tracker.hideFromMap",
+    "questUi.tracker.showOnMap"
   ]
 };

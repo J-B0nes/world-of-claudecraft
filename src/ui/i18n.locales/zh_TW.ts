@@ -1350,6 +1350,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'abilityUi.cast.demonHeal': '惡魔治療',
   'questUi.tracker.title': '任務',
   'questUi.tracker.complete': '完成',
+  'questUi.tracker.showOnMap': '在地圖上顯示{name}',
+  'questUi.tracker.hideFromMap': '在地圖上隱藏{name}',
   'questUi.log.title': '任務日誌',
   'questUi.log.close': '關閉任務日誌',
   'questUi.log.summary': '進行中：{active} / 已完成：{completed}',

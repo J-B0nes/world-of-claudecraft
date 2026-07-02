@@ -3471,7 +3471,9 @@ export const ja_JP: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "クエスト",
-      "complete": "完了"
+      "complete": "完了",
+      "showOnMap": "{name}をマップに表示",
+      "hideFromMap": "{name}をマップから隠す"
     },
     "log": {
       "title": "クエストログ",

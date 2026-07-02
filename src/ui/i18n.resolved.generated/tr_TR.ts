@@ -3471,7 +3471,9 @@ export const tr_TR: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Görevler",
-      "complete": "Tamamlandı"
+      "complete": "Tamamlandı",
+      "showOnMap": "Show {name} on the map",
+      "hideFromMap": "Hide {name} from the map"
     },
     "log": {
       "title": "Görev Kaydı",

@@ -29,6 +29,7 @@ import { isQuestTurnInNpc } from '../sim/types';
 import type { Decoration } from '../sim/world';
 import type { FriendInfo, IWorld } from '../world_api';
 import { overworldDungeonPortals } from './map_dungeon_portals';
+import { questNumbersByLog } from './map_quest_list_view';
 
 // World-map zoom band: 1 = the whole committed zone, up to MAP_MAX_ZOOM.
 export const MAP_MAX_ZOOM = 6;
@@ -109,6 +110,10 @@ export interface MapQuestAreaMarker {
   my: number;
   radius: number;
   objectives: QuestObjectiveRef[];
+  /** Distinct 1-based quest numbers (acceptance order) of the objectives
+   *  here, ascending: the painter draws one numbered badge per entry, and the
+   *  same numbers head the map's quest side list. */
+  numbers: number[];
 }
 
 /** The distinct objectives under a canvas point, across every quest area that
@@ -214,6 +219,9 @@ export interface OverworldMapInput {
   canvasSize: number;
   /** The cached whole-world decorations (generated once from the seed). */
   decorations: readonly Decoration[];
+  /** Quest ids the player untracked from the map side list: their objective
+   *  areas are not plotted. Omitted = every quest tracked. */
+  untrackedQuestIds?: ReadonlySet<string>;
 }
 
 /** Which world-map surface this world renders. Delve when the player stands in a
@@ -233,6 +241,7 @@ export function mapWindowMode(world: IWorld): MapWindowMode {
  */
 export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapModel {
   const { world, zone, zoom, center, canvasSize: S, decorations } = input;
+  const untracked = input.untrackedQuestIds;
   const p = world.player;
 
   // The full committed-zone region: the whole world in X, the zone band in Z.
@@ -286,11 +295,24 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
   // derived from the static content tables (camps / ground objects / NPCs), so
   // the online interest radius never hides a far-away camp. Filtered to the
   // committed zone's band like every other marker; radius scales with the zoom.
+  // Untracked quests (hidden from the map side list) drop out here, and each
+  // surviving area carries its quests' acceptance-order numbers for the badges.
+  const questNumbers = questNumbersByLog(world.questLog);
   const questAreas: MapQuestAreaMarker[] = [];
   for (const area of questObjectiveAreas(world.questLog)) {
     if (area.center.z < zone.zMin || area.center.z >= zone.zMax) continue;
+    const objectives = untracked
+      ? area.objectives.filter((ref) => !untracked.has(ref.questId))
+      : area.objectives;
+    if (objectives.length === 0) continue;
+    const numbers: number[] = [];
+    for (const ref of objectives) {
+      const n = questNumbers.get(ref.questId);
+      if (n !== undefined && !numbers.includes(n)) numbers.push(n);
+    }
+    numbers.sort((a, b) => a - b);
     const { mx, my } = toMap(area.center.x, area.center.z);
-    questAreas.push({ mx, my, radius: (area.radius / spanX) * S, objectives: area.objectives });
+    questAreas.push({ mx, my, radius: (area.radius / spanX) * S, objectives, numbers });
   }
 
   const portals: MapPortalMarker[] = overworldDungeonPortals(

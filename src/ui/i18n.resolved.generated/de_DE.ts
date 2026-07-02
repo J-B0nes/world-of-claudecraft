@@ -3471,7 +3471,9 @@ export const de_DE: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Quests",
-      "complete": "Abgeschlossen"
+      "complete": "Abgeschlossen",
+      "showOnMap": "{name} auf der Karte anzeigen",
+      "hideFromMap": "{name} auf der Karte ausblenden"
     },
     "log": {
       "title": "Questlog",

@@ -3471,7 +3471,9 @@ export const ko_KR: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "퀘스트",
-      "complete": "완료"
+      "complete": "완료",
+      "showOnMap": "{name} 지도에 표시",
+      "hideFromMap": "{name} 지도에서 숨기기"
     },
     "log": {
       "title": "퀘스트 기록",

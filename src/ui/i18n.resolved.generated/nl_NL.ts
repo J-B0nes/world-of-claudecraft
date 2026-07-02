@@ -3471,7 +3471,9 @@ export const nl_NL: EnTranslations = {
   "questUi": {
     "tracker": {
       "title": "Quests",
-      "complete": "Voltooid"
+      "complete": "Voltooid",
+      "showOnMap": "Show {name} on the map",
+      "hideFromMap": "Hide {name} from the map"
     },
     "log": {
       "title": "Questlogboek",
