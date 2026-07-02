@@ -2599,6 +2599,24 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
     '{playerName}，这座山的冬天不会敲门，它会踹门。8张山脊潜猎者皮能为守墙披风加衬。',
   'entities.quests.q_stalker_pelts.completion': '厚得像我的手臂。今年守望者不会冻死。',
   'entities.quests.q_stalker_pelts.objectives.0.label': '山脊潜猎者毛皮',
+  'entities.quests.q_stalkers_return.title': '潜猎者去而复返',
+  'entities.quests.q_stalkers_return.text':
+    '死了十二只，山脊上的潜猎者反而更多了，{playerName}。野兽不会因为饥饿就往城墙上扑，是高脊上有什么东西把它们赶下来。查清之前，猎杀不停。再杀十四只。',
+  'entities.quests.q_stalkers_return.completion':
+    '又杀了十四只，可巡逻队每天清晨仍数得出新的足迹。我的斥候从高脊回来时脸白得像雪线：她说那些爪印有盾牌那么大，还有潜猎者绝不会留下的猎杀痕迹。在上面游荡的绝不是普通的山猫。',
+  'entities.quests.q_stalkers_return.objectives.0.label': '击败山脊潜猎者',
+  'entities.quests.q_stalker_cloaks.title': '守望者的披风',
+  'entities.quests.q_stalker_cloaks.text':
+    '八张皮给军官的披风加了衬，现在墙上每个士兵都想要一件，{playerName}。他们想得没错：寒冬先夺手指，从不听道歉。再从大门以南的山脊取十张皮，整支守望队都能睡个暖觉。',
+  'entities.quests.q_stalker_cloaks.completion':
+    '十张好皮，厚实得没话说……不对，你看这些，{playerName}。一半都撕裂了，可不是刀枪的痕迹。爪痕有我手掌那么宽，直接穿透了冬毛。山脊上有什么东西在残杀自己的同类。',
+  'entities.quests.q_stalker_cloaks.objectives.0.label': '山脊潜猎者毛皮',
+  'entities.quests.q_old_cragmaw.title': '老裂颚',
+  'entities.quests.q_old_cragmaw.text':
+    '山民给我斥候找到的爪印起过名字：老裂颚，一只满身伤疤的暴君巨猫，熬死了自己族群的三代。潜猎者涌上我的道路，就是因为它，{playerName}。它的巢穴在南路上方的西侧山脊。带个帮手去，了结那老魔头。',
+  'entities.quests.q_old_cragmaw.completion':
+    '它终于倒下了。山民曾发誓那只猫会比城墙活得还久。如今潜猎者会守在高处的雪原了，{playerName}，我的巡逻队走这条路也不必再流血。整条山脊都因你安静了下来。',
+  'entities.quests.q_old_cragmaw.objectives.0.label': '击败老裂颚',
   'entities.quests.q_kobold_tunnels.title': '深岩麻烦',
   'entities.quests.q_kobold_tunnels.text':
     '深岩的狗头人往不该挖的深处直挖，像有东西在呼唤。它们的隧道就在我们城墙下，{playerName}。杀12个深岩掘地者。',
