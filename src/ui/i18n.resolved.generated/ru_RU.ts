@@ -2692,7 +2692,9 @@ export const ru_RU: EnTranslations = {
       "alreadyInWorld": "Персонаж уже находится в мире.",
       "takenOver": "Вашего персонажа перехватила другая сессия.",
       "renameBeforeEntering": "Перед входом в мир этому персонажу нужно сменить имя.",
-      "renameNotPermitted": "Переименование этого персонажа не разрешено."
+      "renameNotPermitted": "Переименование этого персонажа не разрешено.",
+      "unsupportedMediaType": "Неподдерживаемый формат запроса.",
+      "crossSiteOrigin": "Запрос заблокирован по соображениям безопасности."
     }
   },
   "desktop": {

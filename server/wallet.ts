@@ -437,6 +437,10 @@ export const routes: RouteDef[] = [
     surface: 'api',
     middleware: [cardContentLengthGuard, activeGuard, rateLimit(CARD_UPLOAD_POLICY)],
     handler: cardHandler,
+    // The card upload is the one registered /api route whose request body is raw
+    // bytes (image/png), not JSON: the Phase 21 Content-Type gate exempts it via
+    // this classification (the response error envelope stays the surface default).
+    meta: { requestBody: 'binary' },
   },
   {
     method: 'GET',

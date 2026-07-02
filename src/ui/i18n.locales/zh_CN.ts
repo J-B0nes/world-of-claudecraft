@@ -729,6 +729,8 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'errors.api.takenOver': '你的角色已被另一个会话接管。',
   'errors.api.renameBeforeEntering': '此角色必须先改名才能进入世界。',
   'errors.api.renameNotPermitted': '不允许为此角色改名。',
+  'errors.api.unsupportedMediaType': '不支持的请求格式。',
+  'errors.api.crossSiteOrigin': '出于安全原因，请求已被拦截。',
   'realm.noRealms': '没有可用服务器。',
   'realm.loading': '正在加载服务器...',
   'realm.recommended': '推荐',

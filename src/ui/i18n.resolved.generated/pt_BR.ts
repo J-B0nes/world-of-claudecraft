@@ -2692,7 +2692,9 @@ export const pt_BR: EnTranslations = {
       "alreadyInWorld": "O personagem já está no mundo.",
       "takenOver": "Seu personagem foi assumido por outra sessão.",
       "renameBeforeEntering": "Este personagem precisa ser renomeado antes de entrar no mundo.",
-      "renameNotPermitted": "Não é permitido renomear este personagem."
+      "renameNotPermitted": "Não é permitido renomear este personagem.",
+      "unsupportedMediaType": "Unsupported request format.",
+      "crossSiteOrigin": "Request blocked for security reasons."
     }
   },
   "desktop": {

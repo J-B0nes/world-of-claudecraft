@@ -81,6 +81,14 @@ export interface RouteMeta {
   readonly publicRead?: boolean;
   /** Overrides the surface's default response envelope for this one route. */
   readonly envelope?: EnvelopeKind;
+  /**
+   * The REQUEST-body media type this route accepts (the response side is
+   * `envelope`). Read by the Phase 21 Content-Type gate: absent means the /api
+   * surface default (application/json); 'binary' marks a raw-bytes upload (the
+   * card PNG) the JSON 415 gate must exempt. Declared here so the gate reads
+   * matched-RouteDef metadata, never a hardcoded path list.
+   */
+  readonly requestBody?: 'json' | 'binary';
   /** Frozen now, unused until the deferred deprecation conventions land. */
   readonly deprecated?: boolean;
   /** ISO-8601 date; frozen now, unused until the deprecation conventions land. */

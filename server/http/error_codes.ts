@@ -133,6 +133,18 @@ export const ERROR_CODES = deepFreeze({
   'two_factor.already_enabled': { params: [] },
   // identity: "two-factor is not enabled"
   'two_factor.not_enabled': { params: [] },
+
+  // --- Phase 21 hardening codes (new contracts, no legacy English identity).
+  // Emitted only when the matching gate runs in enforce mode; both gates ship
+  // log-only, so no response carries these until the native-traffic audit flips
+  // the flags. Phase 22 wires the client matcher. ---
+
+  // The request Content-Type is not application/json on a JSON /api route
+  // (the Content-Type 415 gate, server/http/middleware/content_type.ts).
+  'body.unsupported_media_type': { params: [] },
+  // A mutating request carried a clear cross-site Origin that is neither
+  // same-origin nor allowlisted (server/http/middleware/origin_check.ts).
+  'origin.cross_site': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

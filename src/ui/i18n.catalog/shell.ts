@@ -75,6 +75,8 @@ export const shellStrings = {
         takenOver: 'Your character was taken over by another session.',
         renameBeforeEntering: 'This character must be renamed before entering the world.',
         renameNotPermitted: 'Renaming this character is not allowed.',
+        unsupportedMediaType: 'Unsupported request format.',
+        crossSiteOrigin: 'Request blocked for security reasons.',
       },
     },
     // Desktop (Electron) shell surfaces: the auto-update toast rendered by the

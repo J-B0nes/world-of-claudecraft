@@ -2692,7 +2692,9 @@ export const sv_SE: EnTranslations = {
       "alreadyInWorld": "Karaktären är redan i världen.",
       "takenOver": "Din karaktär togs över av en annan session.",
       "renameBeforeEntering": "Denna karaktär måste byta namn innan den går in i världen.",
-      "renameNotPermitted": "Det är inte tillåtet att byta namn på denna karaktär."
+      "renameNotPermitted": "Det är inte tillåtet att byta namn på denna karaktär.",
+      "unsupportedMediaType": "Unsupported request format.",
+      "crossSiteOrigin": "Request blocked for security reasons."
     }
   },
   "desktop": {

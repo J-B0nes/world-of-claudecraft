@@ -9,24 +9,66 @@
 // Reproducibility is checked by tests/i18n_resolved_equivalence.test.ts.
 
 export const pending: Record<string, readonly string[]> = {
-  "es": [],
-  "es_ES": [],
-  "fr_FR": [],
-  "fr_CA": [],
+  "es": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "es_ES": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "fr_FR": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "fr_CA": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
   "en_CA": [],
-  "it_IT": [],
-  "de_DE": [],
+  "it_IT": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "de_DE": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
   "zh_CN": [],
   "zh_TW": [],
   "ko_KR": [],
   "ja_JP": [],
-  "pt_BR": [],
+  "pt_BR": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
   "ru_RU": [],
-  "nl_NL": [],
-  "pl_PL": [],
-  "id_ID": [],
-  "tr_TR": [],
-  "sv_SE": [],
-  "vi_VN": [],
-  "da_DK": []
+  "nl_NL": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "pl_PL": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "id_ID": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "tr_TR": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "sv_SE": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "vi_VN": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ],
+  "da_DK": [
+    "errors.api.crossSiteOrigin",
+    "errors.api.unsupportedMediaType"
+  ]
 };

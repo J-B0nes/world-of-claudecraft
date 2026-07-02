@@ -2692,7 +2692,9 @@ export const de_DE: EnTranslations = {
       "alreadyInWorld": "Der Charakter ist bereits in der Welt.",
       "takenOver": "Dein Charakter wurde von einer anderen Sitzung übernommen.",
       "renameBeforeEntering": "Dieser Charakter muss vor dem Betreten der Welt umbenannt werden.",
-      "renameNotPermitted": "Das Umbenennen dieses Charakters ist nicht erlaubt."
+      "renameNotPermitted": "Das Umbenennen dieses Charakters ist nicht erlaubt.",
+      "unsupportedMediaType": "Unsupported request format.",
+      "crossSiteOrigin": "Request blocked for security reasons."
     }
   },
   "desktop": {

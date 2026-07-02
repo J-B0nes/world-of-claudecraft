@@ -730,6 +730,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'errors.api.takenOver': '你的角色已被另一個工作階段接管。',
   'errors.api.renameBeforeEntering': '此角色必須先更名才能進入世界。',
   'errors.api.renameNotPermitted': '不允許為此角色更名。',
+  'errors.api.unsupportedMediaType': '不支援的請求格式。',
+  'errors.api.crossSiteOrigin': '出於安全原因，請求已被封鎖。',
   'realm.noRealms': '沒有可用伺服器。',
   'realm.loading': '正在載入伺服器...',
   'realm.recommended': '推薦',

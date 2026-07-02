@@ -2692,7 +2692,9 @@ export const en_XA: EnTranslations = {
       "alreadyInWorld": "[Çĥáŕáçţéŕ íš áļŕéáðý íñ ŵóŕļð.]",
       "takenOver": "[Ýóúŕ çĥáŕáçţéŕ ŵáš ţáķéñ óʋéŕ ƀý áñóţĥéŕ šéššíóñ.]",
       "renameBeforeEntering": "[Ţĥíš çĥáŕáçţéŕ ɱúšţ ƀé ŕéñáɱéð ƀéƒóŕé éñţéŕíñĝ ţĥé ŵóŕļð.]",
-      "renameNotPermitted": "[Ŕéñáɱíñĝ ţĥíš çĥáŕáçţéŕ íš ñóţ áļļóŵéð.]"
+      "renameNotPermitted": "[Ŕéñáɱíñĝ ţĥíš çĥáŕáçţéŕ íš ñóţ áļļóŵéð.]",
+      "unsupportedMediaType": "[Úñšúþþóŕţéð ŕéɋúéšţ ƒóŕɱáţ.]",
+      "crossSiteOrigin": "[Ŕéɋúéšţ ƀļóçķéð ƒóŕ šéçúŕíţý ŕéášóñš.]"
     }
   },
   "desktop": {

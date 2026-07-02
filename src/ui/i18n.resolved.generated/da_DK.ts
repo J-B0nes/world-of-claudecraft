@@ -2692,7 +2692,9 @@ export const da_DK: EnTranslations = {
       "alreadyInWorld": "Karakteren er allerede i verdenen.",
       "takenOver": "Din karakter blev overtaget af en anden session.",
       "renameBeforeEntering": "Denne karakter skal omdøbes, før den kan komme ind i verdenen.",
-      "renameNotPermitted": "Det er ikke tilladt at omdøbe denne karakter."
+      "renameNotPermitted": "Det er ikke tilladt at omdøbe denne karakter.",
+      "unsupportedMediaType": "Unsupported request format.",
+      "crossSiteOrigin": "Request blocked for security reasons."
     }
   },
   "desktop": {

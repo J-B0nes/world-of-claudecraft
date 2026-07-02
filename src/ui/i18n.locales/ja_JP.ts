@@ -772,6 +772,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'errors.api.takenOver': 'あなたのキャラクターは別のセッションに引き継がれました。',
   'errors.api.renameBeforeEntering': 'このキャラクターは世界に入る前に名前変更が必要です。',
   'errors.api.renameNotPermitted': 'このキャラクターの名前変更は許可されていません。',
+  'errors.api.unsupportedMediaType': 'サポートされていないリクエスト形式です。',
+  'errors.api.crossSiteOrigin': 'セキュリティ上の理由によりリクエストがブロックされました。',
   'realm.noRealms': '利用可能なレルムがありません。',
   'realm.loading': 'レルムを読み込み中...',
   'realm.recommended': 'おすすめ',

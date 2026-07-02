@@ -2692,7 +2692,9 @@ export const zh_CN: EnTranslations = {
       "alreadyInWorld": "角色已在世界中。",
       "takenOver": "你的角色已被另一个会话接管。",
       "renameBeforeEntering": "此角色必须先改名才能进入世界。",
-      "renameNotPermitted": "不允许为此角色改名。"
+      "renameNotPermitted": "不允许为此角色改名。",
+      "unsupportedMediaType": "不支持的请求格式。",
+      "crossSiteOrigin": "出于安全原因，请求已被拦截。"
     }
   },
   "desktop": {
