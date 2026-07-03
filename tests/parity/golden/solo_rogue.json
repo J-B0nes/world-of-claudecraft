@@ -15,7 +15,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "3e1ee3e2",
+      "state": "2a766a22",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -37,6 +37,7 @@
           "cls": "rogue",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -111,8 +112,8 @@
       "tick": 20,
       "time": 1,
       "nextId": 394,
-      "state": "28d75e64",
-      "events": "5853da21",
+      "state": "b72849e8",
+      "events": "1ee84278",
       "rng": {
         "draws": 9,
         "digest": "8ecad8de"
@@ -122,8 +123,8 @@
       "tick": 40,
       "time": 2,
       "nextId": 394,
-      "state": "194cc708",
-      "events": "9247ebc2",
+      "state": "6ae3d7e4",
+      "events": "5b71d089",
       "rng": {
         "draws": 15,
         "digest": "843b3bf7"
@@ -133,8 +134,8 @@
       "tick": 60,
       "time": 3,
       "nextId": 394,
-      "state": "f4f703a2",
-      "events": "b00879de",
+      "state": "4f614e8a",
+      "events": "e1df88dd",
       "rng": {
         "draws": 90,
         "digest": "0f3d4b16"
@@ -144,7 +145,7 @@
       "tick": 72,
       "time": 3.6,
       "nextId": 394,
-      "state": "ea3a8e0e",
+      "state": "a0f162be",
       "events": "741638a5",
       "rng": {
         "draws": 143,
@@ -169,6 +170,7 @@
             "damageDealt": 79,
             "damageTaken": 9
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,

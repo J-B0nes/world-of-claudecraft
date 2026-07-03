@@ -30,8 +30,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 396,
-      "state": "473dc03c",
-      "events": "13fbf0b3",
+      "state": "c0c4f760",
+      "events": "4e705dcf",
       "rng": {
         "draws": 1,
         "digest": "b4f92bc7"
@@ -54,6 +54,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -91,6 +92,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 393,
@@ -122,6 +124,7 @@
           "counters": {
             "lootCopper": 34
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 394,
@@ -356,7 +359,7 @@
       "tick": 1,
       "time": 0.05,
       "nextId": 396,
-      "state": "547c8a08",
+      "state": "dcc6f744",
       "events": "6a0c3cb1",
       "rng": {
         "draws": 3,
@@ -380,6 +383,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -421,6 +425,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 393,
@@ -452,6 +457,7 @@
           "counters": {
             "lootCopper": 34
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 394,
@@ -692,8 +698,8 @@
       "tick": 1,
       "time": 0.05,
       "nextId": 396,
-      "state": "c5dc466b",
-      "events": "564262b8",
+      "state": "03bbdfb1",
+      "events": "372fc216",
       "rng": {
         "draws": 3,
         "digest": "0f82d0c2"
@@ -716,6 +722,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -757,6 +764,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 393,
@@ -798,6 +806,7 @@
           "counters": {
             "lootCopper": 34
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 394,
@@ -1021,7 +1030,7 @@
       "tick": 3,
       "time": 0.15,
       "nextId": 396,
-      "state": "2832cf46",
+      "state": "aaec8dbe",
       "events": "741638a5",
       "rng": {
         "draws": 4,
@@ -1045,6 +1054,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -1086,6 +1096,7 @@
           "counters": {
             "lootCopper": 33
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 393,
@@ -1127,6 +1138,7 @@
           "counters": {
             "lootCopper": 34
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 394,

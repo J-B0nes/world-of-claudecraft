@@ -16,7 +16,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "637be62e",
+      "state": "1ef41d08",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -37,6 +37,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -109,8 +110,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "1c4342ce",
-      "events": "25f9e31f",
+      "state": "ae4eccfc",
+      "events": "610b839a",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -130,6 +131,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -214,8 +216,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "928fae1b",
-      "events": "40b8e83e",
+      "state": "80761991",
+      "events": "a0675f0b",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -237,6 +239,7 @@
           "counters": {
             "questProgress": 5
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -327,7 +330,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "1f80a23a",
+      "state": "cac323b8",
       "events": "a3665dd5",
       "rng": {
         "draws": 0,
@@ -350,6 +353,7 @@
           "counters": {
             "questProgress": 5
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -440,8 +444,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "1b0aeb18",
-      "events": "5b54bb46",
+      "state": "0905cfe0",
+      "events": "f5fc7073",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -463,6 +467,7 @@
           "counters": {
             "questProgress": 6
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -553,8 +558,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "704feb8b",
-      "events": "6b752ce2",
+      "state": "67040f05",
+      "events": "b2b6778d",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -579,6 +584,7 @@
             "questsCompleted": 1,
             "xpGained": 350
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -656,7 +662,7 @@
       "tick": 2,
       "time": 0.1,
       "nextId": 393,
-      "state": "b81d1a1d",
+      "state": "01a887eb",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -682,6 +688,7 @@
             "questsCompleted": 1,
             "xpGained": 350
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,

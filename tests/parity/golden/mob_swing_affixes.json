@@ -17,7 +17,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "146dd225",
+      "state": "f8e01035",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -39,6 +39,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -111,8 +112,8 @@
       "tick": 20,
       "time": 1,
       "nextId": 399,
-      "state": "853940fe",
-      "events": "7d8ecb4e",
+      "state": "ea6ecc52",
+      "events": "35052474",
       "rng": {
         "draws": 54,
         "digest": "d9836924"
@@ -122,8 +123,8 @@
       "tick": 40,
       "time": 2,
       "nextId": 399,
-      "state": "1ceef8b8",
-      "events": "dc5c90bc",
+      "state": "0be09e78",
+      "events": "0c3d7434",
       "rng": {
         "draws": 95,
         "digest": "43c2d2eb"
@@ -133,8 +134,8 @@
       "tick": 60,
       "time": 3,
       "nextId": 399,
-      "state": "13e5a54f",
-      "events": "cbe0917a",
+      "state": "30ba2765",
+      "events": "c2f68c64",
       "rng": {
         "draws": 224,
         "digest": "22d4749f"
@@ -144,7 +145,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 399,
-      "state": "6d9fc9b5",
+      "state": "67c2e9d3",
       "events": "741638a5",
       "rng": {
         "draws": 224,
@@ -168,6 +169,7 @@
           "counters": {
             "damageTaken": 1497
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -422,7 +424,7 @@
               "duration": 10,
               "id": "rampage_warlord_drogmar",
               "kind": "buff_ap",
-              "name": "Battle Fury",
+              "name": "Mounting Rage",
               "remaining": 9.65,
               "school": "physical",
               "sourceId": 396,
@@ -582,7 +584,7 @@
       "tick": 64,
       "time": 3.2,
       "nextId": 399,
-      "state": "8e0511e8",
+      "state": "26ab8b50",
       "events": "741638a5",
       "rng": {
         "draws": 244,
@@ -606,6 +608,7 @@
           "counters": {
             "damageTaken": 1497
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -860,7 +863,7 @@
               "duration": 10,
               "id": "rampage_warlord_drogmar",
               "kind": "buff_ap",
-              "name": "Battle Fury",
+              "name": "Mounting Rage",
               "remaining": 9.45,
               "school": "physical",
               "sourceId": 396,

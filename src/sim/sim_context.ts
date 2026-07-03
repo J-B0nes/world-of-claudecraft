@@ -106,7 +106,8 @@ export interface SimContextPrimitives {
   // Backing fields stay on Sim. `duels` is also read per-attack by isHostileTo/
   // dealDamage (PvP hostility), so it stays Sim-owned (A2).
   readonly duels: Map<number, DuelState>;
-  readonly cfg: Required<Omit<SimConfig, 'noPlayer'>>;
+  // `world` stays optional (custom play-test map, else undefined); the rest defaulted.
+  readonly cfg: Required<Omit<SimConfig, 'noPlayer' | 'world'>> & Pick<SimConfig, 'world'>;
   // A2 duel + arena state. Live views: the backing fields stay on Sim (mutated in
   // place / reassigned), like E1's delayedEvents. The three queues are REASSIGNED by
   // the matchmaker's filter, so they are read-write; the maps/set and the match-id
@@ -294,6 +295,9 @@ export interface SimContextCallbacks {
   // delegate; partyOf stays on Sim (A1's thin delegate -> social/party).
   clearEntityMarker(entityId: number): void;
   partyOf(pid: number): Party | null;
+  // Invite a player to the actor's party by pid (delegates to the PartyMachine);
+  // used by the chat "/invite <name>" command in social/chat.ts.
+  partyInvite(targetPid: number, pid?: number): void;
   removeFromParty(pid: number, verb: string): void;
   // Drop a disbanded party's whole raid-marker set (points at T1's targeting store).
   dropPartyMarkers(partyId: number): void;
@@ -787,6 +791,7 @@ export function createSimContext(host: SimContextHost): SimContext {
     removeFungibleItem: host.removeFungibleItem,
     clearEntityMarker: host.clearEntityMarker,
     partyOf: host.partyOf,
+    partyInvite: host.partyInvite,
     removeFromParty: host.removeFromParty,
     dropPartyMarkers: host.dropPartyMarkers,
     onMobKilledForQuests: host.onMobKilledForQuests,

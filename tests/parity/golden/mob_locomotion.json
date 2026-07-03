@@ -32,7 +32,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 394,
-      "state": "d30f4928",
+      "state": "a0246a76",
       "events": "64ddd877",
       "rng": {
         "draws": 4,
@@ -55,6 +55,7 @@
           "counters": {
             "damageTaken": 56
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -173,8 +174,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 395,
-      "state": "b7136d3a",
-      "events": "060f70fb",
+      "state": "e7cdad2f",
+      "events": "7a0b5a46",
       "rng": {
         "draws": 8,
         "digest": "284b8111"
@@ -196,6 +197,7 @@
           "counters": {
             "damageTaken": 194
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -221,7 +223,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -369,8 +371,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 396,
-      "state": "65f9689b",
-      "events": "bad87ac1",
+      "state": "22f3f065",
+      "events": "ab82f6f1",
       "rng": {
         "draws": 13,
         "digest": "06ceb9a6"
@@ -392,6 +394,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -417,7 +420,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -427,7 +430,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,
@@ -621,7 +624,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 397,
-      "state": "54b77920",
+      "state": "c7aa2558",
       "events": "741638a5",
       "rng": {
         "draws": 15,
@@ -644,6 +647,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -669,7 +673,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -679,7 +683,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,
@@ -921,7 +925,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 398,
-      "state": "ca47fe57",
+      "state": "922d8631",
       "events": "741638a5",
       "rng": {
         "draws": 16,
@@ -944,6 +948,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -969,7 +974,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -979,7 +984,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,
@@ -1263,7 +1268,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 399,
-      "state": "f86c9bfd",
+      "state": "db0f6ef3",
       "events": "ab4a6ea7",
       "rng": {
         "draws": 16,
@@ -1286,6 +1291,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -1311,7 +1317,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -1321,7 +1327,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,
@@ -1650,7 +1656,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 399,
-      "state": "97b38cfe",
+      "state": "3b9f4b52",
       "events": "741638a5",
       "rng": {
         "draws": 16,
@@ -1673,6 +1679,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -1698,7 +1705,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -1708,7 +1715,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,
@@ -2038,7 +2045,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 399,
-      "state": "97b38cfe",
+      "state": "3b9f4b52",
       "events": "741638a5",
       "rng": {
         "draws": 16,
@@ -2061,6 +2068,7 @@
           "counters": {
             "damageTaken": 309
           },
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -2086,7 +2094,7 @@
               "duration": 1.5,
               "id": "stomp_stun",
               "kind": "stun",
-              "name": "War Stomp",
+              "name": "Shuddering Stomp",
               "remaining": 1.5,
               "school": "physical",
               "sourceId": 394
@@ -2096,7 +2104,7 @@
               "duration": 3,
               "id": "fear_incap",
               "kind": "incapacitate",
-              "name": "Banshee's Wail",
+              "name": "Keening Wail",
               "remaining": 3,
               "school": "shadow",
               "sourceId": 395,

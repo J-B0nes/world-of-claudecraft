@@ -15,7 +15,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 393,
-      "state": "c0e61b7a",
+      "state": "42efb754",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -37,6 +37,7 @@
           "cls": "hunter",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
@@ -111,8 +112,8 @@
       "tick": 20,
       "time": 1,
       "nextId": 396,
-      "state": "0650b874",
-      "events": "68605b77",
+      "state": "405327a4",
+      "events": "f073ec51",
       "rng": {
         "draws": 6,
         "digest": "fb26b191"
@@ -122,7 +123,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 396,
-      "state": "ad356ae8",
+      "state": "a5e35320",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -133,8 +134,8 @@
       "tick": 60,
       "time": 3,
       "nextId": 396,
-      "state": "b9b317ca",
-      "events": "be1b642a",
+      "state": "59ac773e",
+      "events": "dee33f3a",
       "rng": {
         "draws": 96,
         "digest": "ee95214e"
@@ -144,7 +145,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 396,
-      "state": "f2432556",
+      "state": "19709692",
       "events": "741638a5",
       "rng": {
         "draws": 195,
@@ -155,8 +156,8 @@
       "tick": 100,
       "time": 5,
       "nextId": 396,
-      "state": "7bff195c",
-      "events": "c2baa20f",
+      "state": "094d0f1c",
+      "events": "a70f9f6d",
       "rng": {
         "draws": 294,
         "digest": "98724024"
@@ -166,7 +167,7 @@
       "tick": 120,
       "time": 6,
       "nextId": 396,
-      "state": "d941a204",
+      "state": "ba63fe74",
       "events": "741638a5",
       "rng": {
         "draws": 398,
@@ -177,7 +178,7 @@
       "tick": 120,
       "time": 6,
       "nextId": 396,
-      "state": "d941a204",
+      "state": "ba63fe74",
       "events": "741638a5",
       "rng": {
         "draws": 398,
@@ -199,6 +200,7 @@
           "cls": "hunter",
           "companionUpgrades": {},
           "counters": {},
+          "craftSkills": {},
           "delveClears": {},
           "delveDaily": {},
           "entityId": 392,
