@@ -27,7 +27,7 @@
 // `src/sim`-pure: no DOM/Three, no Math.random/Date.now; all randomness is the shared
 // `ctx.rng` stream, drawn in the exact pre-move positions.
 
-import { CLASSES, MOBS } from '../data';
+import { CLASSES, isArenaPos, MOBS } from '../data';
 import { scheduleProjectile } from '../projectile_travel';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
@@ -120,6 +120,11 @@ export function updatePlayerAutoAttack(ctx: SimContext, p: Entity, meta: PlayerM
     return;
   }
   if (d > MELEE_RANGE) return;
+  // Melee normally skips line of sight (it's always point-blank), but the
+  // arena's thin enclosing walls sit inside MELEE_RANGE: without this a
+  // combatant pressed against a wall could swing through it. See sibling
+  // logic in Sim.abilityNeedsLineOfSight.
+  if (isArenaPos(p.pos.x) && !ctx.hasLineOfSight(p, t)) return;
   ctx.breakGhostWolf(p);
 
   let bonus = 0;
