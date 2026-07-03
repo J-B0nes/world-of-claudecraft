@@ -11,6 +11,54 @@ workstream), NOT a gameplay change, NOT a WS wire change.
 
 ## Current phase
 
+Phase 23 (structured logging + /metrics exporter + drain-aware health) DONE (2026-07-03).
+The Phase 8 observability seam is now LIVE: server/main.ts injects a composite
+teeMetricSink(createAccessLogSink(logger), httpMetrics.sink) into all FOUR createApiDispatcher
+sites (api/admin/oauth/internal share ONE registry and ONE access-log stream); noopMetricSink
+STAYS the default in dispatch.ts so unit tests are unchanged. New modules
+server/http/{redact,logger,access_log,metrics,health}.ts: an in-house pino-SHAPED JSON logger
+(no pino; ALS reqId read at emit time via currentReqId, omitted outside a request; every record
+passes redact() before write; never throws; injectable transport), a pure redactor (key needles +
+Bearer/64-hex value patterns + OTP-scoped numeric/dashed codes; Buffer/TypedArray/ArrayBuffer
+values collapse to the placeholder; idempotent, cycle-safe, total), the access-log MetricSink
+(one 'access' line per onion-served request; route is ALWAYS the :param template; the client ip
+is TRUNCATED at the log surface via truncateIpForLog, IPv4 /24 and IPv6 /48, full ip only on the
+in-memory MetricEvent), the prom-client RED exporter (prom-client PINNED EXACT 15.1.3, the ONE
+weighed dependency, subtree tdigest/bintrees/@opentelemetry/api; createHttpMetrics() per-instance
+Registry; http_requests_total + http_request_duration_seconds with the named
+HTTP_DURATION_BUCKETS_SECONDS constant; labels route/method/status only, ip NEVER a label;
+collectDefaultMetrics scoped per registry, on at boot), and drain-aware health (markDraining /
+isReady / isLive; GET /livez, /readyz, /metrics are top-level routeHttpRequest arms after CORS
+and before /internal/, OUTSIDE auth/rate-limit, Cache-Control no-store, security headers
+inherited; markDraining() is the FIRST statement of the shutdown closure so /readyz flips 503 at
+drain start; verified through the real ladder under BOTH dispatch modes). The request-path
+console.* sweep (~37 real sites, the SPEC's ~70 was a loose bound) moved
+main/oauth/admin/discord/auth_routes/profile_page/player_card/woc_balance/github/
+moderation_service/email plus the content_type/origin_check/require_owned/rate_limit default
+sinks onto the logger; server/http/errors.ts keeps its console default (import cycle via
+context.ts) and dispatch.ts injects a logger-backed onUnexpected; email/sender.ts's console dev
+transport is intentional. TWO LOAD-BEARING DEFERRALS: (1) the X-Request-Id echo is BUILT and
+unit-tested in withRequestId (setHeader on the way in; REQUEST_ID_HEADER single-sourced with
+compose.ts) but the LIVE dispatch-onion mount is DEFERRED TO P25: mounting now adds the header to
+migrated 2xx/429/404 responses the retained legacy delegate never emits (44 parity divergences);
+the error-path echo is already live via errors.ts baseHeaders; NOTE comment in dispatch.ts. (2)
+In 'legacy' dispatch mode (the production default until P25) /api requests emit NO access line or
+metric (only onion-run routes traverse withMetrics); /livez//readyz//metrics work in both modes.
+Malware-scan note: the redactor deny-list NAMES wallet-secret identifiers, so
+scripts/malware_scan.mjs gained a generic per-rule pathSev demotion (high to medium, still
+visible to triage) scoped to EXACTLY server/http/redact.ts + tests/server/http/redact.test.ts on
+the wallet-identifier rule only, endorsed by a release-malware-audit triage (all 13 findings
+false positives) and pinned in tests/malware_scan.test.ts (widening the path list fails a test);
+flag as intentional at release. Reviews apply-all: privacy-security-review 0 BLOCKING (ip
+truncation, byte-collapse, never-log-raw-url/headers convention applied; /metrics exposure
+posture acceptable-for-now), qa-checklist READY 0 BLOCKING (3 legacy main.ts console sites
+migrated, stale comment, dashed user-code pin). REMAINS PHASE 24: the timed drain WINDOW
+constant, loadConfig(env) consolidation, server timeouts, the /metrics exposure gate
+(token/bind/rate-limit + full-ip exception decision), the perf/tick-jitter acceptance gate, and
+optionally wiring the PgRateLimitStore metrics param. Validation: tsc 0, npm run gate PASS all 9
+steps (730 files / 8260 tests), build:server bundles prom-client. Full record: progress.md Phase
+23 Notes. NEXT: Phase 23 QA gate (phase-23-qa.md), then Phase 24 (phase-24-config-timeouts.md).
+
 Phase 22 (REST i18n matcher + per-surface code-parity guard + the coded-emission pass) DONE
 (2026-07-02). The matcher is code-based and guarded, the migrated surfaces emit additive
 codes alongside byte-identical prose in both twins, 9 discord.* codes appended (set now 59,

@@ -59,7 +59,7 @@ Mark a row's Status as "In progress" or "Done" and fill Started / Completed
 | Phase 21 QA | Done | 2026-07-02 | 2026-07-02 |
 | Phase 22 | Done | 2026-07-02 | 2026-07-02 |
 | Phase 22 QA | Done | 2026-07-02 | 2026-07-02 |
-| Phase 23 | Not started |  |  |
+| Phase 23 | Done | 2026-07-02 | 2026-07-03 |
 | Phase 23 QA | Not started |  |  |
 | Phase 24 | Not started |  |  |
 | Phase 24 QA | Not started |  |  |
@@ -1323,9 +1323,9 @@ Notes:
 ## Phase 23: Structured logging + /metrics exporter + drain-aware health
 
 Deliverables:
-- [ ] A pino-shaped logger facade replacing the ~70 raw console.* calls on the request path, with secret/PII redaction (Authorization/bearer 64-hex/password/cookie/OAuth-code/TOTP/wallet-key); structured access line + X-Request-Id echo on every response via the ALS reqId reaching db.ts/domain fns
-- [ ] A Prometheus /metrics exporter (prom-client, the one weighed dependency) emitting the RED request-layer catalog with bounded cardinality (route = :param template, never concrete path)
-- [ ] /livez + /readyz with /readyz reporting NOT-ready during the SIGTERM drain
+- [x] A pino-shaped logger facade replacing the ~70 raw console.* calls on the request path, with secret/PII redaction (Authorization/bearer 64-hex/password/cookie/OAuth-code/TOTP/wallet-key); structured access line + X-Request-Id echo on every response via the ALS reqId reaching db.ts/domain fns (the real request-path count is ~37, the ~70 SPEC estimate was a loose bound; the echo is built + unit-tested on 2xx and thrown-5xx with the error-path live, the 2xx dispatch-onion mount deferred to P25 for parity, see Notes)
+- [x] A Prometheus /metrics exporter (prom-client, the one weighed dependency) emitting the RED request-layer catalog with bounded cardinality (route = :param template, never concrete path)
+- [x] /livez + /readyz with /readyz reporting NOT-ready during the SIGTERM drain
 
 QA:
 - [ ] Fixes applied
@@ -1333,7 +1333,57 @@ QA:
 - [ ] Dead code removed
 - [ ] Reviews clean
 
-Notes:
+Notes (implementation, 2026-07-03):
+- New modules: server/http/redact.ts (pure; key needles + Bearer/64-hex value patterns + OTP-scoped
+  numeric/dashed codes; Buffer/TypedArray/ArrayBuffer values collapse to REDACTED; idempotent,
+  cycle-safe, never throws), server/http/logger.ts (in-house pino-shaped facade, NO pino; one JSON
+  object per line; ALS reqId via currentReqId() at emit time, omitted outside a request; redact()
+  before every write; injectable transport, default singleton on the process streams),
+  server/http/access_log.ts (MetricSink; one 'access' line per onion-served request; ip TRUNCATED
+  at the log surface via truncateIpForLog, IPv4 /24 + IPv6 /48), server/http/metrics.ts
+  (createHttpMetrics(): per-instance Registry; http_requests_total + http_request_duration_seconds
+  with the named HTTP_DURATION_BUCKETS_SECONDS constant; labels route/method/status only;
+  collectDefaultMetrics per-registry, enabled at boot), server/http/health.ts
+  (markDraining/isReady/isLive + the /livez, /readyz, /metrics handler helpers, all
+  Cache-Control: no-store).
+- Wiring: composite teeMetricSink(accessLog, metrics.sink) (additive export on metric_sink.ts,
+  per-sink error isolation) injected into ALL FOUR createApiDispatcher sites in main.ts;
+  noopMetricSink stays the dispatch.ts default for unit tests. GET /livez, /readyz, /metrics mount
+  as top-level routeHttpRequest arms after applyCorsAndPreflight and before /internal/ (outside
+  auth/rate-limit, security headers inherited); markDraining() is the FIRST statement of the
+  shutdown closure. MetricEvent gained an optional ip (populated by withMetrics from ctx; never a
+  metric label). Verified through the real ladder under BOTH dispatch modes.
+- X-Request-Id: echo built into withRequestId (setHeader on the way in; REQUEST_ID_HEADER
+  single-sourced with compose.ts), unit-tested on 2xx and thrown-5xx. LIVE MOUNT DEFERRED TO P25:
+  mounting in the dispatch onion adds the header to migrated 2xx/429/404 responses the retained
+  legacy delegate never emits (44 parity divergences); the error-path echo is live via errors.ts
+  baseHeaders; NOTE comment at the dispatch.ts mount point. Also not live pre-P25: access
+  lines/metrics for 'legacy'-mode /api requests (only onion-run routes traverse withMetrics).
+- Console sweep (~37 request-path sites): main.ts (3, incl. the legacy handleApi 'api error'
+  catch), oauth, admin, discord, auth_routes, profile_page, player_card, woc_balance, github,
+  moderation_service, email/index, plus the content_type/origin_check/require_owned/rate_limit
+  middleware default sinks. errors.ts keeps its console default (import cycle via context.ts):
+  dispatch.ts injects a logger-backed onUnexpected instead. email/sender.ts console dev transport
+  kept (console IS the transport). Boot, world-loop, and WS-lifecycle console calls untouched.
+- Malware scan: the redactor deny-list names wallet-secret identifiers, tripping 13 high key-exfil
+  flags; a release-malware-audit triage dismissed all 13 (replace-only deny-list, no egress, values
+  never read). Fix: a generic per-rule pathSev in scripts/malware_scan.mjs (+ .d.mts type), demoting
+  the wallet-identifier rule high to medium for EXACTLY server/http/redact.ts +
+  tests/server/http/redact.test.ts; pinned in tests/malware_scan.test.ts (widening the path list
+  fails a test; Keypair/HD-derivation/exec rules still fire HIGH inside redact.ts). Flag as
+  intentional at the release-malware-audit gate.
+- Reviews (apply-all): privacy-security-review 0 BLOCKING, 1 SHOULD-FIX applied (full ip replaced
+  by log-surface truncation; the "existing ratelimit practice" rationale was wrong) plus the
+  byte-collapse and the never-log-raw-url/headers/body convention note; /metrics exposure
+  acceptable-for-now, the gate decision (token/bind/rate-limit + any full-ip exception) is Phase
+  24. qa-checklist READY 0 BLOCKING; 1 SHOULD-FIX applied (the 3 legacy main.ts console sites) + 2
+  nits (stale content_type comment, dashed user-code redact pin). NOT dispatched (triggers absent):
+  migration-safety, cross-platform-sync, architecture-reviewer. S3 + code-parity not in play (no
+  player-facing string or error code added).
+- Validation: tsc 0; new/extended suites green (redact, logger, access_log, request_id, metrics,
+  health, metric_sink, dispatch, malware_scan); npm run gate PASS all 9 steps (730 files / 8260
+  tests); build:server bundles prom-client 15.1.3 (pinned exact; subtree
+  tdigest/bintrees/@opentelemetry/api).
 
 ## Phase 24: Validated config + server timeouts + no-magic-values consolidation
 
