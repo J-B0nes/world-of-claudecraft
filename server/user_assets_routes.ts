@@ -231,7 +231,11 @@ export const routes: RouteDef[] = [
     path: '/api/assets/:file',
     surface: 'api',
     middleware: [rateLimit(PUBLIC_READ_POLICY)],
-    meta: { publicRead: true, envelope: 'binary' },
+    // The SUCCESS body is binary (the handler writes model/gltf-binary itself);
+    // thrown errors keep the surface-default problem+json envelope, mirroring
+    // the POST /api/card precedent, so the coded 429 matches the
+    // mapsAssetsRateLimitedBodyToCode ledger entry.
+    meta: { publicRead: true },
     handler: bytesHandler,
   },
   {

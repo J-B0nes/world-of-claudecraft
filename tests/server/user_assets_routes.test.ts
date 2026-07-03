@@ -30,6 +30,7 @@ import type { Method, Middleware } from '../../server/http/types';
 import {
   ASSET_UPLOAD_MAX_PER_MINUTE,
   assetUploadRateLimited,
+  publicReadRateLimited,
   resetAssetUploadRateLimits,
   resetPublicReadRateLimits,
   resetRateLimitClock,
@@ -338,6 +339,27 @@ describe('the public content-addressed byte read', () => {
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'unknown endpoint' });
     expect(bytesForSha).not.toHaveBeenCalled();
+  });
+
+  it('a drained public-read bucket 429s the byte GET as coded problem+json (surface-default envelope)', async () => {
+    // The route's success body is binary but its META keeps the surface-default
+    // error envelope (the POST /api/card precedent), so the coded 429 the
+    // mapsAssetsRateLimitedBodyToCode ledger entry records is problem+json, not a
+    // binary-envelope serialization. Drain the SHARED legacy tier-1 bucket
+    // directly, proving one bucket serves both dispatch paths.
+    const req = { headers: {}, socket: { remoteAddress: '127.0.0.1' } } as http.IncomingMessage;
+    while (publicReadRateLimited(req).allowed) {
+      // drain to the cap; the fixed clock keeps every attempt in one window
+    }
+    fakeService({ bytesForSha: async () => Buffer.from('x') });
+    const res = await runRoute('GET', '/api/assets/:file', {
+      params: { file: `${SHA}.glb` },
+      url: `/api/assets/${SHA}.glb`,
+    });
+    expect(res.status).toBe(429);
+    expect(res.body.code).toBe('rate_limit.exceeded');
+    expect(String(res.headers['content-type'])).toContain('application/problem+json');
+    expect(res.headers['retry-after']).toBeDefined();
   });
 });
 

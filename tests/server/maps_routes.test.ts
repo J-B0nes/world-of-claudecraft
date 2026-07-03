@@ -493,3 +493,34 @@ describe('the optional-auth public :id read', () => {
     expect(getMapForViewer).not.toHaveBeenCalled();
   });
 });
+
+describe('the guard-before-shape-check legs (mapsAssetsIdParamDecode ledger)', () => {
+  it('an unauthenticated non-numeric fork 401s at the guard (legacy fell to the terminal 404)', async () => {
+    // Legacy: mapForkMatch (\d+) rejects "abc/fork" before the bearer is read, so
+    // the ladder answers 404 unknown endpoint. New: activeGuard runs first, so the
+    // same request answers the auth 401. Recorded in mapsAssetsIdParamDecode;
+    // pinned here because the parity corpus replays numeric ids only.
+    const forkMap = vi.fn();
+    fakeService({ forkMap });
+    const res = await runRoute('POST', '/api/maps/:id/fork', {
+      params: { id: 'abc' },
+      url: '/api/maps/abc/fork',
+    });
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'not authenticated', code: 'auth.required' });
+    expect(forkMap).not.toHaveBeenCalled();
+  });
+
+  it('an authenticated non-numeric fork answers the terminal 404 after the guards', async () => {
+    const forkMap = vi.fn();
+    fakeService({ forkMap });
+    const res = await runRoute('POST', '/api/maps/:id/fork', {
+      headers: { authorization: BEARER },
+      params: { id: 'abc' },
+      url: '/api/maps/abc/fork',
+    });
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'unknown endpoint' });
+    expect(forkMap).not.toHaveBeenCalled();
+  });
+});

@@ -1711,6 +1711,27 @@ class; same carve-out as housekeeping/18b). The GET /api/maps/:id optional-auth 
 stays tier-1-only prose BY DESIGN on both arms (conditional anonymous-only, not
 expressible as a rateLimit mount) and survives P25 unchanged inside optionalViewerGuard.
 
+Release-merge audit (the release-merge-audit skill, 7-slice workflow + critic,
+2026-07-03): ZERO blocking. The gate run on the merged tree caught ONE red release-side
+test (tests/glb_assets.test.ts pinned the boolean-era assetUploadRateLimited; adapted to
+.allowed in b65f33963), a NEW instance class for future audits: release-side TEST files
+pinning branch-refactored helper contracts (sweep tests/ + scripts/, not just server/).
+Apply-all fixes from the audit: dead main.ts imports removed (parsePageParams,
+readBinaryBody); the rate_limit.ts header no longer claims PUBLIC_READ_POLICY is
+unmounted; GET /api/assets/:file dropped meta.envelope 'binary' so its thrown errors
+serialize problem+json (the /api/card precedent; drained-bucket 429 unit-pinned);
+mapsAssetsIdParamDecode extended with fork + :file and the three guard-before-shape-check
+legs (unauth non-numeric fork 401-vs-404 pinned; bucket consumption before the terminal
+404 documented); mapsAssetsRateLimitedBodyToCode corrected (tier-2 applies to the
+mutation lanes too); adminIdParamDecode extended with the three map editor moderation
+:id routes; admin.ts map editor moderation backends converted to lazy memoized accessors
+with test setters (the lazy AdminDb doctrine); world_api.ts header counts trued up
+(160 members, 28 delta keys, 9 dispatch-only) and snapshots.test.ts prose made
+count-free; the P25 Agent C exit-criteria carve-out now enumerates the maps/assets
+wrong-method class; main.ts line anchors re-based (~2350); root CLAUDE.md build entries
+(five, editor) and server/CLAUDE.md housekeeping RouteDef count (11) corrected. Full
+gate re-run PASS (all 9 steps) after the fixes.
+
 ## Phase 25: Docs + new:endpoint scaffold + flag-default flip
 
 Deliverables:

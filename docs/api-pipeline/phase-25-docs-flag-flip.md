@@ -37,7 +37,7 @@ STEP 0 - PRE-FLIGHT
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; spawn ONE Explore agent)
 Have the Explore agent read and summarize, anchored on SYMBOL NAMES and route strings (never line
-numbers; main.ts is ~2200 lines after the two v0.20.0 merges):
+numbers; main.ts is ~2350 lines after the three v0.20.0 merges):
 - docs/api-pipeline/state.md and docs/api-pipeline/progress.md (the running ledger: which phases
   landed, the accumulated knownDeviation list, the deferred-items list).
 - docs/api-pipeline/phase-25-docs-flag-flip.md (this file).
@@ -113,12 +113,15 @@ give each ONLY the Explore summary (not the raw files):
     tracked as a next-release follow-up PR. The old ladder is RETAINED this phase. The criteria
     MUST carve out the deliberately delegate-served shapes, which legitimately keep the old-path
     label warm under flag 'new' (the oauthInternalOffTable405 set, HEAD-to-GET delegation, any
-    18b off-table remainder, and the v0.20.0 housekeeping in-family shapes: an unknown
+    18b off-table remainder, the v0.20.0 housekeeping in-family shapes: an unknown
     /admin/api/housekeeping/ sub-path or a non-GET/POST method has no RouteDef, so it delegates
     to the ladder where admin auth 401 precedes the sub-dispatcher's in-family 404/405; at the
     deletion these flip to the table's pre-auth 404/405, the planned405BeforeAuth class, and the
     housekeeping HEAD shape flips from that post-auth 405 to a GET-served response, not from
-    404); a naive zero-requests gate is unreachable otherwise. Also name
+    404; and the v0.20.0 third-slice maps/assets wrong-method shapes: a wrong method on an
+    /api/maps or /api/assets path has no RouteDef, delegates to the ladder terminal 404 today,
+    and flips to the table's pre-auth 405 at the deletion, the same planned405BeforeAuth class);
+    a naive zero-requests gate is unreachable otherwise. Also name
     the expiry of the Phase 18/18b dual-edit MAINTENANCE RULE (ladder branch + RouteDef twin) as
     part of the deletion follow-up. Housekeeping unit-test seam note for this phase's docs: the
     migrated housekeeping handlers reach Postgres via housekeeping_db directly (not the Phase 17

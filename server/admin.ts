@@ -80,9 +80,33 @@ const ACTIVITY_WINDOW_DAYS = 30;
 const IP_BLOCK_KICK_MESSAGE = 'Connection to the server was lost.';
 
 // Map editor moderation reads/writes go straight to the db layer (like the
-// other *_db imports here); the player-facing rules stay in maps.ts.
-const adminMapsDb = new PgMapsDb(pool);
-const adminUserAssetsDb = new PgUserAssetsDb(pool);
+// other *_db imports here); the player-facing rules stay in maps.ts. LAZY
+// memoized accessors (the liveGame()/activeConfig() shape) rather than
+// module-scope construction, so a partial vi.mock of './db' that omits `pool`
+// cannot hand the backends undefined at import time, and a test can override
+// them via the setters below (the file's lazy AdminDb doctrine).
+let adminMapsDbInstance: PgMapsDb | null = null;
+function adminMapsDb(): PgMapsDb {
+  adminMapsDbInstance ??= new PgMapsDb(pool);
+  return adminMapsDbInstance;
+}
+let adminUserAssetsDbInstance: PgUserAssetsDb | null = null;
+function adminUserAssetsDb(): PgUserAssetsDb {
+  adminUserAssetsDbInstance ??= new PgUserAssetsDb(pool);
+  return adminUserAssetsDbInstance;
+}
+
+/** Override the map editor moderation backends with fakes (test-only). */
+export function setAdminMapsDbForTests(maps: PgMapsDb, userAssets: PgUserAssetsDb): void {
+  adminMapsDbInstance = maps;
+  adminUserAssetsDbInstance = userAssets;
+}
+
+/** Restore the real Postgres map editor moderation backends (test-only). */
+export function resetAdminMapsDbForTests(): void {
+  adminMapsDbInstance = null;
+  adminUserAssetsDbInstance = null;
+}
 
 function ok(res: http.ServerResponse, data: unknown): void {
   json(res, 200, { success: true, data, error: null });
@@ -402,13 +426,13 @@ export async function handleAdminApi(
     // byte GET and reject re-uploads of the same hash).
     const mapUnpublishMatch = /^\/admin\/api\/maps\/(\d+)\/unpublish$/.exec(path);
     if (req.method === 'POST' && mapUnpublishMatch) {
-      const done = await adminMapsDb.setStatus(Number(mapUnpublishMatch[1]), null, 'private');
+      const done = await adminMapsDb().setStatus(Number(mapUnpublishMatch[1]), null, 'private');
       return done ? ok(res, { ok: true }) : fail(res, 404, 'map_not_found');
     }
     const assetBlockMatch = /^\/admin\/api\/user-assets\/(\d+)\/(block|unblock)$/.exec(path);
     if (req.method === 'POST' && assetBlockMatch) {
       const status = assetBlockMatch[2] === 'block' ? 'blocked' : 'active';
-      const done = await adminUserAssetsDb.setStatus(Number(assetBlockMatch[1]), status);
+      const done = await adminUserAssetsDb().setStatus(Number(assetBlockMatch[1]), status);
       return done ? ok(res, { ok: true }) : fail(res, 404, 'asset_not_found');
     }
 
@@ -581,12 +605,12 @@ export async function handleAdminApi(
     }
     if (path === '/admin/api/maps') {
       const { page, limit } = parsePageParams(url.searchParams);
-      const { rows, total } = await adminMapsDb.listAdmin(limit, (page - 1) * limit);
+      const { rows, total } = await adminMapsDb().listAdmin(limit, (page - 1) * limit);
       return ok(res, { rows, total, page, limit });
     }
     if (path === '/admin/api/user-assets') {
       const { page, limit } = parsePageParams(url.searchParams);
-      const { rows, total } = await adminUserAssetsDb.listAdmin(limit, (page - 1) * limit);
+      const { rows, total } = await adminUserAssetsDb().listAdmin(limit, (page - 1) * limit);
       return ok(res, { rows, total, page, limit });
     }
 
@@ -1258,27 +1282,27 @@ async function housekeepingHandler(ctx: Ctx): Promise<void> {
 /** GET /admin/api/maps: the paginated all-maps moderation list. */
 async function adminMapsListHandler(ctx: Ctx): Promise<void> {
   const { page, limit } = parsePageParams(ctx.url.searchParams);
-  const { rows, total } = await adminMapsDb.listAdmin(limit, (page - 1) * limit);
+  const { rows, total } = await adminMapsDb().listAdmin(limit, (page - 1) * limit);
   ok(ctx.res, { rows, total, page, limit });
 }
 
 /** GET /admin/api/user-assets: the paginated uploaded-GLB moderation list. */
 async function adminUserAssetsListHandler(ctx: Ctx): Promise<void> {
   const { page, limit } = parsePageParams(ctx.url.searchParams);
-  const { rows, total } = await adminUserAssetsDb.listAdmin(limit, (page - 1) * limit);
+  const { rows, total } = await adminUserAssetsDb().listAdmin(limit, (page - 1) * limit);
   ok(ctx.res, { rows, total, page, limit });
 }
 
 /** POST /admin/api/maps/:id/unpublish: force a published map back to private. */
 async function adminMapUnpublishHandler(ctx: Ctx): Promise<void> {
-  const done = await adminMapsDb.setStatus(adminTargetId(ctx), null, 'private');
+  const done = await adminMapsDb().setStatus(adminTargetId(ctx), null, 'private');
   return done ? ok(ctx.res, { ok: true }) : fail(ctx.res, 404, 'map_not_found');
 }
 
 /** POST /admin/api/user-assets/:id/(block|unblock): flip an upload's moderation flag. */
 function adminAssetStatusHandler(status: 'blocked' | 'active') {
   return async (ctx: Ctx): Promise<void> => {
-    const done = await adminUserAssetsDb.setStatus(adminTargetId(ctx), status);
+    const done = await adminUserAssetsDb().setStatus(adminTargetId(ctx), status);
     return done ? ok(ctx.res, { ok: true }) : fail(ctx.res, 404, 'asset_not_found');
   };
 }

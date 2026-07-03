@@ -289,7 +289,7 @@ The single home is `server/http/types.ts` (TYPE-ONLY, zero runtime emit). Verbat
 - No heavy web framework. Zero new runtime dependencies; the ONE weighed exception is
   `prom-client`, and ONLY when the `/metrics` exporter lands (Phase 23).
 - All `file:line` anchors in the source SPEC (`docs/api-pipeline/source-spec.md`) are STALE
-  (main.ts ~2200 lines as of the second v0.20.0 merge, 64392ada2). Re-anchor on SYMBOL NAMES and route
+  (main.ts ~2350 lines as of the third v0.20.0 merge). Re-anchor on SYMBOL NAMES and route
   strings, never line numbers.
 
 ### Target architecture
@@ -893,7 +893,7 @@ the X-ms constant; X is TBD, see open items.)
   rather than becoming a 500. The migration phase MUST keep the per-request onion the sole failure
   channel: the throw-capable work belongs inside `runOnion` (already the case for the handler and
   route middleware), not in the synchronous pre-onion prefix.
-- **Stale anchors.** Every main.ts/db.ts line anchor in the SPEC is stale (main.ts ~2200 lines as of the second v0.20.0 merge, 64392ada2). Re-anchor on symbol names and route strings, never line
+- **Stale anchors.** Every main.ts/db.ts line anchor in the SPEC is stale (main.ts ~2350 lines as of the third v0.20.0 merge). Re-anchor on symbol names and route strings, never line
   numbers. Phase 03 does the
   re-inventory + a route-count freshness gate; the market/em-dash fixes anchor on function
   names and the literal strings.

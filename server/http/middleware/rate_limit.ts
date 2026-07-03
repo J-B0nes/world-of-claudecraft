@@ -11,8 +11,11 @@
 // process sees no change: tier-1 records first and the fixed window counts a
 // subset of the sliding window, so tier-2 can never reject when tier-1 allowed.
 //
-// DISCORD_POLICY and PUBLIC_READ_POLICY stay UNMOUNTED (no route attaches them);
-// they exist for a later phase / the client code-matcher wiring.
+// DISCORD_POLICY stays UNMOUNTED (no route attaches it); it exists for the
+// client code-matcher wiring. PUBLIC_READ_POLICY is MOUNTED since the v0.20.0
+// third-slice merge: GET /api/maps/public (maps_routes.ts) and the GET
+// /api/assets/:file byte read (user_assets_routes.ts) attach it, sharing the
+// legacy tier-1 bucket and adding the tier-2 global backstop on the new path.
 
 import {
   ASSET_UPLOAD_MAX_PER_MINUTE,

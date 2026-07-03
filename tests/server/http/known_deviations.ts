@@ -818,6 +818,11 @@ export const KNOWN_DEVIATIONS: readonly KnownDeviation[] = [
       '/admin/api/accounts/:id',
       '/admin/api/chat-filter/words/:id/delete',
       '/admin/api/bug-reports/:id/screenshot',
+      // v0.20.0 third slice: the map editor moderation :id routes inherit the
+      // same requireAdminTarget 422-vs-legacy-fall-through class.
+      '/admin/api/maps/:id/unpublish',
+      '/admin/api/user-assets/:id/block',
+      '/admin/api/user-assets/:id/unblock',
     ],
     currentBehavior:
       'The legacy handleAdminApi matches every admin :id route with a `(\\d+)` regex. ' +
@@ -1286,11 +1291,16 @@ export const KNOWN_DEVIATIONS: readonly KnownDeviation[] = [
       'RFC 9457 application/problem+json with the stable code, the draft-11 headers, and ' +
       'Retry-After, instead of the bare { error: "rate_limited" } prose. The tier-1 buckets ' +
       'are SHARED with the legacy arms (the policies wrap the same ratelimit.ts functions), ' +
-      'so limits land identically; only the 429 body shape and headers differ, plus the ' +
-      'public reads gain the pg tier-2 global backstop the legacy tier-1-only checks lack. ' +
-      'GET /api/maps/:id keeps its legacy CONDITIONAL anonymous-only prose throttle inside ' +
-      'optionalViewerGuard on BOTH paths (a rateLimit mount would throttle authenticated ' +
-      'owners too), so it is listed only for completeness of the family.',
+      'so limits land identically; only the 429 body shape and headers differ, plus EVERY ' +
+      'policy-mounted lane (the mutations and upload included, not just the public reads) ' +
+      'gains the pg tier-2 global backstop the legacy tier-1-only checks lack. The GET ' +
+      '/api/assets/:file byte read keeps the surface-default problem+json ERROR envelope ' +
+      '(its success body is binary but its meta sets no envelope, the POST /api/card ' +
+      'precedent), so its coded 429 is problem+json like the rest of the family (pinned in ' +
+      'user_assets_routes.test.ts). GET /api/maps/:id keeps its legacy CONDITIONAL ' +
+      'anonymous-only prose throttle inside optionalViewerGuard on BOTH paths (a rateLimit ' +
+      'mount would throttle authenticated owners too), so it is listed only for ' +
+      'completeness of the family.',
     introducedInPhase: 24,
     reason:
       'Sibling to rateLimitedBodyToCode (the Phase 14 wallet/card entry): the same coded-' +
@@ -1304,9 +1314,11 @@ export const KNOWN_DEVIATIONS: readonly KnownDeviation[] = [
     id: DEVIATION_ID.mapsAssetsIdParamDecode,
     routes: [
       '/api/maps/:id',
+      '/api/maps/:id/fork',
       '/api/maps/:id/publish',
       '/api/maps/:id/unpublish',
       '/api/assets/:id',
+      '/api/assets/:file',
     ],
     currentBehavior:
       'On the legacy handleApi ladder the map editor :id arms gate on \\d+ route regexes ' +
@@ -1325,9 +1337,16 @@ export const KNOWN_DEVIATIONS: readonly KnownDeviation[] = [
       'shape answers the deny-by-default 404 instead of the legacy 413. The public-or-' +
       'owner :id routes (GET /api/maps/:id, POST fork, the GET /api/assets byte read) ' +
       'validate their param IN-HANDLER against the same shape the legacy regex enforced ' +
-      'and answer the ladder terminal 404 { error: "unknown endpoint" } byte-identically, ' +
-      'so they carry NO decode deviation ("/api/maps/:id" is listed for its PUT/DELETE ' +
-      'methods; its GET is parity-clean).',
+      'and answer the ladder terminal 404 { error: "unknown endpoint" } byte-identically ' +
+      'once the handler runs; their DECODE carries no 422. Their GUARDS still run before ' +
+      'that in-handler shape check, which the legacy regex fall-through never did, so ' +
+      'three guard-before-shape-check legs diverge: (1) an unauthenticated non-numeric ' +
+      'fork answers the auth 401 where legacy answered the terminal 404 without reading ' +
+      'the bearer (pinned in maps_routes.test.ts); (2) an authenticated non-numeric fork ' +
+      'consumes a map_mutation tier-1 token (and can answer the coded 429) where legacy ' +
+      'never consulted the limiter for that shape; (3) an anonymous non-matching GET ' +
+      '/api/maps/:id or GET /api/assets/:file consumes the shared public-read bucket ' +
+      '(and can 429) before the terminal 404, where legacy answered it unthrottled.',
     introducedInPhase: 24,
     reason:
       'Sibling to characterIdParamDecode (same 422/401-vs-404 shape, same NaN-safe ' +
