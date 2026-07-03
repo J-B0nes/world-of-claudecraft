@@ -33,9 +33,20 @@
 //   COMMENT_AUTHOR      the triggering comment's author; credited in the reply
 //   OPENROUTER_MODEL    model id (default nvidia/nemotron-3-ultra-550b-a55b:free)
 //   MAX_DIFF_CHARS      cap on diff chars sent to the model (default 60000)
+//
+// A local .env is loaded best-effort (same pattern as the other scripts/ utilities), so
+// a local run can keep OPENROUTER_API_KEY / OPENROUTER_MODEL there. Ambient environment
+// variables (the ones the workflow sets) always win: loadEnvFile never overwrites an
+// existing process.env entry.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import { upsertStickyComment } from './gh_sticky_comment.mjs';
+
+try {
+  process.loadEnvFile();
+} catch {
+  /* no .env: rely on the ambient env */
+}
 
 const MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free';
 const MAX_DIFF_CHARS = Number(process.env.MAX_DIFF_CHARS || 60000);

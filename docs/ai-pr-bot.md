@@ -46,6 +46,10 @@ opt-in:
   (the previous default, `openrouter/owl-alpha`, was pulled), so treat this as a
   prototype default and switch the variable when it goes away. Swapping the model is a
   one-line change with no workflow edit.
+- For a **local run** of `node scripts/ai_review.mjs`, both `OPENROUTER_API_KEY` and
+  `OPENROUTER_MODEL` can live in the repo-root `.env` (see `.env.example`); the script
+  loads it best-effort. Variables already set in the environment always take precedence,
+  so the CI values are never overridden.
 
 ## Requesting a review on demand
 
