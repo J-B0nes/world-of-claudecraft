@@ -1151,6 +1151,10 @@ export const zh_TW: EnTranslations = {
           "note": "朝聖者在月中之月下聚於神廟月門。"
         }
       }
+    },
+    "social": {
+      "lastSeen": "最後上線: {when}",
+      "lastSeenNever": "從未"
     }
   },
   "guide": {
