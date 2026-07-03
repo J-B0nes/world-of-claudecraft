@@ -37,6 +37,24 @@
 > POST-LOCK AMENDMENT #3 (2026-07-02): scanner self-collision #5 found by C1 - 'Gallowglass
 > Maul' contains the armed word 'Maul'; fixed to 'Gallowglass Hammer' (same defect class and
 > treatment as amendment #2; 'Warhammer' rejected - Games Workshop).
+>
+> POST-LOCK AMENDMENT #4 (2026-07-02, operator-approved from the quest/text/dialogue IP audit -
+> categories the G0 scanner was blind to: POI/map labels, boss & delve dialogue, ground-pickup
+> flavor, ability/talent tooltip descriptions, plus every quest name/text/objective). Four
+> clusters (rows in the "## Amendment #4" section below): (A) Webwood -> Sableweb - the item
+> `webwood_silk` was already mapped to "Sableweb Silk Gland", but the co-named POI label, mob
+> "Webwood Lurker", and quest "Webwood Menace" kept the WoW token; aligned to Sableweb (render
+> code already reads "Sableweb Matriarch"). (B) Mistcaller -> Fogbinder - verbatim WoW (Mists of
+> Tirna Scithe boss + Kvaldir family), an epithet across the Vael boss name, the quest, the item
+> "Mistcaller's Edge", and 4 quest-text lines; operator picked "Fogbinder". (C) Scourge - operator
+> KEPT ("Nythraxis, Scourge of Thornpeak" / "Scourge's End"): "Scourge of <place>" is the common-
+> noun (affliction) usage, not WoW's standalone proper-noun faction; considered and declined, like
+> Mogger/Riptide. (D) Shadow Flame -> searing shadow - Blizzard-coined effect left in the
+> `shadowburn` tooltip description (the ability name already renamed to Duskfire). The G0 scanner
+> is EXTENDED in the same change to walk POI labels + encounter/delve dialogue + tooltip
+> descriptions, so these categories are enforced from now on. Two findings were verified
+> already-fixed on their branches and dropped (War Stomp -> W2 "Shuddering Stomp"; Ghost Wolf ->
+> V1 "Shadewolf"). Applied + re-verified at Phase 5 integration; scanner RED until then.
 
 This file is the single source of truth for every old -> new string, the analog of the
 world-api `CommandName` table. Every rename slice applies it VERBATIM and never invents a name.
@@ -1076,3 +1094,44 @@ Deep-, Sable-, Hallow-, Cinder-, Dusk-, Gloam- clusters (see decision 5 below).
 - [x] The 4 verbatim mob-mechanic names (+ 4 G1-added generic-keep? aura rows)
 - [x] Operator decisions resolved on every `generic-keep?`, the Mogger parody, Tunnel Rat
       Digger, and the Brandt greeting (locked 2026-07-02)
+
+## Amendment #4 - quest/text/dialogue IP audit (2026-07-02, operator-approved)
+Rows the map-driven G0 scanner was blind to (POI labels, dialogue, tooltip prose, quest fields).
+Applied on the merged tree at Phase 5 integration; the G0 scanner is extended in the same change
+to walk POI labels + encounter/delve dialogue + ability/talent descriptions. Code ids stay FROZEN
+(display strings only). Bare-token rows (`Webwood`, `Mistcaller`) arm the epithet so every site -
+name, objective label, and prose - is caught by the extended scanner.
+
+### (A) Webwood -> Sableweb (co-named siblings of the already-mapped `webwood_silk` -> Sableweb Silk Gland)
+| id | old | new | kind | flag |
+|---|---|---|---|---|
+| `webwood_spider` | Webwood Lurker | Sableweb Lurker | mob | rename |
+| `q_spiders` quest name | Webwood Menace | Sableweb Menace | quest | rename |
+| zone1 poi label | Webwood | Sableweb | poi | rename |
+
+- `q_spiders` text: "Cull 6 Webwood Lurkers" -> "Cull 6 Sableweb Lurkers".
+- `q_spiders` objective labels: "Webwood Lurker slain" -> "Sableweb Lurker slain"; "Webwood Silk Gland" -> "Sableweb Silk Gland" (matches the already-renamed item display).
+- zone1 render comment already reads "Sableweb Matriarch" (theme pre-established; no change).
+
+### (B) Mistcaller -> Fogbinder (verbatim WoW epithet: Mists of Tirna Scithe boss + Kvaldir family)
+| id | old | new | kind | flag |
+|---|---|---|---|---|
+| `vael_the_mistcaller` | Vael the Mistcaller | Vael the Fogbinder | mob | rename |
+| `q_mistcaller` quest name | The Mistcaller | The Fogbinder | quest | rename |
+| `mistcallers_edge` | Mistcaller's Edge | Fogbinder's Edge | item | rename |
+| Mistcaller epithet | Mistcaller | Fogbinder | epithet | rename |
+
+- `q_mistcaller` objective label: "Vael the Mistcaller slain" -> "Vael the Fogbinder slain".
+- `q_mistcaller` text + zone2 quest prose (zone2.ts:690,1043,1060,1087): "Mistcaller" -> "Fogbinder" (4 lines).
+
+### (C) Scourge - operator KEEP (no rows armed)
+"Nythraxis, Scourge of Thornpeak" (`dungeons.ts`) and "Scourge's End" (`q_nythraxis_scourges_end`)
+KEPT: "Scourge of <place>" is the common-noun (affliction) usage, not WoW's standalone proper-noun
+faction. Considered and declined, like Mogger/Riptide. Ids unchanged; no scanner entry.
+
+### (D) Shadow Flame -> searing shadow (Blizzard-coined effect in tooltip prose)
+| id | old | new | kind | flag |
+|---|---|---|---|---|
+| `shadowburn` description | Shadow Flame | searing shadow | ability-desc | rename |
+
+- classes.ts:2691 + i18n.catalog/abilities.ts (byte-identical English copies): "blasts the target with Shadow Flame" -> "blasts the target with searing shadow". Ability NAME already renamed (`shadowburn` -> Duskfire, V1). Locale values re-fill at Z1.
