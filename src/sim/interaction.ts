@@ -23,6 +23,7 @@
 // `src/sim`-pure: no DOM/Three/render-ui-game-net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
+import { bagCapacity, fitsAll } from './bags';
 import { ITEMS, MOBS, QUESTS, SPIRIT_HEALER_NPC_ID } from './data';
 import {
   activateNythraxisRelic,
@@ -37,9 +38,16 @@ import {
   lootSlotVisibleTo,
   pruneCorpseLoot,
 } from './loot/loot_roll';
-import { harvestItemFor, isHarvestableCorpse, resolveCorpseHarvest } from './professions/gathering';
+import {
+  effectiveFocusComponents,
+  HARVEST_COMPONENT_ITEMS,
+  harvestTierQuantity,
+  isHarvestableCorpse,
+  resolveCorpseFocusHarvest,
+  resolveCorpseHarvest,
+} from './professions/gathering';
 import type { SimContext } from './sim_context';
-import { dist2d, type Entity, INTERACT_RANGE, OBJECT_RESPAWN } from './types';
+import { dist2d, type Entity, INTERACT_RANGE, type InvSlot, OBJECT_RESPAWN } from './types';
 import { markWorldBossLooted } from './world_boss';
 
 // Shared corpse loot-rights snapshot for both the manual `lootCorpse` and the passive
@@ -185,8 +193,19 @@ export function autoLootForParty(ctx: SimContext, mobId: number, triggerPid: num
  * command reaches here first while the corpse is unclaimed wins; every later
  * attempt against the same corpse (same tick or later) is denied. See
  * professions/gathering.ts for the race-freedom argument.
+ *
+ * `components` (#1142) is the player's per-corpse focus pick: which tagged
+ * component(s) to extract. Omitted, empty, or covering every tagged component
+ * all spread the harvest across every tag (the #1141 behavior); picking fewer
+ * concentrates the effort for a higher tier per component, per
+ * resolveCorpseFocusHarvest in professions/gathering.ts.
  */
-export function harvestCorpse(ctx: SimContext, mobId: number, pid?: number): void {
+export function harvestCorpse(
+  ctx: SimContext,
+  mobId: number,
+  components?: string[],
+  pid?: number,
+): void {
   const r = ctx.resolve(pid);
   if (!r) return;
   const { meta, e: p } = r;
@@ -213,16 +232,29 @@ export function harvestCorpse(ctx: SimContext, mobId: number, pid?: number): voi
     return;
   }
   // Capacity gate BEFORE consuming the single-use claim: addItem is never
-  // capacity-capped (the command boundary owns the canAddItem pre-check, like
+  // capacity-capped (the command boundary owns the pre-check, like
   // lootCorpse/pickUpObject in this file), and a full-bags refusal must leave
-  // the corpse unclaimed for the next harvester.
-  const itemId = harvestItemFor(componentTags);
-  if (itemId && !ctx.canAddItem(itemId, 1, meta.entityId)) {
+  // the corpse unclaimed for the next harvester. The gate runs on the
+  // deterministic pre-roll focus set (one of each distinct mapped yield item,
+  // fit cumulatively) so a refused command draws NO rng; the tier-roll
+  // quantities beyond the first of each item only ever top up those stacks.
+  const wanted: InvSlot[] = [];
+  for (const component of effectiveFocusComponents(componentTags ?? [], components ?? [])) {
+    const wantedItemId = HARVEST_COMPONENT_ITEMS[component];
+    if (wantedItemId && !wanted.some((w) => w.itemId === wantedItemId)) {
+      wanted.push({ itemId: wantedItemId, count: 1 });
+    }
+  }
+  if (wanted.length > 0 && !fitsAll(meta.inventory, bagCapacity(meta.bags), wanted)) {
     ctx.error(meta.entityId, 'Your bags are full.');
     return;
   }
   mob.harvestClaimedBy = claim.claimedBy;
-  if (itemId) ctx.addItem(itemId, 1, meta.entityId);
+  const yields = resolveCorpseFocusHarvest(componentTags ?? [], components ?? [], ctx.rng);
+  for (const y of yields) {
+    const itemId = HARVEST_COMPONENT_ITEMS[y.component];
+    if (itemId) ctx.addItem(itemId, harvestTierQuantity(y.tier), meta.entityId);
+  }
 }
 
 export function pickUpObject(ctx: SimContext, objId: number, pid?: number): void {
