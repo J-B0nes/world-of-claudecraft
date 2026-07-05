@@ -235,15 +235,19 @@ export function harvestCorpse(
   // capacity-capped (the command boundary owns the pre-check, like
   // lootCorpse/pickUpObject in this file), and a full-bags refusal must leave
   // the corpse unclaimed for the next harvester. The gate runs on the
-  // deterministic pre-roll focus set (one of each distinct mapped yield item,
-  // fit cumulatively) so a refused command draws NO rng; the tier-roll
-  // quantities beyond the first of each item only ever top up those stacks.
+  // deterministic pre-roll focus set so a refused command draws NO rng, and it
+  // reserves the MAXIMUM the tier roll can add per component
+  // (harvestTierQuantity of the top tier, fit cumulatively): a gate on less
+  // could pass on a nearly-full stack and let the uncapped addItem spill past
+  // capacity.
+  const maxTierQty = harvestTierQuantity('legendary');
   const wanted: InvSlot[] = [];
   for (const component of effectiveFocusComponents(componentTags ?? [], components ?? [])) {
     const wantedItemId = HARVEST_COMPONENT_ITEMS[component];
-    if (wantedItemId && !wanted.some((w) => w.itemId === wantedItemId)) {
-      wanted.push({ itemId: wantedItemId, count: 1 });
-    }
+    if (!wantedItemId) continue;
+    const existing = wanted.find((w) => w.itemId === wantedItemId);
+    if (existing) existing.count += maxTierQty;
+    else wanted.push({ itemId: wantedItemId, count: maxTierQty });
   }
   if (wanted.length > 0 && !fitsAll(meta.inventory, bagCapacity(meta.bags), wanted)) {
     ctx.error(meta.entityId, 'Your bags are full.');

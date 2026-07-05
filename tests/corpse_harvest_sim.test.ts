@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bagCapacity } from '../src/sim/bags';
+import { bagCapacity, stackSizeOf } from '../src/sim/bags';
 import { HARVEST_COMPONENT_ITEMS } from '../src/sim/content/professions';
 import { ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
@@ -172,6 +172,33 @@ describe('corpse harvest: single-use, first-come (#1141)', () => {
     sim.harvestCorpse(mob.id, undefined, b);
     expect(mob.harvestClaimedBy).toBe(b);
     // #1142's focus-harvest tier roll can grant more than one per component.
+    expect(sim.countItem('boar_hide', b)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('a slot-full inventory with a nearly-full yield stack is refused, never taken over capacity', () => {
+    // The tier roll can add up to harvestTierQuantity('legendary') = 6 of a
+    // component's item, and addItem is never capacity-capped. A gate that only
+    // reserves 1 would pass here (the partial stack absorbs 1) and the roll
+    // could spill past capacity into a new slot; the gate must reserve the
+    // roll's MAXIMUM. Focused single-component pick so the partial-stack path
+    // is what decides, not a second component needing a free slot.
+    const { sim, internals, mob, a, b } = setup();
+    fillBags(sim, internals, a);
+    const m = internals.players.get(a)!;
+    const cap = bagCapacity(m.bags);
+    // Convert one gear slot into a boar_hide stack with room for exactly 1.
+    m.inventory[0] = { itemId: 'boar_hide', count: stackSizeOf(ITEMS.boar_hide) - 1 };
+    expect(m.inventory.length).toBe(cap);
+    sim.drainEvents();
+    sim.harvestCorpse(mob.id, ['hide'], a);
+    const ev = sim.drainEvents();
+    expect(ev.some((e) => e.type === 'error' && e.text === 'Your bags are full.')).toBe(true);
+    expect(mob.harvestClaimedBy).toBeNull();
+    expect(m.inventory.length).toBeLessThanOrEqual(cap);
+    expect(sim.countItem('boar_hide', a)).toBe(stackSizeOf(ITEMS.boar_hide) - 1);
+    // The unconsumed claim is still winnable by a player with room.
+    sim.harvestCorpse(mob.id, ['hide'], b);
+    expect(mob.harvestClaimedBy).toBe(b);
     expect(sim.countItem('boar_hide', b)).toBeGreaterThanOrEqual(1);
   });
 
