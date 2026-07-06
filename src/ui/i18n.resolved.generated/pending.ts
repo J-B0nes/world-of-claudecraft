@@ -86,7 +86,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "es_ES": [
     "guide.nav.settings",
@@ -165,7 +166,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "fr_FR": [
     "guide.nav.settings",
@@ -244,7 +246,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "fr_CA": [
     "guide.nav.settings",
@@ -323,7 +326,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "en_CA": [],
   "it_IT": [
@@ -403,7 +407,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "de_DE": [
     "guide.nav.settings",
@@ -482,7 +487,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "zh_CN": [
     "hudChrome.crafting.reagentLine",
@@ -581,7 +587,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "ru_RU": [
     "hudChrome.crafting.reagentLine",
@@ -665,7 +672,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "pl_PL": [
     "guide.nav.settings",
@@ -744,7 +752,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "id_ID": [
     "guide.nav.settings",
@@ -823,7 +832,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "tr_TR": [
     "guide.nav.settings",
@@ -902,7 +912,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "sv_SE": [
     "guide.nav.settings",
@@ -981,7 +992,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "vi_VN": [
     "guide.nav.settings",
@@ -1060,7 +1072,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ],
   "da_DK": [
     "guide.nav.settings",
@@ -1139,6 +1152,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.targetCycle",
     "hudChrome.mobile.targetCycleShort",
     "hudChrome.options.mobileCameraJoystick",
-    "hudChrome.options.mobileLeftHanded"
+    "hudChrome.options.mobileLeftHanded",
+    "loading.reconnecting"
   ]
 };
