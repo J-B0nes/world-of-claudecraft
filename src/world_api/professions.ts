@@ -39,9 +39,10 @@ export interface CraftResultView {
 // is harvestable right now BY THE LOCAL VIEWER specifically. Two players
 // asking about the same node id can get different answers, because each
 // player's respawn timer for a node is independent (see
-// src/sim/professions/gathering.ts). `recipeList`/`craftItem`/`lastCraftResult`
-// (#1127) are the first crafting-action members: recipes exist as content, and
-// a player can craft a common-tier recipe if they have required materials.
+// src/sim/professions/gathering.ts). `recipeList`/`craftItem`/
+// `lastCraftResult` (#1127) are the first crafting-action members: recipes
+// exist as content, and a player can craft a common-tier recipe if they have
+// required materials.
 export interface IWorldProfessions {
   professionsState: PlayerProfessionsView;
   nodeHarvestableByMe(nodeId: string): boolean;

@@ -2260,6 +2260,19 @@ export class ClientWorld implements IWorld {
   collectDelveChestLoot(chestId: number): void {
     this.cmd({ cmd: 'collect_delve_chest_loot', objectId: chestId });
   }
+  // Mirror the authoritative craftResult event into lastCraftResult (#1127).
+  // The event still flows to the HUD (drainEvents) for a toast/log line.
+  private applyCraftResultEvent(ev: SimEvent): void {
+    if (ev.type !== 'craftResult') return;
+    this.lastCraftResult = {
+      ok: ev.ok,
+      recipeId: ev.recipeId,
+      itemId: ev.itemId,
+      count: ev.count,
+      quality: ev.quality as MaterialRarity | undefined,
+      reason: ev.reason,
+    };
+  }
   delveRiteChoose(intensity: RiteIntensity): void {
     this.cmd({ cmd: 'delve_rite_choose', intensity });
   }
