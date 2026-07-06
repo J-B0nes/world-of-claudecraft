@@ -339,7 +339,9 @@ export function resolveCorpseHarvest(currentClaimedBy: number | null, pid: numbe
  * but reuses the same classic six-tier naming so it reads consistently. */
 export type HarvestTier = 'poor' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
-const HARVEST_TIERS: readonly HarvestTier[] = [
+// Exported so professions/focus.ts (#1143) can shift a rolled tier upward by a
+// persistent town-focus bonus without redefining the tier order.
+export const HARVEST_TIERS: readonly HarvestTier[] = [
   'poor',
   'common',
   'uncommon',
@@ -403,93 +405,6 @@ export function resolveCorpseFocusHarvest(
   rng: Rng,
 ): FocusHarvestYield[] {
   const effectiveChosen = effectiveFocusComponents(taggedComponents, chosen);
-  const bonus = Math.max(
-    0,
-    Math.min(HARVEST_TIERS.length - 1, taggedComponents.length - effectiveChosen.length),
-  );
-  return effectiveChosen.map((component) => ({ component, tier: rollFocusTier(rng, bonus) }));
-}
-
-/** How many of the mapped item a yielded tier grants: 1 (poor) through 6 (legendary). */
-export function harvestTierQuantity(tier: HarvestTier): number {
-  return HARVEST_TIERS.indexOf(tier) + 1;
-}
-
-function rollFocusTier(rng: Rng, bonus: number): HarvestTier {
-  const totalWeight = BASE_TIER_WEIGHTS.reduce((sum, w) => sum + w, 0);
-  let roll = rng.next() * totalWeight;
-  let index = 0;
-  for (; index < BASE_TIER_WEIGHTS.length - 1; index++) {
-    roll -= BASE_TIER_WEIGHTS[index];
-    if (roll < 0) break;
-  }
-  const shifted = Math.min(HARVEST_TIERS.length - 1, index + bonus);
-  return HARVEST_TIERS[shifted];
-}
-
-// Per-corpse focus picker (#1142): concentrate vs spread tradeoff.
-//
-// At a harvestable corpse the player chooses which tagged component(s) to
-// extract. Choosing FEWER components concentrates the effort and yields a
-// measurably higher tier per component than spreading across every tagged
-// type on the same corpse.
-
-/** Component yield tiers, worst to best. Independent of `ItemDef['quality']`
- * (a harvest yield is a raw material, not necessarily an equippable item),
- * but reuses the same classic six-tier naming so it reads consistently. */
-export type HarvestTier = 'poor' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-
-// Exported so professions/focus.ts (#1143) can shift a rolled tier upward by a
-// persistent town-focus bonus without redefining the tier order.
-export const HARVEST_TIERS: readonly HarvestTier[] = [
-  'poor',
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'legendary',
-];
-
-// Base per-tier roll weights (poor..legendary), used unshifted when the player
-// spreads across every tagged component on the corpse (zero concentration).
-// Tune here, not inline in the roll.
-const BASE_TIER_WEIGHTS: readonly number[] = [40, 30, 15, 10, 4, 1];
-
-export interface FocusHarvestYield {
-  readonly component: string;
-  readonly tier: HarvestTier;
-}
-
-/**
- * Resolve a per-corpse focus harvest: one independent tier roll per chosen
- * component, each roll's weight table shifted upward by a concentration bonus.
- *
- * Formula (monotonic, documented, no invented balance numbers beyond the base
- * weight table above): `bonus = taggedComponents.length - effectiveChosen.length`,
- * clamped to `[0, HARVEST_TIERS.length - 1]`. Each component's tier index is
- * `min(rolledIndex + bonus, HARVEST_TIERS.length - 1)`. Choosing every tagged
- * component gives `bonus = 0` (an unshifted roll, the pre-#1142 "spread"
- * behavior); choosing strictly fewer components out of the same tagged set
- * can only raise the shift, never lower it, so concentrating on fewer
- * components always yields an equal-or-higher expected tier per component
- * than spreading wider on the same corpse.
- *
- * Backward compatibility: an empty `chosen` (no selection made) or a `chosen`
- * that covers every tagged component both default to spreading across all of
- * `taggedComponents`, matching the single-harvest behavior from #1141.
- *
- * Pure: draws only from the passed-in `Rng`, one draw per yielded component,
- * in `effectiveChosen` order.
- */
-export function resolveCorpseFocusHarvest(
-  taggedComponents: readonly string[],
-  chosen: readonly string[],
-  rng: Rng,
-): FocusHarvestYield[] {
-  const effectiveChosen =
-    chosen.length === 0 || chosen.length >= taggedComponents.length
-      ? taggedComponents
-      : chosen.filter((c) => taggedComponents.includes(c));
   const bonus = Math.max(
     0,
     Math.min(HARVEST_TIERS.length - 1, taggedComponents.length - effectiveChosen.length),
