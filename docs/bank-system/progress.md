@@ -7,7 +7,7 @@
 | Phase 1: sim bank core | complete | 2026-07-05 | 2026-07-05 |
 | Phase 1 QA | complete | 2026-07-06 | 2026-07-06 |
 | Phase 2: banker NPCs | complete | 2026-07-06 | 2026-07-06 |
-| Phase 2 QA | not started | | |
+| Phase 2 QA | complete | 2026-07-06 | 2026-07-06 |
 | Phase 3: IWorld + wire | not started | | |
 | Phase 3 QA | not started | | |
 | Phase 4: lease + ledger | not started | | |
@@ -43,7 +43,7 @@
 - [x] Sim tests: proximity open/deny, event emission, anchor-list behavior (bank.test.ts 42 -> 58)
 
 ### Phase 2 QA
-- [ ] As Phase 1 QA
+- [x] Deliverables and acceptance criteria re-verified independently (parity + golden audit, event/proximity/i18n/guide, in-world visual placement); findings fixed; 8-mutation decisiveness pass all killed
 
 ### Phase 3: IWorld + wire
 - [ ] `src/world_api/bank.ts` facet; IWorld extends list; COMMAND_FACETS tags
@@ -117,7 +117,7 @@
 ### Phase 2 (2026-07-06)
 - Reviewers: architecture-reviewer (0 blocking, 0 should-fix, 4 notes), cross-platform-sync (0 blocking, 4 nits, all deferred-phase handoffs), qa-checklist (READY, 1 should-fix: targeted-far interact test, applied same-session as test 58). Every finding applied or recorded in state.md Phase 2 outcomes.
 - PARITY GOLDENS REGENERATED (user-approved in-phase): three ctor-placed NPCs shift every later entity id by +3, so "goldens byte-identical" is unachievable for any world-entity addition. Independent audit (script + architecture-reviewer re-verification): all 48 changed goldens are a pure +3 id-family offset, rng draw digests and counts byte-identical, zero anomalies. Landed as its own test(parity) commit per tests/parity/CLAUDE.md. The packet acceptance criterion was amended accordingly.
-- Easter egg: the Eastbrook banker is Bursar Fernando (bursar_fernando), renamed mid-phase from the planned bursar_hobb at the maintainer's request. All phase docs, i18n keys, and translations re-keyed; repo-wide grep for the old id is clean (the two historical provenance notes in docs are deliberate).
+- Easter egg: the Eastbrook banker is Bursar Fernando (bursar_fernando), renamed mid-phase from the planned bursar_hobb at the maintainer's request. All phase docs, i18n keys, and translations re-keyed; repo-wide grep for the old id is clean (the historical provenance notes in the bank-system docs, five mentions across state.md, phase-02-banker-npcs.md, and this file, are deliberate).
 - Deferral: an in-world visual placement check of the three bankers (overlap/geometry) needs a running client; deferred to the Phase 2 QA session.
 - Next: run docs/bank-system/phase-02-qa.md in a fresh session.
 
@@ -127,3 +127,11 @@
 - Planted-bug pass (acceptance criterion 1): 5/5 conservation mutations caught by the sweep itself, including the vacuity guard.
 - `tests/bank.test.ts` grew 41 -> 42 tests and every refusal path now pins copper + both containers; the two generic persistence suites now cover the bank field.
 - Next: run docs/bank-system/phase-02-banker-npcs.md in a fresh session.
+
+### Phase 2 QA (2026-07-06)
+- Verdict: PASS after fixes. 0 blocking + 4 should-fix + 5 nits/info found across seven audit streams (correctness, coverage, dead-code, architecture-reviewer, cross-platform-sync, qa-checklist, in-world visual check); all four should-fix and both doc nits applied same-session. Full record in state.md "Phase 2 QA outcomes".
+- Fixes landed: dead-player gate on all three bank commands (the market/mail silent idiom; a dead player could previously deposit/withdraw/buy while the interact path was already dead-gated), `banker: true` preserved through the map-editor sanitizer (`sanitizeNpc` mirrored `market` but dropped `banker`), `bursar_petra_vell` re-authored {12,303} -> {9,303} (the authored spot sat inside the Fenbridge inn's collider and findSafePos silently relocated her 2.8 yd at spawn; the new coordinate spawns nudge-free and parity goldens are UNTOUCHED because hub NPCs are not tracked parity entities), and the reach boundary pinned with literal distances (7.0 succeeds, 7.05 refused).
+- Independent re-verification: parity green with rng draws/digests byte-identical across all 48 goldens (779 checks, 3072 +3 id-shifts, zero anomalies); in-world visual placement PASS for all three bursars (screenshots; identity via nameplates/target frames).
+- Decisiveness: 8-mutation planted-bug pass, all killed (per-command gates, both interact intercepts, ctor push, pid on the emit, radius widening, boundary inclusivity, dead gate).
+- Phase 5 handoffs recorded in state.md: banker discoverability (no minimap marker or role hint yet) and whether to surface the greeting on bank-open; keep passing pid on the bank event.
+- Next: run docs/bank-system/phase-03-iworld-wire.md in a fresh session.
