@@ -10,6 +10,8 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -39,6 +41,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "es_ES": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -68,6 +72,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "fr_FR": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -97,6 +103,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "fr_CA": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -127,6 +135,8 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "en_CA": [],
   "it_IT": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -156,6 +166,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "de_DE": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -185,26 +197,36 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "zh_CN": [
+    "download.linuxCta",
+    "download.linuxHint",
     "hudChrome.crafting.reagentLine",
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.spellbookPageLabel"
   ],
   "zh_TW": [
+    "download.linuxCta",
+    "download.linuxHint",
     "hudChrome.crafting.reagentLine",
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.spellbookPageLabel"
   ],
   "ko_KR": [
+    "download.linuxCta",
+    "download.linuxHint",
     "hudChrome.crafting.reagentLine",
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.spellbookPageLabel"
   ],
   "ja_JP": [
+    "download.linuxCta",
+    "download.linuxHint",
     "hudChrome.crafting.reagentLine",
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.spellbookPageLabel"
   ],
   "pt_BR": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -234,11 +256,15 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "ru_RU": [
+    "download.linuxCta",
+    "download.linuxHint",
     "hudChrome.crafting.reagentLine",
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.spellbookPageLabel"
   ],
   "nl_NL": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -268,6 +294,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "pl_PL": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -297,6 +325,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "id_ID": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -326,6 +356,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "tr_TR": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -355,6 +387,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "sv_SE": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -384,6 +418,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "vi_VN": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
@@ -413,6 +449,8 @@ export const pending: Record<string, readonly string[]> = {
     "loading.reconnecting"
   ],
   "da_DK": [
+    "download.linuxCta",
+    "download.linuxHint",
     "entities.quests.q_archetype_acceptance.completion",
     "entities.quests.q_archetype_acceptance.objectives.0.label",
     "entities.quests.q_archetype_acceptance.text",
