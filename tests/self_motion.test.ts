@@ -247,6 +247,35 @@ describe('SelfMotionPredictor', () => {
     }
   });
 
+  it('never pumps forward/backward when the RTT exceeds the lead cap (netem case)', () => {
+    // 280ms RTT > SELF_MOTION_CAP_MAX_MS: the divergence measurement must stay
+    // aligned to the TRUE delay and the servo gain bounded, or the correction
+    // chases its own delayed history and pumps the pose back and forth.
+    const lab = new Lab(280);
+    lab.setInput(mi({ forward: true }));
+    let prev: number | null = null;
+    for (let i = 0; i < 60 * 3; i++) {
+      const { pose } = lab.frame();
+      if (!pose) throw new Error('predictor disabled unexpectedly');
+      if (prev !== null) expect(pose.z - prev, `run frame ${i}`).toBeGreaterThanOrEqual(-0.005);
+      prev = pose.z;
+    }
+    lab.setInput(mi());
+    // per-frame: nothing beyond sub-centimeter noise; cumulative: no slow
+    // sawtooth sneaking under a per-frame threshold
+    let backslide = 0;
+    for (let i = 0; i < 60 * 2; i++) {
+      const r = lab.frame();
+      if (r.pose && prev !== null) {
+        const step = r.pose.z - prev;
+        expect(step, `release frame ${i}`).toBeGreaterThanOrEqual(-0.01);
+        if (step < 0) backslide += -step;
+        prev = r.pose.z;
+      }
+    }
+    expect(backslide).toBeLessThan(0.05);
+  });
+
   it('starts the jump arc locally without waiting for the server', () => {
     const lab = new Lab(150);
     lab.setInput(mi({ forward: true }));

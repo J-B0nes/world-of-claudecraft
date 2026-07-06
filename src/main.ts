@@ -2400,9 +2400,14 @@ async function startGame(
       turnAllowed: net.spectating === null && !movementFrozen() && !isStunned(pe),
       sentFacing: foreignFacing,
       serverFacing: interpServerFacing,
+      echoMs: onlineInputEchoMs,
       frameDt,
     });
-    const netFacing = foreignFacing ?? kbFacing;
+    // wireFacing, not kbFacing: only input-derived headings go on the wire.
+    // Streaming the seam/glide corrections (which chase the mirror) would
+    // close a feedback loop through the server that at high RTT never
+    // converges (the observed self-spinning resonance under netem).
+    const netFacing = foreignFacing ?? kbTurn.wireFacing;
     Object.assign(net.moveInput, resolved.mi);
     // The engage-edge frame lets the real flags through once: server behaviors
     // keyed on a manual turn (breaking /follow, the anti-AFK activity mark)

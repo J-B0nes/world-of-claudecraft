@@ -14,6 +14,7 @@ const args = (over: Partial<KeyboardTurnArgs> = {}): KeyboardTurnArgs => ({
   turnAllowed: true,
   sentFacing: null,
   serverFacing: 0,
+  echoMs: 0,
   frameDt: FRAME_60,
   ...over,
 });
@@ -185,6 +186,61 @@ describe('stepKeyboardTurnFacing', () => {
     );
     expect(f).toBeCloseTo(0.8, 6);
     expect(st.facing).not.toBeNull();
+  });
+
+  it('puts only input-derived headings on the wire, never corrections', () => {
+    const st = newKeyboardTurnState();
+    stepKeyboardTurnFacing(st, args({ turnLeft: true, serverFacing: 0 }));
+    expect(st.wireFacing).toBeCloseTo(st.facing as number, 12); // turning: streamed
+    // release with the mirror far behind: the pure hold streams the constant heading
+    stepKeyboardTurnFacing(st, args({ serverFacing: -1 }));
+    expect(st.wireFacing).toBeCloseTo(st.facing as number, 12);
+    // seam band: mirror-derived correction motion, the wire goes silent
+    const held = st.facing as number;
+    stepKeyboardTurnFacing(st, args({ serverFacing: held - 0.015 }));
+    expect(st.wireFacing).toBeNull();
+  });
+
+  it('cannot resonate through the server: converges against its own delayed echo', () => {
+    // Reproduces the netem self-spin setup: the server applies whatever the
+    // client streams, one RTT later, and the mirror feeds back as serverFacing.
+    // With corrections kept OFF the wire the loop is open and must converge.
+    const st = newKeyboardTurnState();
+    for (let i = 0; i < 30; i++) {
+      stepKeyboardTurnFacing(st, args({ turnLeft: true, serverFacing: 0 }));
+    }
+    const echoFrames = 17; // ~280ms at 60fps
+    const wireLog: (number | null)[] = [];
+    let lastApplied = (st.facing as number) - 0.6; // mirror far behind at release
+    let f: number | null = st.facing;
+    let prev = st.facing as number;
+    let totalTravel = 0;
+    for (let i = 0; i < 60 * 5 && f !== null; i++) {
+      wireLog.push(st.wireFacing);
+      const arrived = i >= echoFrames ? wireLog[i - echoFrames] : null;
+      if (arrived !== null) lastApplied = arrived;
+      f = stepKeyboardTurnFacing(st, args({ serverFacing: lastApplied, echoMs: 280 }));
+      if (f !== null) {
+        totalTravel += Math.abs(f - prev);
+        prev = f;
+      }
+    }
+    expect(st.facing).toBeNull(); // handed off, not spinning forever
+    expect(totalTravel).toBeLessThan(Math.PI); // bounded settle, no full circles
+  });
+
+  it('scales the release grace with the measured echo', () => {
+    const st = newKeyboardTurnState();
+    for (let i = 0; i < 30; i++) {
+      stepKeyboardTurnFacing(st, args({ turnLeft: true, serverFacing: 0 }));
+    }
+    const held = st.facing as number;
+    const serverFacing = held - 0.3; // mirror never catches up
+    // echo 400ms -> grace 720ms; at ~500ms the heading must still be held
+    for (let i = 0; i < 30; i++) {
+      stepKeyboardTurnFacing(st, args({ serverFacing, echoMs: 400 }));
+    }
+    expect(st.facing).toBeCloseTo(held, 9);
   });
 
   it('returns null and stays inactive when idle', () => {

@@ -49,10 +49,20 @@ const MAX_FRAME_DT = 0.25;
 export interface KeyboardTurnState {
   facing: number | null; // null = inactive (the server facing owns the display)
   releaseMs: number; // time spent in the release phase
+  /**
+   * The heading the caller may put on the wire this frame, or null. Only ever
+   * carries values DERIVED FROM INPUT (the live turn integration, the constant
+   * held heading): never a value derived from the mirrored server facing. The
+   * seam/glide corrections move the display TOWARD the mirror, and streaming
+   * them back would make the server chase its own delayed echo, a closed
+   * feedback loop that at high RTT never converges (the character visibly
+   * spins on its own at the glide rate until the player intervenes).
+   */
+  wireFacing: number | null;
 }
 
 export function newKeyboardTurnState(): KeyboardTurnState {
-  return { facing: null, releaseMs: 0 };
+  return { facing: null, releaseMs: 0, wireFacing: null };
 }
 
 function approachAngle(current: number, target: number, maxStep: number): number {
@@ -75,6 +85,9 @@ export interface KeyboardTurnArgs {
   sentFacing: number | null;
   /** Interpolated prev->server facing (alpha capped at 1), the handoff target. */
   serverFacing: number;
+  /** Measured input echo (ms); scales the release grace so a high-RTT link
+   *  gets its full round trip of holding before any correction starts. */
+  echoMs: number;
   frameDt: number;
 }
 
@@ -91,6 +104,7 @@ export function stepKeyboardTurnFacing(
     // A foreign path (mouselook, click-move) owns the heading and streams it
     // itself; yield.
     state.facing = null;
+    state.wireFacing = null;
     return null;
   }
   const dt = Math.min(Math.max(0, args.frameDt), MAX_FRAME_DT);
@@ -100,9 +114,13 @@ export function stepKeyboardTurnFacing(
     const base = state.facing ?? args.serverFacing;
     state.facing = wrapAngle(base + dir * TURN_SPEED * dt);
     state.releaseMs = 0;
+    state.wireFacing = state.facing; // input-derived: safe to stream
     return state.facing;
   }
-  if (state.facing === null) return null;
+  if (state.facing === null) {
+    state.wireFacing = null;
+    return null;
+  }
 
   // Release phase: hold the local heading until the mirrored server facing
   // settles on it (the caller kept streaming it while we held, so the server
@@ -111,19 +129,30 @@ export function stepKeyboardTurnFacing(
   const gap = wrapAngle(args.serverFacing - state.facing);
   if (Math.abs(gap) <= HANDOFF_DONE_EPS) {
     state.facing = null;
+    state.wireFacing = null;
     return args.serverFacing;
   }
   if (Math.abs(gap) <= HANDOFF_EPS) {
     // Seam band: ease the last fraction of a degree (mostly wire rounding)
-    // onto the mirror instead of stepping it in a single frame.
+    // onto the mirror instead of stepping it in a single frame. Mirror-derived
+    // motion: never streamed (see wireFacing).
     state.facing = approachAngle(state.facing, args.serverFacing, SEAM_RATE * dt);
+    state.wireFacing = null;
     return state.facing;
   }
   state.releaseMs += dt * 1000;
-  if (state.releaseMs >= RELEASE_GRACE_MS) {
+  // The grace scales with the measured echo: the mirror cannot possibly show
+  // the held heading before one full round trip, so correcting earlier on a
+  // slow link would fight in-flight state.
+  const graceMs = Math.max(RELEASE_GRACE_MS, args.echoMs * 1.5 + 120);
+  if (state.releaseMs >= graceMs) {
     // The server never caught up (stun mid-turn, dropped input, quantization):
-    // glide the residual out gently instead of snapping at TURN_SPEED.
+    // glide the residual out gently instead of snapping at TURN_SPEED. Mirror-
+    // derived motion: never streamed.
     state.facing = approachAngle(state.facing, args.serverFacing, RELEASE_CORRECT_RATE * dt);
+    state.wireFacing = null;
+  } else {
+    state.wireFacing = state.facing; // the constant held heading: input-derived
   }
   return state.facing;
 }

@@ -34,6 +34,16 @@ import { DT, type Entity, type MoveInput, RUN_SPEED } from '../sim/types';
 // bad link never runs the visual far ahead of the truth.
 export const SELF_MOTION_CAP_MIN_MS = 60;
 export const SELF_MOTION_CAP_MAX_MS = 180;
+// The divergence MEASUREMENT is aligned to the true echo, bounded only by
+// what the history ring can serve. This is a different bound from the lead
+// cap above on purpose: capping the measurement at 180ms on a 280ms link
+// compares the anchor against a history sample 100ms too new, a constant
+// phantom error that drives the servo continuously; and since the history
+// records the already-corrected display, the correction chases its own
+// delayed output. With gain x delay > 1 that loop self-oscillates (the
+// observed forward/backward pumping under netem). Alignment kills the
+// phantom error; the rate bound below keeps the residual loop damped.
+export const SELF_MOTION_MEASURE_MAX_MS = 400;
 // Pull rate of the divergence correction. The correction compares the
 // authoritative pose against WHERE THE LOCAL PREDICTION WAS one latency cap
 // ago (a short pose-history ring), so during agreed motion (steady runs,
@@ -274,19 +284,22 @@ export class SelfMotionPredictor {
     // glides the visual back at SELF_MOTION_BLEND_RATE. Server-driven motion
     // with no local intent (charge, knockback) is also captured: the history
     // stands still while the anchor moves, so the error tracks the ride.
-    const capMs = clamp(
-      frame.echoMs + 0.5 * frame.jitterMs,
-      SELF_MOTION_CAP_MIN_MS,
-      SELF_MOTION_CAP_MAX_MS,
-    );
-    const past = this.sampleHistory(this.timeMs - capMs);
+    const latencyMs = frame.echoMs + 0.5 * frame.jitterMs;
+    const capMs = clamp(latencyMs, SELF_MOTION_CAP_MIN_MS, SELF_MOTION_CAP_MAX_MS);
+    const measureMs = clamp(latencyMs, SELF_MOTION_CAP_MIN_MS, SELF_MOTION_MEASURE_MAX_MS);
+    const past = this.sampleHistory(this.timeMs - measureMs);
     if (past) {
       // The blend dt is clamped tighter than the frame clamp: at load-hitch
       // frame times (100-250ms at world entry, or on weak hardware) an
       // unclamped exponential eats ~95% of the error in ONE frame, turning
       // every correction into a visible jerk. Capped at 1/30 a correction
       // never moves more than ~33% of the gap per frame and still converges.
-      const k = 1 - Math.exp(-SELF_MOTION_BLEND_RATE * Math.min(dt, 1 / 30));
+      // The rate itself is bounded so that rate x measurement-delay stays
+      // under 0.5: the correction loop runs through its own delayed history,
+      // and a delayed servo rings near gain x delay ~1 (at 0.8 it still
+      // pumped ~17cm over a 2s settle in the 280ms-RTT lab).
+      const rate = Math.min(SELF_MOTION_BLEND_RATE, 500 / measureMs);
+      const k = 1 - Math.exp(-rate * Math.min(dt, 1 / 30));
       const errX = ax - past.x;
       const errY = ay - past.y;
       const errZ = az - past.z;
@@ -312,12 +325,13 @@ export class SelfMotionPredictor {
     const ez = actor.pos.z - az;
     const elen = Math.hypot(ex, ez);
     if (elen > budget) {
-      const cx = ax + (ex * budget) / elen - actor.pos.x;
-      const cz = az + (ez * budget) / elen - actor.pos.z;
-      actor.pos.x += cx;
-      actor.pos.z += cz;
-      actor.prevPos.x += cx;
-      actor.prevPos.z += cz;
+      // Clamp pos ONLY (unlike the correction blend above): prevPos keeps the
+      // last displayed point, so the sub-frame interpolation glides onto the
+      // boundary instead of stepping back. When the RTT exceeds the lead cap
+      // the display rides this boundary permanently, and shifting prevPos too
+      // turned each 20Hz kernel step into a visible forward/back sawtooth.
+      actor.pos.x = ax + (ex * budget) / elen;
+      actor.pos.z = az + (ez * budget) / elen;
     }
 
     this.out.x = actor.prevPos.x + (actor.pos.x - actor.prevPos.x) * frac;
