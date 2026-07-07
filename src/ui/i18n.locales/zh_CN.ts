@@ -6076,4 +6076,6 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.sport_shoulder.description': '一记符合丰收休战规矩的肩撞，把对手撞得摔离球。',
   'entities.abilities.sport_second_wind.name': '重振旗鼓',
   'entities.abilities.sport_second_wind.description': '找回状态：移动速度提高50%，持续4秒。',
+  'hudChrome.vcup.guildBoardWl': '{wins} 胜，{losses} 负',
+  'hudChrome.vcup.shootPower': '力量',
 };

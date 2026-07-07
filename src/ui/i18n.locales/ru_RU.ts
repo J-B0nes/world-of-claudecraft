@@ -6543,4 +6543,6 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.sport_second_wind.name': 'Второе дыхание',
   'entities.abilities.sport_second_wind.description':
     'Обретите ноги: скорость передвижения повышена на 50% на 4 сек.',
+  'hudChrome.vcup.guildBoardWl': '{wins} В, {losses} П',
+  'hudChrome.vcup.shootPower': 'СИЛА',
 };

@@ -6358,4 +6358,328 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
   'entities.quests.q_prof_make_amends.completion':
     "Modifications apportées ; un nouveau chemin s'ouvre à vous.",
   'entities.quests.q_prof_make_amends.objectives.0.label': 'Loup des forêts tué',
+  'entities.abilities.sport_boot.description':
+    'Un long ballon botté en cloche vers le point visé. La foule adore.',
+  'entities.abilities.sport_boot.name': 'Grosse botte',
+  'entities.abilities.sport_dive.description':
+    'Jetez-vous vers le point visé. Un ballon qui croise votre course vous reste dans les mains.',
+  'entities.abilities.sport_dive.name': 'Plongeon',
+  'entities.abilities.sport_feint.description': 'Un brusque pas de côté vers le point visé.',
+  'entities.abilities.sport_feint.name': 'Feinte',
+  'entities.abilities.sport_hoof.description':
+    "Frappez le ballon fort et à ras de terre vers l'avant du terrain.",
+  'entities.abilities.sport_hoof.name': 'Coup de sabot',
+  'entities.abilities.sport_kick.description': 'Poussez le ballon au sol vers le point visé.',
+  'entities.abilities.sport_kick.name': 'Coup de pied',
+  'entities.abilities.sport_pass.description':
+    "Adressez une passe appuyée à l'équipier ciblé, dans le sens de sa course.",
+  'entities.abilities.sport_pass.name': 'Passe',
+  'entities.abilities.sport_punt.description': 'Un dégagement de gardien, haut et loin.',
+  'entities.abilities.sport_punt.name': 'Long dégagement',
+  'entities.abilities.sport_second_wind.description':
+    'Retrouvez vos jambes : vous vous déplacez 50% plus vite pendant 4 s.',
+  'entities.abilities.sport_second_wind.name': 'Jambes fraîches',
+  'entities.abilities.sport_shoot.description':
+    'Maintenez pour charger la puissance, relâchez pour tirer au but. Trop de puissance, et le ballon file au-dessus.',
+  'entities.abilities.sport_shoot.name': 'Tir',
+  'entities.abilities.sport_shoulder.description':
+    "Un coup d'épaule loyal, dans l'esprit de la trêve des moissons. L'adversaire culbute et lâche le ballon.",
+  'entities.abilities.sport_shoulder.name': "Coup d'épaule",
+  'entities.npcs.bursar_aldous_crane.greeting':
+    'Chaque caisse, chaque coffret et chaque babiole est en sécurité au Coffre doré.',
+  'entities.npcs.bursar_aldous_crane.name': 'Trésorier Aldous Crane',
+  'entities.npcs.bursar_aldous_crane.title': 'Le Coffre doré',
+  'entities.npcs.bursar_fernando.greeting':
+    "Bienvenue au Coffre doré. Vos biens reposent à l'abri derrière nos serrures.",
+  'entities.npcs.bursar_fernando.name': 'Trésorier Fernando',
+  'entities.npcs.bursar_fernando.title': 'Le Coffre doré',
+  'entities.npcs.bursar_petra_vell.greeting':
+    'Le Coffre doré tient des registres propres et des chambres fortes plus propres encore. Que pouvons-nous ranger pour vous ?',
+  'entities.npcs.bursar_petra_vell.name': 'Trésorière Petra Vell',
+  'entities.npcs.bursar_petra_vell.title': 'Le Coffre doré',
+  'entities.npcs.groundskeeper_bram.greeting':
+    "La trêve tient au Champ de la Truie, {className} : coups de botte et coups d'épaule, rien de plus. Ça te dit de jouer pour le Seau de cuivre ?",
+  'entities.npcs.groundskeeper_bram.name': 'Intendant Bram',
+  'entities.npcs.groundskeeper_bram.title': 'Gardien du Champ de la Truie',
+  'entities.zones.eastbrook_vale.pois.10.label': 'Le Champ de la Truie',
+  'guide.economy.bankBody':
+    'Chaque ville principale abrite une succursale du Coffre doré, la maison de banque du royaume. Adressez-vous au trésorier sur place pour ouvrir votre chambre forte, une réserve privée au-delà de vos sacs que votre personnage conserve à vie. Tout ce que vous leur confiez attend en lieu sûr, quelle que soit la succursale où vous passerez ensuite.',
+  'guide.economy.bankHow':
+    "Une fois la chambre forte ouverte, cliquez sur un objet dans vos sacs pour le déposer, et cliquez dessus dans la chambre forte pour le reprendre. La chambre forte n'accueille que des biens, jamais de pièces, et les objets de quête restent sur vous. Quand vos sacs débordent en pleine route, un seul bouton y range d'un coup tous vos matériaux d'artisanat.",
+  'guide.economy.bankSlots':
+    'Une chambre forte neuve commence petite et grandit avec vous. Le trésorier vend des emplacements supplémentaires contre pièces, à des prix toujours plus élevés, et jouer en ligne rapporte de la place bonus en plus, par exemple pour une adresse e-mail vérifiée, des comptes liés ou des amis que vous amenez dans le jeu.',
+  'guide.economy.bankTitle': 'La banque',
+  'guide.nav.professions': 'Métiers',
+  'guide.nav.valeCup': 'Coupe du Val',
+  'guide.professions.archetypeChooseBody':
+    "Vous déclarez votre premier archétype au fil d'une quête d'histoire de la zone un, tôt dans l'aventure, qui vous accueille officiellement dans cette identité. Tant que cette quête n'est pas achevée, vous n'avez encore choisi aucun archétype.",
+  'guide.professions.archetypeChooseTitle': 'Choisir son archétype',
+  'guide.professions.archetypeIdentityBody':
+    "Votre archétype actif est une déclaration sur qui est votre personnage dans le monde, reconnue dans la manière dont les autres et le monde s'adressent à vous. Les récompenses et les marques de reconnaissance exactes qui l'accompagnent sont encore en cours de finalisation ; revenez voir à mesure que le système s'étoffe.",
+  'guide.professions.archetypeIdentityTitle': 'Ce que votre archétype signifie',
+  'guide.professions.archetypeIntro':
+    "Chacun des dix métiers d'artisanat incarne aussi un archétype, une identité plus large que vous pouvez endosser au-delà du simple exercice du métier. Votre archétype actif est un choix unique, pas une liste à cocher : vous n'en portez qu'un à la fois, et vous pourrez en changer plus tard si vous le souhaitez.",
+  'guide.professions.archetypeSwitchBody':
+    "Avoir déclaré un archétype ne vous y enferme pas pour toujours. Pour en changer, il faut d'abord accomplir, envers l'ancien, une quête réitérable où vous faites amende honorable, et à chaque changement, l'amende attendue la fois suivante se fait un peu plus lourde : changer garde ainsi du poids au lieu d'être gratuit.",
+  'guide.professions.archetypeSwitchTitle': "Changer d'avis",
+  'guide.professions.archetypeTitle': 'Les dix archétypes',
+  'guide.professions.craftComboBody':
+    "Au-delà de la liste de recettes d'un seul métier, la roue autorise aussi des recettes combinées qui font appel à deux métiers voisins à la fois, récompensant un personnage (ou une paire de partenaires d'échange) qui a investi dans des métiers adjacents sur l'anneau plutôt que dans un seul métier isolé.",
+  'guide.professions.craftComboTitle': 'Recettes combinées',
+  'guide.professions.craftIntro':
+    "Dix métiers d'artisanat transforment les matériaux récoltés en équipement et en marchandises : l'armurerie, la forge d'armes et la joaillerie façonnent la matière brute en pièces portables ; l'alchimie et l'ingénierie avancent par essais et erreurs ; la cuisine, la calligraphie et l'enchantement touchent chacun à l'ouvrage des autres métiers ; la couture et le travail du cuir suivent des patrons exacts. Ensemble, ils forment une roue où chaque métier voisine avec deux autres et se trouve à l'opposé d'un autre.",
+  'guide.professions.craftMasteryBody':
+    "Réussir une fabrication renforce votre compétence dans ce métier, et les recettes les plus riches se méritent : les recettes de base sont ouvertes à tous, tandis que les plus avancées exigent toujours plus de maîtrise pour être tentées. Faire grandir votre compétence dans un métier, c'est le chemin qui mène des simples produits de débutant à ses recettes les plus ambitieuses.",
+  'guide.professions.craftMasteryTitle': 'Compétence et maîtrise',
+  'guide.professions.craftRecipesBody':
+    "Chaque métier possède ses propres recettes, chacune réclamant des composants précis que vous récoltez ou achetez. Les recettes les plus simples de chaque métier ne demandent que des matériaux communs et se fabriquent dès le tout début, si bien que vous pouvez exercer un métier dès l'instant où vous l'adoptez, sans attendre de le débloquer.",
+  'guide.professions.craftRecipesTitle': 'Recettes et composants',
+  'guide.professions.craftRingBody':
+    "Les dix métiers sont disposés en anneau fixe, et la place d'un métier sur cet anneau compte : des métiers voisins sur la roue partagent plus entre eux que des métiers placés aux antipodes. S'engager dans un métier doit donner le sentiment de rejoindre une famille de métiers apparentés, pas de choisir une compétence isolée.",
+  'guide.professions.craftRingTitle': 'Une roue de spécialités',
+  'guide.professions.craftTitle': "Les dix métiers d'artisanat",
+  'guide.professions.gatherIntro':
+    "Trois métiers de récolte vous permettent de tirer les matières premières directement du monde : le minage arrache minerai et pierre aux filons, le bûcheronnage abat du bois dans les bosquets, et l'herboristerie cueille herbes et plantes sauvages. Chacun est suivi séparément : progresser dans l'un ne ralentit jamais votre progression dans un autre.",
+  'guide.professions.gatherProficiencyBody':
+    "Chaque récolte réussie renforce votre maîtrise de ce métier de récolte. Une maîtrise plus élevée oriente ce que vous tirez d'un gisement vers des qualités de matériaux plus rares, en partant du commun, même si les qualités les plus rares restent rares à haute maîtrise. La pratique ne dessert jamais vos chances : elle ne fait que les améliorer.",
+  'guide.professions.gatherProficiencyTitle': 'Maîtrise et qualité des matériaux',
+  'guide.professions.gatherTitle': 'La récolte : minage, bûcheronnage et herboristerie',
+  'guide.professions.gatherToolsBody':
+    'Les marchands vendent des outils de base pour chaque métier de récolte, et de meilleurs peuvent être fabriqués : travailler un gisement doit devenir plus efficace à mesure que vous vous équipez, au lieu de rester figé. Les outils de palier supérieur sont la voie prévue pour accéder aux gisements les plus riches et les exploiter plus efficacement sur la durée.',
+  'guide.professions.gatherToolsTitle': 'Les outils du métier',
+  'guide.professions.gatherWhatBody':
+    "Filons de minerai, bosquets et carrés d'herbes sont disséminés dans les zones, bien visibles et sans propriétaire. Approchez-vous de l'un d'eux et interagissez pour récolter ce qu'il renferme. Une fois que vous avez récolté un gisement, il lui faut du temps pour se reconstituer avant que vous puissiez, vous, le récolter à nouveau ; il ne bloque jamais personne d'autre : un autre joueur peut récolter le même gisement entre-temps.",
+  'guide.professions.gatherWhatTitle': 'Les gisements de ressources',
+  'guide.professions.intro':
+    "Au-delà des combats et des quêtes, le monde vous récompense de travailler la terre et la forge : récoltez des matières premières, transformez-les en équipement aux ateliers de dix métiers différents, et installez-vous dans l'identité de l'un des dix archétypes que ces métiers incarnent.",
+  'guide.valeCupPage.heading': 'La Coupe du Val',
+  'guide.valeCupPage.howHeading': 'Comment jouer',
+  'guide.valeCupPage.howMatch':
+    "Au coup d'envoi, votre panoplie de classe est remplacée par une panoplie sportive, puis restituée à l'identique après le match. Les frappes visent le réticule au sol, le ballon rebondit sur les bandes, et dribbler, c'est simplement courir avec le ballon. Marquez plus de buts que l'autre camp avant la fin du temps réglementaire ; un match nul se joue au but en or.",
+  'guide.valeCupPage.howQueue':
+    "Inscrivez-vous depuis n'importe où via la fenêtre de la Coupe du Val, ou parlez à l'intendant Bram aux portes du Champ de la Truie. Choisissez un format, du 1 contre 1 au 5 contre 5, une nation de bannière et un rôle sportif ; inscrivez-vous seul ou venez avec votre groupe.",
+  'guide.valeCupPage.howTruce':
+    'Personne ne saigne au Champ de la Truie : les tacles font culbuter, rien ne fait mal, et les familiers restent sur le banc.',
+  'guide.valeCupPage.intro':
+    'La balle au sanglier au Champ de la Truie : choisissez une bannière, choisissez un rôle, et poussez une peau de sanglier empaillée derrière le gardien pour le Seau de cuivre. Pas de sang, pas de butin, rien que la clameur des tribunes.',
+  'guide.valeCupPage.loreHeading': 'La balle au sanglier et la trêve des moissons',
+  'guide.valeCupPage.loreOldSow':
+    "Bien avant le réveil des morts, les valets de ferme d'Eastbrook jouaient à la balle au sanglier sur les chaumes après la moisson : deux bandes, une peau de sanglier bourrée de paille, et deux ridelles de chariot traînées à chaque bout du pré. La première balle, la Vieille Truie, trône, bronzée, au-dessus de l'âtre de la taverne.",
+  'guide.valeCupPage.loreTruce':
+    'Quand le Colisée cendré se mit à organiser des jeux de guerre, le maréchal Redbrook répondit par quelque chose de plus doux : une trêve des moissons permanente sur le vieux pré. Les ridelles de chariot devinrent des poteaux de but ; le pré gagna des murs, des tribunes et un nom, le Champ de la Truie ; et le prix resta toujours le même seau à lait cabossé dans lequel buvaient les vainqueurs : le Seau de cuivre.',
+  'guide.valeCupPage.nationChoir':
+    'Bleu pâle et argent sous la cloche : inquiétants, précis et très silencieux.',
+  'guide.valeCupPage.nationColiseum':
+    "Rouge et noir, épées croisées : ils jouent comme si c'était encore un jeu de guerre.",
+  'guide.valeCupPage.nationCopperdig':
+    'Cuivre et brun sous la pioche : des piocheurs qui ne cessent jamais de courir.',
+  'guide.valeCupPage.nationMirefen':
+    'Sarcelle et gris sous le héron : patients, hauts sur pattes, jamais pressés.',
+  'guide.valeCupPage.nationMoon':
+    'Violet et argent sous le croissant : des joueurs de la nuit, légers sur leurs appuis.',
+  'guide.valeCupPage.nationOgre':
+    "Orange et terre d'ombre derrière le poing : l'épaule d'abord, et fiers de l'être.",
+  'guide.valeCupPage.nationThornpeak':
+    'Bleu glacier et blanc sous le pic : le pied sûr et la tête dure.',
+  'guide.valeCupPage.nationVale':
+    "Vert et or, la gerbe de blé au vent : l'équipe à domicile, valets de ferme jusqu'à la moelle.",
+  'guide.valeCupPage.nationsBody':
+    "Chaque équipe joue sous une bannière. Le capitaine choisit la nation, et si les deux camps arborent la même, l'équipe à l'extérieur joue aux couleurs inversées.",
+  'guide.valeCupPage.nationsHeading': 'Les huit nations de bannière',
+  'guide.valeCupPage.rewardsBody':
+    "Règles de trêve obligent : ni expérience, ni butin. Un match joué jusqu'à son terme compte dans votre bilan et sur le tableau des vainqueurs, et rapporte au passage des points de récompenses quotidiennes. Déserter un match vous met au banc pour un temps, et l'intendant s'en souvient.",
+  'guide.valeCupPage.rewardsHeading': 'Les règles de la trêve',
+  'guide.valeCupPage.rolesBody':
+    'Votre rôle détermine la panoplie que vous emportez sur le terrain. Tout le monde tape dans le ballon ; le reste est affaire de tempérament.',
+  'guide.valeCupPage.rolesHeading': 'Les rôles sportifs',
+  'guide.valeCupPage.spectateBody':
+    "Un seul match se joue à la fois au stade, et chacun peut s'approcher pour regarder depuis les tribunes.",
+  'hudChrome.bank.bonusAdvertDiscord': 'Liez votre Discord pour gagner 2 emplacements.',
+  'hudChrome.bank.bonusAdvertEmail': 'Vérifiez votre adresse e-mail pour gagner 2 emplacements.',
+  'hudChrome.bank.bonusAdvertWallet': 'Liez un portefeuille pour gagner 2 emplacements.',
+  'hudChrome.bank.bonusEarned': '+{count}',
+  'hudChrome.bank.bonusReferralExplainer':
+    "Invitez un ami : quand il atteint le niveau 10, vous gagnez chacun 2 emplacements, jusqu'à 5 amis.",
+  'hudChrome.bank.bonusReferralProgress': '{count}/{cap}',
+  'hudChrome.bank.bonusSectionAria': "Emplacements de banque bonus et comment en gagner d'autres",
+  'hudChrome.bank.bonusSourceDiscord': 'Discord lié',
+  'hudChrome.bank.bonusSourceEmail': 'Adresse e-mail vérifiée',
+  'hudChrome.bank.bonusSourceReferral': 'Amis parrainés',
+  'hudChrome.bank.bonusSourceWallet': 'Portefeuille lié',
+  'hudChrome.bank.bonusStatusEarned': '+{count}',
+  'hudChrome.bank.bonusTitle': 'Emplacements bonus',
+  'hudChrome.bank.buyConfirm':
+    'Acheter {count} emplacements de banque supplémentaires pour {price} ?',
+  'hudChrome.bank.buyConfirmAccept': 'Acheter',
+  'hudChrome.bank.buySlots': 'Acheter {count} emplacements',
+  'hudChrome.bank.buySlotsMaxed': 'Capacité maximale',
+  'hudChrome.bank.cannotDeposit': 'Impossible à mettre en banque',
+  'hudChrome.bank.capacity': '{used}/{total}',
+  'hudChrome.bank.capacityAria': 'Emplacements de banque utilisés : {used} sur {total}',
+  'hudChrome.bank.close': 'Fermer la banque',
+  'hudChrome.bank.depositAll': 'Déposer tous les matériaux',
+  'hudChrome.bank.depositAllDone': 'Matériaux déposés : {count}.',
+  'hudChrome.bank.depositAllFull': 'Matériaux déposés : {count}. La banque est maintenant pleine.',
+  'hudChrome.bank.depositAllNone': "Banque pleine : rien n'a été déposé.",
+  'hudChrome.bank.depositHint': 'Cliquez pour déposer',
+  'hudChrome.bank.depositPartialHint': 'Maj-clic pour déposer une quantité partielle',
+  'hudChrome.bank.depositQuantityConfirm': 'Déposer',
+  'hudChrome.bank.depositQuantityInput': 'Quantité à déposer',
+  'hudChrome.bank.depositQuantityTitle': 'Déposer {item}',
+  'hudChrome.bank.empty': 'Votre banque est vide.',
+  'hudChrome.bank.filterGroupAria': 'Filtrer la banque par catégorie',
+  'hudChrome.bank.searchAria': 'Rechercher un objet de la banque par son nom',
+  'hudChrome.bank.sortAria': 'Trier les objets de la banque',
+  'hudChrome.bank.subtitle': 'Le Coffre doré',
+  'hudChrome.bank.title': 'Banque',
+  'hudChrome.bank.tooFar': "Vous devez être auprès d'un banquier pour consulter votre banque.",
+  'hudChrome.bank.withdrawHint': 'Cliquez pour retirer',
+  'hudChrome.bank.withdrawPartialHint': 'Maj-clic pour retirer une quantité partielle',
+  'hudChrome.bank.withdrawQuantityConfirm': 'Retirer',
+  'hudChrome.bank.withdrawQuantityInput': 'Quantité à retirer',
+  'hudChrome.bank.withdrawQuantityTitle': 'Retirer {item}',
+  'hudChrome.keybinds.valecup': 'Coupe du Val',
+  'hudChrome.mobile.dailyRewards': 'Récompenses',
+  'hudChrome.perf.labels.predLead': 'Avance de prédiction',
+  'hudChrome.townFocus.budgetLabel': 'Points restants : {remaining} / {budget}',
+  'hudChrome.townFocus.decreaseAria': 'Réduire la priorité de {component}',
+  'hudChrome.townFocus.hint':
+    'Les points de priorité ajoutent un bonus au rendement de base de chaque élément. Les éléments sans priorité restent à leur rendement de base.',
+  'hudChrome.townFocus.increaseAria': 'Augmenter la priorité de {component}',
+  'hudChrome.townFocus.notInTownHint': 'Vous devez être en ville pour définir vos priorités.',
+  'hudChrome.townFocus.saveButton': 'Enregistrer les priorités',
+  'hudChrome.townFocus.title': 'Priorités de la ville',
+  'hudChrome.vcup.awayNote':
+    "Si les deux camps arborent la même bannière, l'équipe à l'extérieur joue aux couleurs inversées.",
+  'hudChrome.vcup.bannerCountdown': "Coup d'envoi dans {seconds}...",
+  'hudChrome.vcup.bannerDraw': 'Match nul au Champ de la Truie.',
+  'hudChrome.vcup.bannerEnd': 'Fin du match : {nationA} {scoreA}, {nationB} {scoreB}',
+  'hudChrome.vcup.bannerFound': 'La Coupe du Val vous appelle : {nationA} contre {nationB} !',
+  'hudChrome.vcup.bannerGoal': 'BUT ! {nation} marque !',
+  'hudChrome.vcup.bannerGolden': "BUT EN OR : le prochain but l'emporte !",
+  'hudChrome.vcup.bannerKickoff': "COUP D'ENVOI !",
+  'hudChrome.vcup.bannerLoss': 'Défaite au Champ de la Truie.',
+  'hudChrome.vcup.bannerSave': 'ARRÊT DE {name} !',
+  'hudChrome.vcup.bannerWin': 'Victoire au Champ de la Truie !',
+  'hudChrome.vcup.bet.aria': 'Paris sur le match de la Coupe du Val',
+  'hudChrome.vcup.bet.back': 'Miser sur {team}',
+  'hudChrome.vcup.bet.closed': 'Paris clos',
+  'hudChrome.vcup.bet.closesIn': 'Clôture des paris dans {seconds} s',
+  'hudChrome.vcup.bet.collapse': 'Masquer les paris',
+  'hudChrome.vcup.bet.expand': 'Voir les paris et miser',
+  'hudChrome.vcup.bet.form': '{wins}V-{losses}D',
+  'hudChrome.vcup.bet.lostLog': 'Votre pari sur la Coupe du Val est perdu : {amount}.',
+  'hudChrome.vcup.bet.mine': 'Votre pari : {amount} sur {team}',
+  'hudChrome.vcup.bet.none': "Vous n'avez pas encore parié sur ce match.",
+  'hudChrome.vcup.bet.oddsLabel': 'Rapporte',
+  'hudChrome.vcup.bet.prize': 'Cagnotte {amount}',
+  'hudChrome.vcup.bet.record': 'Bilan des paris : {wins}V-{losses}D, {sign}{net}',
+  'hudChrome.vcup.bet.refundLog': 'Paris annulés : votre mise de {amount} vous a été rendue.',
+  'hudChrome.vcup.bet.splitAria': 'Part de la cagnotte misée sur chaque équipe',
+  'hudChrome.vcup.bet.title': 'Paris du match',
+  'hudChrome.vcup.bet.wonBanner': 'Votre pari est gagnant !',
+  'hudChrome.vcup.bet.wonLog': 'Votre pari sur la Coupe du Val est gagnant : {amount} récupérés.',
+  'hudChrome.vcup.blockNation': "Choisissez d'abord une nation de bannière.",
+  'hudChrome.vcup.blockNotLeader': "Seul le chef de groupe peut inscrire l'équipe.",
+  'hudChrome.vcup.blockPartySize': 'Ce format demande un groupe plus petit.',
+  'hudChrome.vcup.boardEmpty': "Aucun vainqueur inscrit pour l'instant. Le Seau de cuivre attend.",
+  'hudChrome.vcup.boardHeading': 'Tableau des vainqueurs',
+  'hudChrome.vcup.boardWins': '{count} victoires',
+  'hudChrome.vcup.bracketLabel': '{n}c{n}',
+  'hudChrome.vcup.bracketsAria': 'Format du match',
+  'hudChrome.vcup.briefing.bot': 'Bot',
+  'hudChrome.vcup.briefing.kitHeading': 'Votre panoplie',
+  'hudChrome.vcup.briefing.kitNote':
+    'Ces gestes remplacent vos techniques de classe le temps du match.',
+  'hudChrome.vcup.briefing.ready': 'Je suis prêt',
+  'hudChrome.vcup.briefing.readyAria': "Se déclarer prêt pour le coup d'envoi",
+  'hudChrome.vcup.briefing.readyCount': '{ready} sur {total} prêts',
+  'hudChrome.vcup.briefing.readyDone': 'Prêt',
+  'hudChrome.vcup.briefing.rosterHeading': 'La feuille de match',
+  'hudChrome.vcup.briefing.rule1': 'Frappez ou passez le ballon dans le but adverse pour marquer.',
+  'hudChrome.vcup.briefing.rule2':
+    "La première équipe à 5 buts l'emporte, ou celle qui en compte le plus au coup de sifflet final.",
+  'hudChrome.vcup.briefing.rule3':
+    "Un match à égalité à la fin du temps réglementaire se joue au but en or : le prochain but l'emporte.",
+  'hudChrome.vcup.briefing.rule4':
+    'Les tacles ne font que vous culbuter. Personne ne se blesse sous la trêve des moissons.',
+  'hudChrome.vcup.briefing.rule5': 'Chacun peut venir vous encourager depuis les tribunes.',
+  'hudChrome.vcup.briefing.rulesHeading': 'Comment jouer',
+  'hudChrome.vcup.briefing.subtitle': "Causerie d'avant-match",
+  'hudChrome.vcup.briefing.vs': 'contre',
+  'hudChrome.vcup.briefing.waiting': "En attendant que l'autre camp se déclare prêt...",
+  'hudChrome.vcup.briefing.whistle': 'Le coup de sifflet retentit dans {seconds} s.',
+  'hudChrome.vcup.briefing.you': 'Vous',
+  'hudChrome.vcup.clock': '{minutes}:{seconds}',
+  'hudChrome.vcup.close': 'Fermer la fenêtre de la Coupe du Val',
+  'hudChrome.vcup.deserterNote':
+    "L'intendant s'en souvient. Vous pourrez vous réinscrire dans {seconds} s.",
+  'hudChrome.vcup.enterAsGuild': 'Entrer sous la bannière de {guild}',
+  'hudChrome.vcup.gossipOpen': 'Le registre des rencontres',
+  'hudChrome.vcup.gossipOpenAria': 'Ouvrir la fenêtre de la Coupe du Val',
+  'hudChrome.vcup.guildBoardEmpty':
+    "Aucune guilde n'est encore entrée sur le terrain. Faites flotter votre bannière !",
+  'hudChrome.vcup.guildBoardHeading': 'Bannières de guilde',
+  'hudChrome.vcup.guildBoardWl': '{wins} V, {losses} D',
+  'hudChrome.vcup.guildRecordLine': 'Bilan de votre guilde : {wins} victoires, {losses} défaites.',
+  'hudChrome.vcup.inMatchNote': 'Votre équipe est sur le terrain. Jouez !',
+  'hudChrome.vcup.indicatorLive': 'Coupe du Val',
+  'hudChrome.vcup.indicatorOpen': 'Ouvrir la fenêtre de la Coupe du Val',
+  'hudChrome.vcup.indicatorQueued':
+    'File de la Coupe du Val : {bracket}, position {position} sur {count}',
+  'hudChrome.vcup.leaveQueue': 'Quitter la file',
+  'hudChrome.vcup.liveAria': 'Coupe du Val : {nationA} {scoreA}, {nationB} {scoreB}',
+  'hudChrome.vcup.liveHeading': 'En ce moment au Champ de la Truie',
+  'hudChrome.vcup.logDraw': 'La rencontre au Champ de la Truie se termine sur un match nul.',
+  'hudChrome.vcup.logFound':
+    'Votre match de la Coupe du Val est prêt : {nationA} contre {nationB}.',
+  'hudChrome.vcup.logGoal': '{name} marque pour {nation} ! {nationA} {scoreA}, {nationB} {scoreB}.',
+  'hudChrome.vcup.logLoss': 'Vous perdez la rencontre au Champ de la Truie.',
+  'hudChrome.vcup.logQueued':
+    'Vous rejoignez la file de la Coupe du Val en {bracket} (position {position}).',
+  'hudChrome.vcup.logRoster': 'Votre camp : {allies}. Leur camp : {enemies}.',
+  'hudChrome.vcup.logSave': "{name} fait l'arrêt !",
+  'hudChrome.vcup.logUnqueued': 'Vous quittez la file de la Coupe du Val.',
+  'hudChrome.vcup.logWin': 'Vous remportez la rencontre au Champ de la Truie.',
+  'hudChrome.vcup.mobileLabel': 'Coupe',
+  'hudChrome.vcup.nation.choir': 'Le Chœur pâle',
+  'hudChrome.vcup.nation.coliseum': 'Le Colisée cendré',
+  'hudChrome.vcup.nation.copperdig': 'La Mine de cuivre',
+  'hudChrome.vcup.nation.mirefen': 'Le Mirefen',
+  'hudChrome.vcup.nation.moon': 'La Lune pâle',
+  'hudChrome.vcup.nation.ogre': 'Les Clans ogres',
+  'hudChrome.vcup.nation.thornpeak': 'Thornpeak',
+  'hudChrome.vcup.nation.vale': "Val d'Eastbrook",
+  'hudChrome.vcup.nationsHeading': 'Nation de bannière',
+  'hudChrome.vcup.noLive': 'Le terrain est calme. Aucun match en cours.',
+  'hudChrome.vcup.offlineNote':
+    "Le registre des rencontres est fermé. La Coupe du Val n'est pas disponible pour le moment.",
+  'hudChrome.vcup.phaseCountdown': "Coup d'envoi dans {seconds}",
+  'hudChrome.vcup.phaseGoal': 'BUT !',
+  'hudChrome.vcup.phaseGolden': 'BUT EN OR',
+  'hudChrome.vcup.phaseOver': 'FIN DU MATCH',
+  'hudChrome.vcup.practice': 'Entraînement contre des bots',
+  'hudChrome.vcup.practiceNote':
+    "Lance aussitôt un match privé contre des bots sur votre propre terrain d'entraînement.",
+  'hudChrome.vcup.practicingNow': "À l'entraînement ({count}) :",
+  'hudChrome.vcup.queue': 'Rejoindre la file',
+  'hudChrome.vcup.queueNote':
+    "Inscrivez-vous depuis n'importe où ; le coup de sifflet vous appellera au Champ de la Truie.",
+  'hudChrome.vcup.queuedStatus': 'En file pour {bracket} : position {position} sur {count}.',
+  'hudChrome.vcup.recordLine': 'Votre bilan : {wins} victoires, {losses} défaites, {draws} nuls.',
+  'hudChrome.vcup.role.allrounder.desc':
+    "Un peu de tout : coup de pied, grosse botte et coup d'épaule loyal.",
+  'hudChrome.vcup.role.allrounder.name': 'Polyvalent',
+  'hudChrome.vcup.role.keeper.desc':
+    'Garde la surface de but : prise sûre, plongeon et dégagement.',
+  'hudChrome.vcup.role.keeper.name': 'Gardien',
+  'hudChrome.vcup.role.striker.desc': 'Ne vit que pour la grosse botte et le pas de côté éclair.',
+  'hudChrome.vcup.role.striker.name': 'Attaquant',
+  'hudChrome.vcup.role.sweeper.desc': 'Bouscule les porteurs de ballon et dégage loin devant.',
+  'hudChrome.vcup.role.sweeper.name': 'Libéro',
+  'hudChrome.vcup.rolesHeading': 'Rôle sportif',
+  'hudChrome.vcup.shootPower': 'PUISSANCE',
+  'hudChrome.vcup.title': 'La Coupe du Val',
+  'hudChrome.vcup.waitingCount': '{count} en attente',
+  'hudChrome.vcup.walkUp': 'Approchez-vous du Champ de la Truie pour regarder depuis les tribunes.',
 };

@@ -6413,4 +6413,6 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     '収穫休戦の掟にかなった正々堂々の肩当たり。相手をボールから弾き飛ばす。',
   'entities.abilities.sport_second_wind.name': 'フレッシュレッグス',
   'entities.abilities.sport_second_wind.description': '脚を取り戻す:4秒間、移動速度が50%上昇する。',
+  'hudChrome.vcup.guildBoardWl': '{wins}勝{losses}敗',
+  'hudChrome.vcup.shootPower': 'パワー',
 };

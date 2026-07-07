@@ -6408,4 +6408,6 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.sport_second_wind.name': '재도약',
   'entities.abilities.sport_second_wind.description':
     '기운을 되찾습니다: 4초 동안 이동 속도가 50% 증가합니다.',
+  'hudChrome.vcup.guildBoardWl': '{wins}승 {losses}패',
+  'hudChrome.vcup.shootPower': '파워',
 };

@@ -6310,4 +6310,330 @@ export const es: Partial<Record<TranslationKey, string>> = {
   'entities.quests.q_prof_make_amends.completion':
     'Enmiendas hechas; un nuevo camino está abierto para ti.',
   'entities.quests.q_prof_make_amends.objectives.0.label': 'Lobo del bosque matado',
+  'entities.abilities.sport_boot.description':
+    'Un patadón largo y elevado hacia el punto de mira. Al público le encanta.',
+  'entities.abilities.sport_boot.name': 'Patadón',
+  'entities.abilities.sport_dive.description':
+    'Lánzate hacia el punto de mira. Un balón cruzado se te queda pegado.',
+  'entities.abilities.sport_dive.name': 'Zambullida',
+  'entities.abilities.sport_feint.description':
+    'Un amague veloz que te impulsa hacia el punto de mira.',
+  'entities.abilities.sport_feint.name': 'Finta',
+  'entities.abilities.sport_hoof.description': 'Golpea el balón raso y con fuerza campo arriba.',
+  'entities.abilities.sport_hoof.name': 'Despeje',
+  'entities.abilities.sport_kick.description':
+    'Empuja el balón a ras de suelo hacia el punto de mira.',
+  'entities.abilities.sport_kick.name': 'Patada',
+  'entities.abilities.sport_pass.description':
+    'Envía un pase firme y raso al compañero que tienes como objetivo, adelantando el balón a su carrera.',
+  'entities.abilities.sport_pass.name': 'Pase',
+  'entities.abilities.sport_punt.description': 'Un saque de guardameta, alto y lejano.',
+  'entities.abilities.sport_punt.name': 'Saque Largo',
+  'entities.abilities.sport_second_wind.description':
+    'Recupera las piernas: te mueves un 50% más rápido durante 4 s.',
+  'entities.abilities.sport_second_wind.name': 'Piernas Frescas',
+  'entities.abilities.sport_shoot.description':
+    'Mantén pulsado para acumular potencia y suelta para tirar a portería. Con demasiada potencia, el balón sale por encima.',
+  'entities.abilities.sport_shoot.name': 'Tiro',
+  'entities.abilities.sport_shoulder.description':
+    'Un hombrazo limpio, digno de la tregua de la cosecha. Manda a los rivales rodando lejos del balón.',
+  'entities.abilities.sport_shoulder.name': 'Hombrazo',
+  'entities.npcs.bursar_aldous_crane.greeting':
+    'Cada cajón, cofre y baratija está a salvo en el Arca Dorada.',
+  'entities.npcs.bursar_aldous_crane.name': 'Tesorero Aldous Crane',
+  'entities.npcs.bursar_aldous_crane.title': 'El Arca Dorada',
+  'entities.npcs.bursar_fernando.greeting':
+    'Te damos la bienvenida al Arca Dorada. Tus bienes descansan seguros tras nuestras cerraduras.',
+  'entities.npcs.bursar_fernando.name': 'Tesorero Fernando',
+  'entities.npcs.bursar_fernando.title': 'El Arca Dorada',
+  'entities.npcs.bursar_petra_vell.greeting':
+    'El Arca Dorada lleva registros limpios y bóvedas aún más limpias. ¿Qué guardamos para ti?',
+  'entities.npcs.bursar_petra_vell.name': 'Tesorera Petra Vell',
+  'entities.npcs.bursar_petra_vell.title': 'El Arca Dorada',
+  'entities.npcs.groundskeeper_bram.greeting':
+    'La tregua se mantiene en el Campo de la Cerda, {className}: solo patadones y hombrazos. ¿Te animas a jugar por el Cubo de Cobre?',
+  'entities.npcs.groundskeeper_bram.name': 'Guardacampo Bram',
+  'entities.npcs.groundskeeper_bram.title': 'Guardián del Campo de la Cerda',
+  'entities.zones.eastbrook_vale.pois.10.label': 'El Campo de la Cerda',
+  'guide.economy.bankBody':
+    'Cada pueblo principal mantiene una sucursal del Arca Dorada, la casa de banca del reino. Habla allí con el tesorero para abrir tu bóveda, una reserva privada de espacio más allá de tus bolsas que tu personaje conserva de por vida. Lo que dejes en sus manos espera a salvo, sea cual sea la sucursal que visites la próxima vez.',
+  'guide.economy.bankHow':
+    'Con la bóveda abierta, haz clic en un objeto de tus bolsas para depositarlo y haz clic en él dentro de la bóveda para recuperarlo. La bóveda solo guarda bienes, nunca monedas, y los objetos de misión se quedan contigo. Cuando tus bolsas se llenan a mitad de viaje, un solo botón mete de una vez todos tus materiales de artesanía.',
+  'guide.economy.bankSlots':
+    'Una bóveda recién abierta empieza pequeña y crece contigo. El tesorero vende espacios adicionales por monedas a precios cada vez más altos, y jugar en línea suma espacio extra por cosas como un correo verificado, cuentas vinculadas y amigos que traes al juego.',
+  'guide.economy.bankTitle': 'El banco',
+  'guide.nav.professions': 'Profesiones',
+  'guide.nav.valeCup': 'Copa del Valle',
+  'guide.professions.archetypeChooseBody':
+    'Declaras tu primer arquetipo a través de una misión temprana de la historia de la zona uno que te acepta formalmente en esa identidad. Hasta que completes esa misión, todavía no has elegido ningún arquetipo.',
+  'guide.professions.archetypeChooseTitle': 'Elegir tu arquetipo',
+  'guide.professions.archetypeIdentityBody':
+    'Tu arquetipo activo es una declaración de quién es tu personaje en el mundo, reconocida en cómo se dirigen a ti los demás y el propio mundo. Las recompensas y el reconocimiento exactos que lo acompañan aún se están terminando de definir; vuelve a consultar a medida que el sistema se complete.',
+  'guide.professions.archetypeIdentityTitle': 'Qué significa tu arquetipo',
+  'guide.professions.archetypeIntro':
+    'Cada uno de los diez oficios representa también un arquetipo, una identidad más amplia que puedes adoptar más allá de ejercer ese oficio. Tu arquetipo activo es una única elección a la vez, no una lista de tareas: llevas uno, y puedes cambiarlo más adelante si así lo decides.',
+  'guide.professions.archetypeSwitchBody':
+    'Haber declarado un arquetipo una vez no te ata a él para siempre. Cambiar a un arquetipo distinto exige completar primero una misión repetible de «hacer las paces» con el antiguo, y cada vez que cambias, las enmiendas que se esperan de ti la próxima vez se vuelven un poco más exigentes, de modo que cambiar siga teniendo peso en lugar de salir gratis.',
+  'guide.professions.archetypeSwitchTitle': 'Cambiar de opinión',
+  'guide.professions.archetypeTitle': 'Los diez arquetipos',
+  'guide.professions.craftComboBody':
+    'Más allá de la lista de recetas propia de cada oficio, la rueda también admite recetas combinadas que recurren a dos oficios vecinos a la vez, premiando a un personaje (o a una pareja de socios comerciales) que haya invertido en oficios adyacentes de la rueda en lugar de en uno aislado.',
+  'guide.professions.craftComboTitle': 'Recetas combinadas',
+  'guide.professions.craftIntro':
+    'Diez oficios de artesanía convierten los materiales recolectados en equipo y bienes terminados: la Armería, la Forja de armas y la Joyería convierten la materia prima en equipo para vestir; la Alquimia y la Ingeniería avanzan a base de ensayo y error; la Cocina, la Inscripción y el Encantamiento tocan cada uno la obra de otros oficios; la Sastrería y la Peletería trabajan a partir de patrones exactos. Juntos forman una rueda, con cada oficio junto a dos vecinos y frente a otro.',
+  'guide.professions.craftMasteryBody':
+    'Elaborar con éxito aumenta tu habilidad en ese oficio, y las recetas más ricas están reservadas a una habilidad mayor: las recetas básicas están abiertas a todos, mientras que las progresivamente más avanzadas piden progresivamente más maestría para intentarlas. Aumentar tu habilidad en un oficio es el camino que lleva de los sencillos bienes iniciales a sus recetas más ambiciosas.',
+  'guide.professions.craftMasteryTitle': 'Habilidad y maestría',
+  'guide.professions.craftRecipesBody':
+    'Cada oficio tiene sus propias recetas, y cada una pide componentes concretos que recolectas o compras. Las recetas más básicas de cada oficio no piden más que materiales comunes y se pueden elaborar desde el primer momento, así que puedes empezar a ejercer un oficio en cuanto lo aprendes, en lugar de esperar a desbloquearlo.',
+  'guide.professions.craftRecipesTitle': 'Recetas y componentes',
+  'guide.professions.craftRingBody':
+    'Los diez oficios están dispuestos en una rueda fija, y el lugar que un oficio ocupa en esa rueda importa: los oficios contiguos en la rueda comparten más entre sí que los que están en lados opuestos. Comprometerse con un oficio debe sentirse como unirse a una familia de oficios afines, no como elegir una habilidad aislada.',
+  'guide.professions.craftRingTitle': 'Una rueda de especialidades',
+  'guide.professions.craftTitle': 'Los diez oficios',
+  'guide.professions.gatherIntro':
+    'Tres oficios de recolección te permiten extraer materias primas directamente del mundo: la Minería arranca mineral y piedra de las vetas, la Tala derriba madera de las arboledas y la Herboristería recoge hierbas y plantas silvestres. Cada uno se registra por separado, así que trabajar en uno nunca frena tu progreso en otro.',
+  'guide.professions.gatherProficiencyBody':
+    'Cada recolección exitosa aumenta tu competencia en ese oficio de recolección. Una competencia más alta inclina lo que sacas de un nodo hacia grados más raros de material, de lo común hacia arriba, aunque los grados más raros siguen siendo raros incluso con una competencia alta. Practicar más nunca perjudica tus probabilidades, solo las mejora.',
+  'guide.professions.gatherProficiencyTitle': 'Competencia y calidad del material',
+  'guide.professions.gatherTitle': 'Recolección: Minería, Tala y Herboristería',
+  'guide.professions.gatherToolsBody':
+    'Los vendedores ofrecen herramientas básicas para cada oficio de recolección, y las mejores se pueden fabricar, así que trabajar un nodo de recursos está pensado para que te sientas más capaz a medida que te equipas, en lugar de quedarse igual. Las herramientas de nivel superior son el camino previsto para desbloquear el acceso a nodos más ricos y trabajarlos con más eficiencia durante una sesión larga.',
+  'guide.professions.gatherToolsTitle': 'Las herramientas del oficio',
+  'guide.professions.gatherWhatBody':
+    'Las vetas de mineral, las arboledas y los parches de hierbas están repartidos por las zonas como elementos visibles y sin dueño. Acércate a uno e interactúa con él para recolectar lo que contenga. Una vez que has recolectado un nodo, necesita tiempo para recuperarse antes de que tú, personalmente, puedas recolectarlo de nuevo, aunque nunca bloquea a nadie más: otro jugador puede recolectar exactamente el mismo nodo mientras tanto.',
+  'guide.professions.gatherWhatTitle': 'Nodos de recursos',
+  'guide.professions.intro':
+    'Más allá del combate y las misiones, el mundo te recompensa por trabajar la tierra y la forja: recolectar materias primas, convertirlas en equipo en las estaciones de artesanía de diez oficios distintos y asentarte en una identidad como uno de los diez arquetipos que esos oficios representan.',
+  'guide.valeCupPage.heading': 'La Copa del Valle',
+  'guide.valeCupPage.howHeading': 'Cómo se juega',
+  'guide.valeCupPage.howMatch':
+    'Con el saque inicial, tu equipamiento de clase se cambia por un equipamiento deportivo y se restaura exactamente igual al terminar. Las patadas apuntan a la retícula del suelo, el balón rebota en las vallas y regatear es simplemente correr con el balón. Marca más goles que el otro equipo antes del final del partido; un empate se decide con gol de oro.',
+  'guide.valeCupPage.howQueue':
+    'Entra en cola desde cualquier lugar a través de la ventana de la Copa del Valle, o habla con el guardacampo Bram en la puerta del Campo de la Cerda. Elige una categoría, desde uno contra uno hasta cinco contra cinco, una nación de estandarte y un rol deportivo; entra en cola en solitario o trae a tu grupo.',
+  'guide.valeCupPage.howTruce':
+    'Nadie sangra en el Campo de la Cerda: las entradas solo te hacen rodar, nada duele y las mascotas se quedan fuera del partido.',
+  'guide.valeCupPage.intro':
+    'Balonjabalí en el Campo de la Cerda: elige un estandarte, elige un rol y manda una piel de jabalí rellena más allá del guardameta por el Cubo de Cobre. Sin sangre, sin botín, solo el rugido de las gradas.',
+  'guide.valeCupPage.loreHeading': 'El balonjabalí y la tregua de la cosecha',
+  'guide.valeCupPage.loreOldSow':
+    'Mucho antes de que despertaran los muertos, los campesinos de Eastbrook jugaban al balonjabalí en los rastrojos después de la cosecha: dos cuadrillas, una piel de jabalí rellena de paja y dos portones de carreta arrastrados a cada extremo del prado. El primer balón, la Vieja Cerda, cuelga bañado en bronce sobre la chimenea de la taberna.',
+  'guide.valeCupPage.loreTruce':
+    'Cuando el Coliseo Cinéreo empezó a autorizar juegos de guerra, el mariscal Redbrook respondió con algo más amable: una tregua de la cosecha permanente sobre el viejo prado. Los portones de carreta se volvieron porterías; el prado ganó muros, gradas y un nombre, el Campo de la Cerda; y el premio fue siempre el mismo cubo de leche abollado del que bebían los ganadores: el Cubo de Cobre.',
+  'guide.valeCupPage.nationChoir':
+    'Azul pálido y plata bajo la campana: inquietantes, precisos y muy callados.',
+  'guide.valeCupPage.nationColiseum':
+    'Rojo y negro con espadas cruzadas: juegan como si esto siguiera siendo un juego de guerra.',
+  'guide.valeCupPage.nationCopperdig':
+    'Cobre y marrón con el pico: excavadores que nunca dejan de correr.',
+  'guide.valeCupPage.nationMirefen':
+    'Verde azulado y gris bajo la garza: pacientes, zancudos, nunca con prisa.',
+  'guide.valeCupPage.nationMoon':
+    'Violeta y plata bajo la luna creciente: jugadores nocturnos, ligeros de pies.',
+  'guide.valeCupPage.nationOgre':
+    'Naranja y pardo tras el puño: primero el hombro, y a mucha honra.',
+  'guide.valeCupPage.nationThornpeak':
+    'Azul hielo y blanco bajo el pico de la montaña: de paso firme y tercos.',
+  'guide.valeCupPage.nationVale':
+    'Verde y oro, con la gavilla de trigo al viento: el equipo local, campesinos hasta la médula.',
+  'guide.valeCupPage.nationsBody':
+    'Cada equipo juega bajo un estandarte. El capitán elige la nación y, si ambos bandos enarbolan la misma, el equipo visitante juega con la paleta invertida.',
+  'guide.valeCupPage.nationsHeading': 'Las ocho naciones de estandarte',
+  'guide.valeCupPage.rewardsBody':
+    'Las reglas de la tregua significan que no hay experiencia ni botín: un partido decidido cuenta para tu historial y para el tablón de ganadores, y trae consigo puntos de recompensas diarias. Desertar de un partido te manda al banquillo un tiempo, y el guardacampo lo recuerda.',
+  'guide.valeCupPage.rewardsHeading': 'Las reglas de la tregua',
+  'guide.valeCupPage.rolesBody':
+    'Tu rol decide el equipamiento que llevas al terreno de juego. Todos patean el balón; el resto es cuestión de temperamento.',
+  'guide.valeCupPage.rolesHeading': 'Roles deportivos',
+  'guide.valeCupPage.spectateBody':
+    'En el estadio se juega un partido a la vez, y cualquiera puede acercarse y mirar desde las gradas.',
+  'hudChrome.bank.bonusAdvertDiscord': 'Vincula tu Discord para ganar 2 espacios.',
+  'hudChrome.bank.bonusAdvertEmail': 'Verifica tu correo para ganar 2 espacios.',
+  'hudChrome.bank.bonusAdvertWallet': 'Vincula una cartera para ganar 2 espacios.',
+  'hudChrome.bank.bonusEarned': '+{count}',
+  'hudChrome.bank.bonusReferralExplainer':
+    'Invita a un amigo: cuando alcance el nivel 10, cada uno gana 2 espacios, hasta 5 amigos.',
+  'hudChrome.bank.bonusReferralProgress': '{count}/{cap}',
+  'hudChrome.bank.bonusSectionAria': 'Espacios de banco extra y cómo ganar más',
+  'hudChrome.bank.bonusSourceDiscord': 'Discord vinculado',
+  'hudChrome.bank.bonusSourceEmail': 'Correo verificado',
+  'hudChrome.bank.bonusSourceReferral': 'Amigos invitados',
+  'hudChrome.bank.bonusSourceWallet': 'Cartera vinculada',
+  'hudChrome.bank.bonusStatusEarned': '+{count}',
+  'hudChrome.bank.bonusTitle': 'Espacios extra',
+  'hudChrome.bank.buyConfirm': '¿Comprar {count} espacios de banco adicionales por {price}?',
+  'hudChrome.bank.buyConfirmAccept': 'Comprar',
+  'hudChrome.bank.buySlots': 'Comprar {count} espacios',
+  'hudChrome.bank.buySlotsMaxed': 'Ampliado al máximo',
+  'hudChrome.bank.cannotDeposit': 'No se puede guardar en el banco',
+  'hudChrome.bank.capacity': '{used}/{total}',
+  'hudChrome.bank.capacityAria': 'Espacios de banco usados: {used} de {total}',
+  'hudChrome.bank.close': 'Cerrar el banco',
+  'hudChrome.bank.depositAll': 'Depositar todos los materiales',
+  'hudChrome.bank.depositAllDone': 'Materiales depositados: {count}.',
+  'hudChrome.bank.depositAllFull': 'Materiales depositados: {count}. El banco está ahora lleno.',
+  'hudChrome.bank.depositAllNone': 'Banco lleno: no se depositó nada.',
+  'hudChrome.bank.depositHint': 'Clic para depositar',
+  'hudChrome.bank.depositPartialHint': 'Mayús+clic para depositar una cantidad parcial',
+  'hudChrome.bank.depositQuantityConfirm': 'Depositar',
+  'hudChrome.bank.depositQuantityInput': 'Cantidad a depositar',
+  'hudChrome.bank.depositQuantityTitle': 'Depositar {item}',
+  'hudChrome.bank.empty': 'Tu banco está vacío.',
+  'hudChrome.bank.filterGroupAria': 'Filtrar el banco por categoría',
+  'hudChrome.bank.searchAria': 'Buscar objetos del banco por nombre',
+  'hudChrome.bank.sortAria': 'Ordenar los objetos del banco',
+  'hudChrome.bank.subtitle': 'El Arca Dorada',
+  'hudChrome.bank.title': 'Banco',
+  'hudChrome.bank.tooFar': 'Debes estar junto a un banquero para ver tu banco.',
+  'hudChrome.bank.withdrawHint': 'Clic para retirar',
+  'hudChrome.bank.withdrawPartialHint': 'Mayús+clic para retirar una cantidad parcial',
+  'hudChrome.bank.withdrawQuantityConfirm': 'Retirar',
+  'hudChrome.bank.withdrawQuantityInput': 'Cantidad a retirar',
+  'hudChrome.bank.withdrawQuantityTitle': 'Retirar {item}',
+  'hudChrome.keybinds.valecup': 'Copa del Valle',
+  'hudChrome.mobile.dailyRewards': 'Recompensas',
+  'hudChrome.perf.labels.predLead': 'Adelanto de predicción',
+  'hudChrome.townFocus.budgetLabel': 'Puntos restantes: {remaining} / {budget}',
+  'hudChrome.townFocus.decreaseAria': 'Reducir el enfoque en {component}',
+  'hudChrome.townFocus.hint':
+    'Los puntos de enfoque añaden una bonificación sobre el rendimiento base de cada componente. Los componentes sin enfoque se mantienen en el nivel base.',
+  'hudChrome.townFocus.increaseAria': 'Aumentar el enfoque en {component}',
+  'hudChrome.townFocus.notInTownHint': 'Debes estar en el pueblo para fijar tu enfoque.',
+  'hudChrome.townFocus.saveButton': 'Guardar enfoque',
+  'hudChrome.townFocus.title': 'Enfoque del pueblo',
+  'hudChrome.vcup.awayNote':
+    'Si ambos bandos enarbolan el mismo estandarte, el equipo visitante juega con la paleta invertida.',
+  'hudChrome.vcup.bannerCountdown': 'Saque inicial en {seconds}...',
+  'hudChrome.vcup.bannerDraw': 'Empate en el Campo de la Cerda.',
+  'hudChrome.vcup.bannerEnd': 'Final del partido: {nationA} {scoreA}, {nationB} {scoreB}',
+  'hudChrome.vcup.bannerFound': '¡La Copa del Valle llama: {nationA} contra {nationB}!',
+  'hudChrome.vcup.bannerGoal': '¡GOL! ¡{nation} marca!',
+  'hudChrome.vcup.bannerGolden': 'GOL DE ORO: ¡el próximo gol gana!',
+  'hudChrome.vcup.bannerKickoff': '¡SAQUE INICIAL!',
+  'hudChrome.vcup.bannerLoss': 'Derrota en el Campo de la Cerda.',
+  'hudChrome.vcup.bannerSave': '¡PARADA DE {name}!',
+  'hudChrome.vcup.bannerWin': '¡Victoria en el Campo de la Cerda!',
+  'hudChrome.vcup.bet.aria': 'Apuestas del partido de la Copa del Valle',
+  'hudChrome.vcup.bet.back': 'Apostar por {team}',
+  'hudChrome.vcup.bet.closed': 'Apuestas cerradas',
+  'hudChrome.vcup.bet.closesIn': 'Las apuestas cierran en {seconds} s',
+  'hudChrome.vcup.bet.collapse': 'Ocultar apuestas',
+  'hudChrome.vcup.bet.expand': 'Ver apuestas y apostar',
+  'hudChrome.vcup.bet.form': '{wins}V-{losses}D',
+  'hudChrome.vcup.bet.lostLog': 'Tu apuesta de la Copa del Valle ha perdido: {amount}.',
+  'hudChrome.vcup.bet.mine': 'Tu apuesta: {amount} por {team}',
+  'hudChrome.vcup.bet.none': 'Aún no tienes ninguna apuesta en este partido.',
+  'hudChrome.vcup.bet.oddsLabel': 'Paga',
+  'hudChrome.vcup.bet.prize': 'Bolsa: {amount}',
+  'hudChrome.vcup.bet.record': 'Historial de apuestas: {wins}V-{losses}D, {sign}{net}',
+  'hudChrome.vcup.bet.refundLog': 'Apuestas anuladas: se te devuelve tu apuesta de {amount}.',
+  'hudChrome.vcup.bet.splitAria': 'Parte de la bolsa de apuestas en cada equipo',
+  'hudChrome.vcup.bet.title': 'Apuestas del partido',
+  'hudChrome.vcup.bet.wonBanner': '¡Tu apuesta ha ganado!',
+  'hudChrome.vcup.bet.wonLog': 'Tu apuesta de la Copa del Valle ha ganado: recuperas {amount}.',
+  'hudChrome.vcup.blockNation': 'Primero elige una nación de estandarte.',
+  'hudChrome.vcup.blockNotLeader': 'Solo el líder del grupo puede poner al equipo en cola.',
+  'hudChrome.vcup.blockPartySize': 'Esa categoría requiere un grupo más pequeño.',
+  'hudChrome.vcup.boardEmpty': 'Aún no hay ganadores registrados. El Cubo de Cobre espera.',
+  'hudChrome.vcup.boardHeading': 'Tablón de ganadores',
+  'hudChrome.vcup.boardWins': '{count} victorias',
+  'hudChrome.vcup.bracketLabel': '{n}v{n}',
+  'hudChrome.vcup.bracketsAria': 'Categoría del partido',
+  'hudChrome.vcup.briefing.bot': 'Bot',
+  'hudChrome.vcup.briefing.kitHeading': 'Tu equipamiento',
+  'hudChrome.vcup.briefing.kitNote':
+    'Estos movimientos sustituyen a tus habilidades de clase durante el partido.',
+  'hudChrome.vcup.briefing.ready': '¡Listo!',
+  'hudChrome.vcup.briefing.readyAria': 'Prepararse para el saque inicial',
+  'hudChrome.vcup.briefing.readyCount': '{ready} de {total} listos',
+  'hudChrome.vcup.briefing.readyDone': 'Listo',
+  'hudChrome.vcup.briefing.rosterHeading': 'La alineación',
+  'hudChrome.vcup.briefing.rule1': 'Patea o pasa el balón hacia la portería enemiga para marcar.',
+  'hudChrome.vcup.briefing.rule2':
+    'Gana el primero en llegar a 5 goles, o quien tenga más goles cuando suene el final del partido.',
+  'hudChrome.vcup.briefing.rule3':
+    'Un partido empatado al final del tiempo se decide con gol de oro: el próximo gol gana.',
+  'hudChrome.vcup.briefing.rule4':
+    'Las entradas solo te hacen rodar. Nadie sale herido bajo la tregua de la cosecha.',
+  'hudChrome.vcup.briefing.rule5': 'Cualquiera puede acercarse y animarte desde las gradas.',
+  'hudChrome.vcup.briefing.rulesHeading': 'Cómo se juega',
+  'hudChrome.vcup.briefing.subtitle': 'Charla previa al partido',
+  'hudChrome.vcup.briefing.vs': 'vs',
+  'hudChrome.vcup.briefing.waiting': 'Esperando a que el otro equipo esté listo...',
+  'hudChrome.vcup.briefing.whistle': 'El silbato sonará en {seconds} s.',
+  'hudChrome.vcup.briefing.you': 'Tú',
+  'hudChrome.vcup.clock': '{minutes}:{seconds}',
+  'hudChrome.vcup.close': 'Cerrar la ventana de la Copa del Valle',
+  'hudChrome.vcup.deserterNote':
+    'El guardacampo lo recuerda. Podrás volver a entrar en cola en {seconds} s.',
+  'hudChrome.vcup.enterAsGuild': 'Participar bajo el estandarte de {guild}',
+  'hudChrome.vcup.gossipOpen': 'El libro de encuentros',
+  'hudChrome.vcup.gossipOpenAria': 'Abrir la ventana de la Copa del Valle',
+  'hudChrome.vcup.guildBoardEmpty':
+    'Ninguna hermandad ha saltado al campo todavía. ¡Enarbola tu estandarte!',
+  'hudChrome.vcup.guildBoardHeading': 'Estandartes de hermandad',
+  'hudChrome.vcup.guildBoardWl': '{wins} V, {losses} D',
+  'hudChrome.vcup.guildRecordLine':
+    'Historial de tu hermandad: {wins} victorias, {losses} derrotas.',
+  'hudChrome.vcup.inMatchNote': 'Tu equipo está en el terreno de juego. ¡A jugar!',
+  'hudChrome.vcup.indicatorLive': 'Copa del Valle',
+  'hudChrome.vcup.indicatorOpen': 'Abrir la ventana de la Copa del Valle',
+  'hudChrome.vcup.indicatorQueued':
+    'Cola de la Copa del Valle: {bracket}, posición {position} de {count}',
+  'hudChrome.vcup.leaveQueue': 'Salir de la cola',
+  'hudChrome.vcup.liveAria': 'Copa del Valle: {nationA} {scoreA}, {nationB} {scoreB}',
+  'hudChrome.vcup.liveHeading': 'Ahora en el Campo de la Cerda',
+  'hudChrome.vcup.logDraw': 'El encuentro en el Campo de la Cerda termina en empate.',
+  'hudChrome.vcup.logFound':
+    'Tu partido de la Copa del Valle está listo: {nationA} contra {nationB}.',
+  'hudChrome.vcup.logGoal': '¡{name} marca para {nation}! {nationA} {scoreA}, {nationB} {scoreB}.',
+  'hudChrome.vcup.logLoss': 'Pierdes el encuentro en el Campo de la Cerda.',
+  'hudChrome.vcup.logQueued':
+    'Entras en la cola de la Copa del Valle para {bracket} (posición {position}).',
+  'hudChrome.vcup.logRoster': 'Tu bando: {allies}. Su bando: {enemies}.',
+  'hudChrome.vcup.logSave': '¡{name} detiene el disparo!',
+  'hudChrome.vcup.logUnqueued': 'Sales de la cola de la Copa del Valle.',
+  'hudChrome.vcup.logWin': 'Ganas el encuentro en el Campo de la Cerda.',
+  'hudChrome.vcup.mobileLabel': 'Copa',
+  'hudChrome.vcup.nation.choir': 'El Coro Pálido',
+  'hudChrome.vcup.nation.coliseum': 'El Coliseo Cinéreo',
+  'hudChrome.vcup.nation.copperdig': 'La Excavación de Cobre',
+  'hudChrome.vcup.nation.mirefen': 'El Mirefen',
+  'hudChrome.vcup.nation.moon': 'La Luna Pálida',
+  'hudChrome.vcup.nation.ogre': 'Los Clanes Ogros',
+  'hudChrome.vcup.nation.thornpeak': 'Thornpeak',
+  'hudChrome.vcup.nation.vale': 'Valle de Eastbrook',
+  'hudChrome.vcup.nationsHeading': 'Nación de estandarte',
+  'hudChrome.vcup.noLive':
+    'El terreno de juego está en silencio. No se está jugando ningún partido.',
+  'hudChrome.vcup.offlineNote':
+    'El libro de encuentros está cerrado. La Copa del Valle no está disponible en este momento.',
+  'hudChrome.vcup.phaseCountdown': 'Saque inicial en {seconds}',
+  'hudChrome.vcup.phaseGoal': '¡GOL!',
+  'hudChrome.vcup.phaseGolden': 'GOL DE ORO',
+  'hudChrome.vcup.phaseOver': 'FINAL DEL PARTIDO',
+  'hudChrome.vcup.practice': 'Práctica contra bots',
+  'hudChrome.vcup.practiceNote':
+    'Comienza de inmediato un partido privado contra bots en tu propio campo de práctica.',
+  'hudChrome.vcup.practicingNow': 'Practicando ahora ({count}):',
+  'hudChrome.vcup.queue': 'Entrar en la cola',
+  'hudChrome.vcup.queueNote':
+    'Entra en cola desde cualquier lugar; el silbato te llamará al Campo de la Cerda.',
+  'hudChrome.vcup.queuedStatus': 'En cola para {bracket}: posición {position} de {count}.',
+  'hudChrome.vcup.recordLine':
+    'Tu historial: {wins} victorias, {losses} derrotas, {draws} empates.',
+  'hudChrome.vcup.role.allrounder.desc':
+    'Un poco de cada cosa: patada, patadón y un hombrazo limpio.',
+  'hudChrome.vcup.role.allrounder.name': 'Todoterreno',
+  'hudChrome.vcup.role.keeper.desc': 'Defiende el área con agarre, zambullida y saque largo.',
+  'hudChrome.vcup.role.keeper.name': 'Guardameta',
+  'hudChrome.vcup.role.striker.desc': 'Vive para el patadón largo y la finta rápida.',
+  'hudChrome.vcup.role.striker.name': 'Delantero',
+  'hudChrome.vcup.role.sweeper.desc': 'Aparta a los corredores del balón y lo despeja lejos.',
+  'hudChrome.vcup.role.sweeper.name': 'Líbero',
+  'hudChrome.vcup.rolesHeading': 'Rol deportivo',
+  'hudChrome.vcup.shootPower': 'POTENCIA',
+  'hudChrome.vcup.title': 'La Copa del Valle',
+  'hudChrome.vcup.waitingCount': '{count} en espera',
+  'hudChrome.vcup.walkUp': 'Acércate al Campo de la Cerda para mirar desde las gradas.',
 };
