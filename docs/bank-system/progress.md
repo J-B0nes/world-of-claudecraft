@@ -18,7 +18,7 @@
 | Phase 6 QA | complete | 2026-07-06 | 2026-07-06 |
 | Phase 7: mobile + a11y | complete | 2026-07-06 | 2026-07-06 |
 | Phase 7 QA | complete | 2026-07-07 | 2026-07-07 |
-| Phase 8: bonus slots | not started | | |
+| Phase 8: bonus slots | complete | 2026-07-07 | 2026-07-07 |
 | Phase 8 QA | not started | | |
 | Phase 9: final whole-feature QA | not started | | |
 
@@ -91,11 +91,11 @@
 - [x] As Phase 1 QA
 
 ### Phase 8: bonus slots
-- [ ] Server entitlement calculator as an extensible source registry (email, Discord link, wallet link, qualified referrals: referee has a level >= 10 character, cap 5) stamped into character state at load; offline default 0
-- [ ] Registry extensibility proven by test (future X and Twitch connect-and-follow rows land without wire or pin churn; not implemented in v1)
-- [ ] Referral qualification query on the existing referrals table (no rebuild)
-- [ ] Player-facing surface listing bonus sources and status (portal or bank window footer; decide in phase)
-- [ ] Tests: entitlement math, cap, qualification, stamp-at-load, no mid-session drift
+- [x] Server entitlement calculator as an extensible source registry (email VERIFIED via `accounts.email_verified_at IS NOT NULL`, Discord link row, wallet link row, qualified referrals: referee has a level >= 10 character, cap 5) stamped into character state at load via the ws_auth fresh-join arm -> game.join meta bag -> `addPlayer` `bankBonus` opt; offline default 0 (`server/bank_entitlements.ts` + `bankBonusFactsForAccount` in `server/db.ts`, one parameterized round trip)
+- [x] Registry extensibility proven by test (a fake future connect-and-follow row appended over a registry copy lands as one more breakdown row with no wire-shape or pin churn; X/Twitch doc-commented as approved-but-blocked, not implemented)
+- [x] Referral qualification query on the existing referrals table (no rebuild; capture untouched; realm-agnostic; denormalized `characters.level`)
+- [x] Player-facing surface listing bonus sources and status (DECIDED: bank window footer; breakdown rides `BankInfo.bonusSources` on the existing proximity-gated bank delta; 13 `hudChrome.bank.bonus*` keys with five non-Latin fills; unknown future ids skipped)
+- [x] Tests: entitlement math per source, the cap at exactly 5, the qualification SQL pins, stamp-at-load both directions, shrink-below-used over-capacity without loss, offline/no-stamp arm, pre-bonusSlots back-compat, the registry-vs-sim-clamp tripwire (plus the deferred Phase 1 `bonusSlots` upper clamp, closed: `BANK_MAX_BONUS_SLOTS = 16`)
 
 ### Phase 8 QA
 - [ ] As Phase 1 QA
