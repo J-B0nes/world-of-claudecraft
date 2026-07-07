@@ -20,7 +20,7 @@
 | Phase 7 QA | complete | 2026-07-07 | 2026-07-07 |
 | Phase 8: bonus slots | complete | 2026-07-07 | 2026-07-07 |
 | Phase 8 QA | complete | 2026-07-07 | 2026-07-07 |
-| Phase 9: final whole-feature QA | not started | | |
+| Phase 9: final whole-feature QA | complete | 2026-07-07 | 2026-07-07 |
 
 ## Per-phase deliverable checklists
 
@@ -101,7 +101,7 @@
 - [ ] As Phase 1 QA
 
 ### Phase 9: final whole-feature QA
-- [ ] Full `qa-checklist.md` matrix green; `npm run gate` green; packet teardown offered
+- [x] Full `qa-checklist.md` matrix green; `npm run gate` green; packet teardown offered
 
 ## Notes per phase
 
@@ -260,3 +260,17 @@
 - Three parallel reviewers over the post-merge feature. Completeness critic: NO new phases needed, PR-ready after phase-09-final-qa; the PR body must surface the maintainer-calls (mobile long-press destroy suppression, deposit-all tool-sweep incl. Heroic Marks, banker discoverability, balance numbers) and the follow-ups (bank_ledger pruning, audit cadence/alerting, ip_block_kick mock hygiene). Release-content interaction review: professions/heroic/crafting/movement-feel/instances all clean at product level.
 - ONE CRITICAL found by cross-platform-sync and fixed same-session: the bank had no client entry point in normal play (openQuestDialog had no banker arm; every prior smoke opened via the __game.sim.interact() debug hook, masking it through eight QA phases). Fixed test-first as the openQuestDialog banker divert, live-proven through a real KeyF press. Full record and the standing real-input-path lesson in state.md "Whole-feature gap review before Phase 9".
 - Next: run docs/bank-system/phase-09-final-qa.md in a fresh session (the packet closer; its UI cluster must drive the open legs through the REAL interact key, tmp/bank_real_interact_probe.mjs is the template).
+
+### Second release merge 2026-07-07 (immediately before Phase 9)
+
+- Merged origin/release/v0.23.0 (tip bcf975752: Vale Cup #1586, mobile HUD overlap #1578, town focus #1214) as e97de0a61. Ten hand-resolved files, all exact unions (COMMAND_NAMES, zone1 NPCs, sim/sim_context bankerIds-vs-vcup views, world_api facet union + COMMAND_FACETS, five count-pin suites re-derived: sends/dispatches 131/140, IWorld 202 = 53 data + 149 method, 25 facets, 35 delta keys) plus the generated i18n trio and 48 parity goldens (regenerated on the merged tree with UPDATE_PARITY, recorded; sha256 re-baselined in the same commit; i18n_resolved_equivalence green).
+- release-merge-audit (14 agents): NO lost intent either direction; WsAuthDeps injection byte-identical; no new db call in game.join/leave (vcupResolveDesertion is a sim call, the bot-detector overlay mocks are unaffected). Warn-level findings were all doc staleness, fixed in 50e9a8d2a. One predicted-class break surfaced by the gate: release-authored tests/vale_cup_online.test.ts mocked ../server/db without the lease exports our game.leave calls; fixed as 9d598a90f (mirrors character_lease_game.test.ts).
+
+### Phase 9: final whole-feature QA (2026-07-07)
+
+- Verdict: PASS. Every qa-checklist.md matrix row proven by a command or driven behavior (6-cluster parallel verification, all rows PASS; the one FAIL, two literal dash characters inside bank_window.test.ts's own dash-guard assertions that provably tripped the pre-push copy scan, fixed as unicode escapes in 050f6d5dd). npm run gate PASS on the merged tree (11k+ tests; re-run after every fix batch).
+- Conservation harness teeth PROVEN by a planted mutation: a deposit-path item mint failed the 50-seed sweep immediately; reverted, 71/71 green.
+- Real-input-path open legs (the standing lesson) driven BOTH hosts: offline real KeyF at Bursar Fernando opens the bank (gossip intact for quest NPCs, template probe 4/4), and a NEW online real-key probe (fresh account, real registration/login, dev_teleport arrangement only, real KeyF through the input layer) passes 5/5 (tmp/bank_online_realkey_probe.mjs). The Escape behavior was investigated and is correct family behavior (topmost-first: first Escape closes the docked bags, second closes the bank). Full online wire smoke 20/20; mobile footer probes green at 740x360 AND 844x390.
+- The #1578 bags-vs-bank standalone-height divergence ADJUDICATED: standalone mobile bank adopts the full-height bags treatment (same modal surface class, same issue-1577 rationale); the bank-open 50/50 pairing keeps its 72px reservation mirroring the vendor split. Landed as 67db55b5a, live-verified at both viewports.
+- Reviewer dispatch (all six, whole-feature): architecture-reviewer CLEAN (2 low notes), cross-platform-sync CLEAN, migration-safety CLEAN (3 info), privacy-security-review CLEAN (2 info), test-coverage-auditor CLEAN (1 nit, fixed as 4a1a92047: the join-meta bankBonus now pinned to a NON-ZERO recomputed grant), qa-checklist READY (2 nice-to-have: the stale fernando.png media-manifest hash, fixed as 510abc71f; the ledger CASCADE design note, already the adjudicated FK-CASCADE decision).
+- bank_audit.mjs ran clean on the live dev db (31 personal-container ledger rows, 0 findings).
