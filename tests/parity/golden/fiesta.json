@@ -30,7 +30,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 408,
-      "state": "fdfe619f",
+      "state": "ad41e799",
       "events": "bfe7ca4b",
       "rng": {
         "draws": 0,
@@ -41,7 +41,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 408,
-      "state": "f17acc41",
+      "state": "ea8a084b",
       "events": "77c6843d",
       "rng": {
         "draws": 36,
@@ -52,7 +52,7 @@
       "tick": 75,
       "time": 3.75,
       "nextId": 408,
-      "state": "69a82577",
+      "state": "8afd1591",
       "events": "60599c2d",
       "rng": {
         "draws": 120,
@@ -63,7 +63,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 408,
-      "state": "618b0181",
+      "state": "ea121c8b",
       "events": "9c2f436d",
       "rng": {
         "draws": 230,
@@ -74,7 +74,7 @@
       "tick": 125,
       "time": 6.25,
       "nextId": 408,
-      "state": "8c5b60d7",
+      "state": "6b7ad561",
       "events": "a1558958",
       "rng": {
         "draws": 384,
@@ -85,7 +85,7 @@
       "tick": 150,
       "time": 7.5,
       "nextId": 408,
-      "state": "548b1f8f",
+      "state": "6a869cf9",
       "events": "741638a5",
       "rng": {
         "draws": 543,
@@ -96,7 +96,7 @@
       "tick": 163,
       "time": 8.15,
       "nextId": 408,
-      "state": "a0b601e8",
+      "state": "c51cca96",
       "events": "0d84dad0",
       "rng": {
         "draws": 608,
@@ -156,7 +156,8 @@
               "war_toughness": 3
             },
             "spec": "arms"
-          }
+          },
+          "townFocus": {}
         },
         {
           "activeLoadout": -1,
@@ -212,7 +213,8 @@
               "mag_wand_specialization": 2
             },
             "spec": "arcane"
-          }
+          },
+          "townFocus": {}
         },
         {
           "activeLoadout": -1,
@@ -269,7 +271,8 @@
               "rog_malice": 3
             },
             "spec": "assassination"
-          }
+          },
+          "townFocus": {}
         },
         {
           "activeLoadout": -1,
@@ -325,7 +328,8 @@
               "hun_lethal_shots": 3
             },
             "spec": "beast_mastery"
-          }
+          },
+          "townFocus": {}
         }
       ],
       "entities": [

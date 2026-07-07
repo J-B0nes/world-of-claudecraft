@@ -77,6 +77,7 @@ import type { IWorldTalents } from './world_api/talents';
 import type { IWorldTargeting } from './world_api/targeting';
 import type { IWorldTelemetry } from './world_api/telemetry';
 import type { IWorldTrade } from './world_api/trade';
+import type { IWorldValeCup } from './world_api/vale_cup';
 
 // --- pass-through sim re-exports: downstream imports these FROM world_api ---
 export type {
@@ -138,6 +139,17 @@ export type {
   SocialInfo,
 } from './world_api/social_graph';
 export type { TradeInfo, TradeOffer } from './world_api/trade';
+export type {
+  CupInfo,
+  VcBetInfo,
+  VcBetRecord,
+  VcBoardEntry,
+  VcLiveMatch,
+  VcMatchInfo,
+  VcPhase,
+  VcRosterPlayer,
+  VcStanding,
+} from './world_api/vale_cup';
 
 // The aggregate seam. Empty body: every member lives on exactly one facet above,
 // so `IWorld` is byte-identical to the pre-split flat interface and both the
@@ -166,7 +178,8 @@ export interface IWorld
     IWorldDailyRewards,
     IWorldTelemetry,
     IWorldProfessions,
-    IWorldBank {}
+    IWorldBank,
+    IWorldValeCup {}
 
 // ---------------------------------------------------------------------------
 // Command schema (W0b): the shared wire-token vocabulary.
@@ -318,8 +331,15 @@ export const COMMAND_NAMES = [
   'bank_deposit',
   'bank_withdraw',
   'bank_buy_slots',
+  'set_town_focus',
   'set_dungeon_difficulty',
   'heroic_buy',
+  'vcup_queue',
+  'vcup_leave',
+  'vcup_role',
+  'vcup_ready',
+  'vcup_bet',
+  'vcup_practice',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -384,7 +404,8 @@ export type WorldFacet =
   | 'IWorldDelves'
   | 'IWorldDailyRewards'
   | 'IWorldTelemetry'
-  | 'IWorldBank';
+  | 'IWorldBank'
+  | 'IWorldValeCup';
 
 export const COMMAND_FACETS = {
   // IWorldCombat: ability casts, auto-attack, spirit release.
@@ -528,4 +549,12 @@ export const COMMAND_FACETS = {
   bank_deposit: 'IWorldBank',
   bank_withdraw: 'IWorldBank',
   bank_buy_slots: 'IWorldBank',
+  // IWorldValeCup: the Vale Cup boarball queue. cupInfo is a snapshot read (no
+  // send); vcup_practice starts a private instanced practice bout (online + off).
+  vcup_queue: 'IWorldValeCup',
+  vcup_leave: 'IWorldValeCup',
+  vcup_role: 'IWorldValeCup',
+  vcup_ready: 'IWorldValeCup',
+  vcup_bet: 'IWorldValeCup',
+  vcup_practice: 'IWorldValeCup',
 } as const satisfies Partial<Record<ClientCommand, WorldFacet>>;
