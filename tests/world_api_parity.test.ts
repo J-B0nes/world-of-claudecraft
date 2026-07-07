@@ -96,8 +96,8 @@ export const IWORLD_MEMBERS = [
   // --- commands + read-returning methods ---
   { name: 'questState', kind: 'method' }, // read-returning (1/6)
   { name: 'castAbility', kind: 'method' },
-  { name: 'castAbilityBySlot', kind: 'method' },
   { name: 'castAbilityAt', kind: 'method' },
+  { name: 'castAbilityBySlot', kind: 'method' },
   { name: 'cancelAura', kind: 'method' },
   { name: 'targetEntity', kind: 'method' },
   { name: 'tabTarget', kind: 'method' },
@@ -835,8 +835,8 @@ type _ExhaustEntityRoster = AssertNever<
 const FACET_COMBAT = [
   'known',
   'castAbility',
-  'castAbilityBySlot',
   'castAbilityAt',
+  'castAbilityBySlot',
   'cancelAura',
   'startAutoAttack',
   'stopAutoAttack',
@@ -859,11 +859,11 @@ type _ExhaustTargeting = AssertNever<
 const FACET_INTERACTION = [
   'interact',
   'lootCorpse',
-  'autoLoot',
   'harvestCorpse',
   'pickUpObject',
   'townFocus',
   'setTownFocus',
+  'autoLoot',
 ] as const satisfies readonly (keyof IWorldInteraction)[];
 type _ExhaustInteraction = AssertNever<
   Exclude<keyof IWorldInteraction, (typeof FACET_INTERACTION)[number]>

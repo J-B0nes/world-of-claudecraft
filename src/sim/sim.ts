@@ -836,18 +836,18 @@ export interface PlayerMeta {
   // Session-only World Market browse filter. The market is capped at
   // MARKET_WIRE_LIMIT listings per snapshot to bound wire cost, so this
   // server-side substring filter (matched against item names) is how a player
-  // reaches goods past the cap. Never persisted, resets on login.
+  // reaches goods past the cap. Never persisted: resets on login.
   marketFilter: string;
   // Flat per-craft skill tracking (#1126): one independent, additive-only skill
   // value per craft on the ten-craft ring (see professions/wheel.ts). Persisted
   // in CharacterState.
   craftSkills: Record<string, number>;
-  // One-time Ravenpost welcome letter sent (persisted in CharacterState, so
-  // existing characters get the service announcement exactly once).
-  mailWelcomed: boolean;
   // Active-archetype state and quest-gated switching (#1129, superseded scope: see
   // professions/archetype.ts). Never touches craftSkills. Persisted in CharacterState.
   archetype: ArchetypeState;
+  // One-time Ravenpost welcome letter sent (persisted in CharacterState, so
+  // existing characters get the service announcement exactly once).
+  mailWelcomed: boolean;
   // Delve meta progression (persisted in CharacterState).
   delveMarks: number;
   delveClears: Record<string, number>;
@@ -903,6 +903,7 @@ export interface CharacterState {
   // contract (src/sim/professions/CLAUDE.md, #1164) parallel to the existing
   // `delveDaily`/`companionUpgrades` persisted fields.
   professions?: Partial<Record<string, number>>;
+  // load cleanly, defaulting every profession to 0).
   gatheringProficiency?: Partial<Record<string, number>>;
   copper: number;
   hp: number;
@@ -1529,10 +1530,10 @@ export class Sim {
       raidLockouts: new Map(),
       away: null,
       marketQuery: defaultMarketQuery(),
-      craftSkills: emptyCraftSkills(),
-      mailWelcomed: false,
       marketFilter: '',
+      craftSkills: emptyCraftSkills(),
       archetype: emptyArchetypeState(),
+      mailWelcomed: false,
       delveMarks: 0,
       delveClears: {},
       companionUpgrades: {},
@@ -1632,8 +1633,8 @@ export class Sim {
         }
       }
       meta.craftSkills = normalizeCraftSkills(s.craftSkills);
-      meta.mailWelcomed = s.mailWelcomed === true;
       meta.archetype = normalizeArchetypeState(s.archetype);
+      meta.mailWelcomed = s.mailWelcomed === true;
       meta.delveMarks = s.delveMarks ?? 0;
       meta.delveClears = { ...(s.delveClears ?? {}) };
       meta.companionUpgrades = { ...(s.companionUpgrades ?? {}) };
