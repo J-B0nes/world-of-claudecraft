@@ -9550,6 +9550,15 @@ export class Hud {
   openQuestDialog(npcId: number): void {
     const npc = this.sim.entities.get(npcId);
     if (npc?.kind !== 'npc') return;
+    // A banker never gossips: divert to the sim interact, whose banker intercept
+    // emits the bank event this HUD opens on (case 'bank'), identically in both
+    // worlds. Routing through the sim keeps proximity server-authoritative; the
+    // authored greeting stays un-rendered by design (the Phase 5 adjudication).
+    if (NPCS[npc.templateId]?.banker) {
+      this.sim.targetEntity(npc.id);
+      this.sim.interact();
+      return;
+    }
     this.questDialogOpenedAtMs = performance.now();
     if ($('#quest-dialog').style.display !== 'block')
       this.questDialogTrap = this.focusManager.open({ root: () => $('#quest-dialog') });
