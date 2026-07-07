@@ -1181,6 +1181,9 @@ export class Hud {
   private lastHudMediumAt = 0;
   private lastHudSlowAt = 0;
   private dailyRewardsButtonEl: HTMLButtonElement | null = null;
+  // Mobile More-tray entry mirroring the desktop chest button's hidden/spin-ready
+  // state (folded off the top-right rail so it never overlaps the buff/debuff bars).
+  private mobileDailyRewardsButtonEl: HTMLButtonElement | null = null;
   private dailyRewardsLauncherSeq = 0;
   private lastDailyRewardsLauncherRefreshAt = 0;
   // Per-element tier cadence stamps (graphics-tier knobs). Each gates a non-self /
@@ -1361,11 +1364,16 @@ export class Hud {
     const dailyRewardsButton = document.getElementById(
       'daily-rewards-button',
     ) as HTMLButtonElement | null;
+    const mobileDailyRewardsButton = document.getElementById(
+      'mobile-daily-rewards',
+    ) as HTMLButtonElement | null;
     if (!this.dailyRewardsEnabled()) {
       dailyRewardsButton?.setAttribute('hidden', '');
+      mobileDailyRewardsButton?.setAttribute('hidden', '');
       $('#daily-rewards-window').style.display = 'none';
     } else if (dailyRewardsButton) {
       this.dailyRewardsButtonEl = dailyRewardsButton;
+      this.mobileDailyRewardsButtonEl = mobileDailyRewardsButton;
       dailyRewardsButton.innerHTML =
         '<img class="daily-rewards-icon" src="/ui/daily-rewards/treasure_chest.webp" alt="" draggable="false" decoding="async">';
       dailyRewardsButton.classList.remove('spin-ready');
@@ -5570,6 +5578,10 @@ export class Hud {
     const visible = this.dailyRewardsEnabled() && show;
     button.toggleAttribute('hidden', !visible);
     if (!visible) button.classList.remove('spin-ready');
+    // The mobile More-tray entry is a menu row, not floating chrome: it stays
+    // reachable whenever the feature itself is on, regardless of the
+    // showDailyRewardsChestButton preference (which only declutters the rail).
+    if (!this.dailyRewardsEnabled()) this.mobileDailyRewardsButtonEl?.classList.remove('spin-ready');
   }
 
   private setDailyRewardsChestButtonPreference(show: boolean): void {
@@ -5588,6 +5600,8 @@ export class Hud {
   private applyDailyRewardsLauncherStatus(status: DailyRewardStatus): void {
     if (!this.dailyRewardsEnabled()) return;
     const button = this.dailyRewardsButtonEl;
+    const spinReady = !status.eligibility.eligible || !status.spin.claimed;
+    this.mobileDailyRewardsButtonEl?.classList.toggle('spin-ready', spinReady);
     if (!button) return;
     if (!this.showDailyRewardsChestButton()) {
       button.hidden = true;
@@ -5595,7 +5609,7 @@ export class Hud {
       return;
     }
     button.hidden = false;
-    button.classList.toggle('spin-ready', !status.eligibility.eligible || !status.spin.claimed);
+    button.classList.toggle('spin-ready', spinReady);
   }
 
   private refreshDailyRewardsLauncher(force = false): void {

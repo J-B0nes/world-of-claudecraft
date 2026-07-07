@@ -308,6 +308,7 @@ export const en_CA: EnTranslations = {
       "autorun": "Autorun",
       "jump": "Jump",
       "leaderboard": "Ranks",
+      "dailyRewards": "Rewards",
       "nameplates": "Names",
       "haptics": "Haptics",
       "hapticsOff": "Haptics Off",

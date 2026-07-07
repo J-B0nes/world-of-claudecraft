@@ -11,28 +11,34 @@
 export const pending: Record<string, readonly string[]> = {
   "es": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "es_ES": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "fr_FR": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "fr_CA": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "en_CA": [],
   "it_IT": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "de_DE": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "zh_CN": [
     "hudChrome.discord.roleTag.coredevs"
@@ -48,7 +54,8 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "pt_BR": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "ru_RU": [
     "hudChrome.discord.roleTag.coredevs"
@@ -59,6 +66,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mobile.actionPageIndicator",
     "hudChrome.mobile.actionPageToggle",
     "hudChrome.mobile.actionRing",
+    "hudChrome.mobile.dailyRewards",
     "hudChrome.mobile.hotbarPage",
     "hudChrome.mobile.hotbarPageAria",
     "hudChrome.mobile.spellbookPageLabel",
@@ -69,30 +77,37 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "nl_NL": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "pl_PL": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "id_ID": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "tr_TR": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "sv_SE": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "vi_VN": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ],
   "da_DK": [
     "hudChrome.crafting.comboRequirementUnmet",
-    "hudChrome.discord.roleTag.coredevs"
+    "hudChrome.discord.roleTag.coredevs",
+    "hudChrome.mobile.dailyRewards"
   ]
 };

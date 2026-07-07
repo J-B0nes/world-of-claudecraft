@@ -37,6 +37,7 @@ import {
   hoverCursorKind,
   isAttackableEntity,
 } from './game/interactions';
+import { applyMobileKeyboardViewport } from './game/keyboard_viewport_applier';
 import { Keybinds } from './game/keybinds';
 import { shouldUseStaticBackdrop } from './game/landing_backdrop';
 import {
@@ -424,6 +425,7 @@ function syncBuildInfo(): void {
 function syncAppViewport(): void {
   syncAppViewportShared();
   applyMobileHudLayout();
+  applyMobileKeyboardViewport();
 }
 
 function preventMobileZoom(): void {
@@ -1133,6 +1135,7 @@ async function startGame(
     onTalents: () => hud.toggleTalents(),
     onMap: () => hud.toggleMap(),
     onLeaderboard: () => hud.toggleLeaderboard(),
+    onDailyRewards: () => hud.toggleDailyRewards(),
     onNameplates: () => (renderer.showNameplates = !renderer.showNameplates),
     onMusic: () => {
       music.setEnabled(!music.enabled);

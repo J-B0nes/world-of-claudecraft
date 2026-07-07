@@ -3508,6 +3508,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mobile.hotbarPageAria': '次のスキルセットを表示',
   'hudChrome.mobile.jump': 'ジャンプ',
   'hudChrome.mobile.leaderboard': 'ランキング',
+  'hudChrome.mobile.dailyRewards': '報酬',
   'hudChrome.mobile.nameplates': 'ネームプレート',
   'hudChrome.mobile.targetCycle': 'ターゲット切替',
   'hudChrome.mobile.targetCycleShort': '標的',

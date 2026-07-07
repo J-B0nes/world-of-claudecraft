@@ -990,16 +990,16 @@ describe('client HTML shell', () => {
       'body.mobile-touch #party-frames.below-target {\n    top: calc(max(8px, env(safe-area-inset-top)) + 130px);',
     );
     expect(hudMobileCss).toContain(
-      'body.mobile-touch #party-frames .party-frame {\n    width: 132px;\n    min-height: 40px;',
+      'body.mobile-touch #party-frames .party-frame {\n    width: 112px;\n    min-height: 40px;',
     );
     expect(hudMobileCss).toContain(
       'body.mobile-touch #party-frames .party-frame:not(:first-child) {\n    margin-top: -1px;',
     );
     expect(hudMobileCss).toContain(
-      'body.mobile-touch #party-frames #party-leave {\n    width: 132px;\n    min-height: 40px;',
+      'body.mobile-touch #party-frames #party-leave {\n    grid-column: 1 / span 2;\n    grid-row: 3;\n    width: auto;\n    min-height: 40px;',
     );
     expect(hudMobileCss).toContain(
-      'body.mobile-touch #party-frames .party-frame {\n      width: 118px;\n      min-height: 40px;',
+      'body.mobile-touch #party-frames .party-frame {\n      width: 100px;\n      min-height: 40px;',
     );
     expect(hudMobileCss).toContain(
       'body.mobile-touch #target-frame {\n      left: max(6px, env(safe-area-inset-left));\n      top: calc(max(6px, env(safe-area-inset-top)) + 56px);',
@@ -1638,11 +1638,10 @@ describe('client HTML shell', () => {
     expect(hudMobileCss).toContain(
       'body.mobile-touch.hud-mobile-compact.mobile-left-handed #mobile-action-ring {',
     );
-    // The compact minimap shrink and the hand-synced daily-chest offset are a
-    // COUPLED pair (170 * 0.44 + 8 = 83): pin both so one cannot drift without
-    // the other, and so the arc's vertical budget on a 360px-tall phone holds.
+    // The compact minimap shrink keeps the arc's vertical budget on a
+    // 360px-tall phone holding (the daily-chest rail was folded into the
+    // mobile More tray, issue #1577, so it no longer needs a coupled offset).
     expect(hudMobileCss).toContain('transform: scale(0.44);');
-    expect(hudMobileCss).toContain('right: calc(max(6px, env(safe-area-inset-right)) + 83px);');
   });
 
   it('gates the camera joystick behind its opt-in setting (swipe-look is the primary camera)', () => {

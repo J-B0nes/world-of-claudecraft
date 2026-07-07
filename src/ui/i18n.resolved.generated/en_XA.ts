@@ -308,6 +308,7 @@ export const en_XA: EnTranslations = {
       "autorun": "[Áúţóŕúñ]",
       "jump": "[Ĵúɱþ]",
       "leaderboard": "[Ŕáñķš]",
+      "dailyRewards": "[Ŕéŵáŕðš]",
       "nameplates": "[Ñáɱéš]",
       "haptics": "[Ĥáþţíçš]",
       "hapticsOff": "[Ĥáþţíçš Óƒƒ]",
