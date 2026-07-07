@@ -820,6 +820,9 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     elite: true,
     canSwim: false,
     ccImmune: true,
+    // A raid boss cannot be perma-snared by a wall of Frostbolts / Hamstrings: slows do
+    // not stick to him (ccImmune already blocks stun/root/etc; slow is separate).
+    slowImmune: true,
     // Raid-tier health: ~20k base at level 20, ~44k after the elite multiplier, a
     // sustained fight for a gathered raid, far above the solo/small-group rares
     // (Varkas and Bound Guardian scale the same way from ~2k / ~1.3k base).
@@ -854,14 +857,16 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
       school: 'nature',
     },
     // Howling Gale: the anti-kite snare. Gale-force winds pin every player within 40yd
-    // to 20% move speed for 6s, re-slammed every 5s (so uptime is permanent while you
+    // to 70% move speed for 6s, re-slammed every 5s (so uptime is permanent while you
     // stand in the storm, and the snare lingers if you flee the radius). Unlike the
     // other pulses this one also fires while Thunzharr is CHASING, so a hunter whose
     // run speed (7) outpaces the boss (5.8) can no longer kite it forever: once snared
-    // to 1.4yd/s the boss closes and the melee, Thunderclap, and Stomp come online.
+    // to 4.9yd/s the boss (5.8) still closes and the melee, Thunderclap, and Stomp come
+    // online. A gentle 30% snare, not a hard 80% one: it denies a permanent kite without
+    // rooting the raid in place.
     aoeSlow: {
       radius: 40,
-      mult: 0.2,
+      mult: 0.7,
       duration: 6,
       every: 5,
       name: 'Howling Gale',
@@ -920,7 +925,7 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
       { itemId: 'soulflame_cord', chance: 0.08, rollGroup: 'thunzharr_t2_belt' },
       { itemId: 'stormcallers_waistguard', chance: 0.08, rollGroup: 'thunzharr_t2_belt' },
     ],
-    scale: 50, // rendered mountain-sized so he reads as a world boss on the skyline. Visual scale is DECOUPLED from combat reach: his melee is pinned to a ~17yd body in combatProfileForMob (mob_combat.ts), so the Howling Gale snare, not a giant swing, is what keeps him unkitable.
+    scale: 8, // a large, imposing world boss that reads on the skyline without being mountain-sized. Visual scale is DECOUPLED from combat reach: his melee is pinned to a ~17yd (scale-5) body in combatProfileForMob (mob_combat.ts), so the Howling Gale snare, not a giant swing, is what keeps him unkitable.
     color: 0x7d8a99,
   },
   // Stormlings: lesser storm elementals Thunzharr tears loose from itself at the
@@ -2590,7 +2595,7 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
   deathlords_dread_visage: {
     id: 'deathlords_dread_visage',
     set: 'deathlord',
-    name: "Barrowlord's Dread Visage",
+    name: 'Barrowlord Dread Visage',
     kind: 'armor',
     armorType: 'mail',
     slot: 'helmet',
@@ -2628,7 +2633,7 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
   // family's existing helm/shoulder. The `set` tag wires each into its family. ---
   crownforged_gauntlets: {
     id: 'crownforged_gauntlets',
-    name: 'Crownforged Gauntlets',
+    name: 'Bonewrought Gauntlets',
     kind: 'armor',
     slot: 'gloves',
     armorType: 'mail',
@@ -2636,11 +2641,11 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     stats: { armor: 180, str: 6, sta: 7 },
     sellValue: 3600,
     requiredClass: ['warrior', 'paladin'],
-    set: 'crownforged', // 3rd Crownforged piece, unlocks the set's 3-piece bonus
+    set: 'crownforged', // 3rd Bonewrought piece, unlocks the set's 3-piece bonus
   },
   nighttalon_grips: {
     id: 'nighttalon_grips',
-    name: 'Nighttalon Grips',
+    name: 'Direfang Grips',
     kind: 'armor',
     slot: 'gloves',
     armorType: 'leather',
@@ -2648,11 +2653,11 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     stats: { armor: 110, agi: 8, sta: 5 },
     sellValue: 3600,
     requiredClass: ['rogue', 'hunter', 'druid'],
-    set: 'nighttalon', // 3rd Nighttalon piece, unlocks the set's 3-piece bonus
+    set: 'nighttalon', // 3rd Direfang piece, unlocks the set's 3-piece bonus
   },
   soulflame_gloves: {
     id: 'soulflame_gloves',
-    name: 'Soulflame Gloves',
+    name: 'Wraithfire Gloves',
     kind: 'armor',
     slot: 'gloves',
     armorType: 'cloth',
@@ -2660,11 +2665,11 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     stats: { armor: 60, int: 8, sta: 5 },
     sellValue: 3600,
     requiredClass: ['mage', 'priest', 'warlock', 'druid'],
-    set: 'soulflame', // 3rd Soulflame piece, unlocks the set's 3-piece bonus
+    set: 'soulflame', // 3rd Wraithfire piece, unlocks the set's 3-piece bonus
   },
   stormcallers_handguards: {
     id: 'stormcallers_handguards',
-    name: "Stormcaller's Handguards",
+    name: 'Galecall Handguards',
     kind: 'armor',
     slot: 'gloves',
     armorType: 'mail',
@@ -2672,13 +2677,13 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     stats: { armor: 130, int: 8, sta: 5 },
     sellValue: 3600,
     requiredClass: ['shaman'],
-    set: 'stormcallers', // 3rd Stormcaller's piece, unlocks the set's 3-piece bonus
+    set: 'stormcallers', // 3rd Galecall piece, unlocks the set's 3-piece bonus
   },
   // --- Thunzharr, the Waking Peak (world boss): epic BELTS, each family's fourth
   // piece (helm, shoulder, glove, belt), alongside the glove drops above. ---
   crownforged_girdle: {
     id: 'crownforged_girdle',
-    name: 'Crownforged Girdle',
+    name: 'Bonewrought Girdle',
     kind: 'armor',
     slot: 'waist',
     armorType: 'mail',
@@ -2690,7 +2695,7 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
   },
   nighttalon_waistband: {
     id: 'nighttalon_waistband',
-    name: 'Nighttalon Waistband',
+    name: 'Direfang Waistband',
     kind: 'armor',
     slot: 'waist',
     armorType: 'leather',
@@ -2702,7 +2707,7 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
   },
   soulflame_cord: {
     id: 'soulflame_cord',
-    name: 'Soulflame Cord',
+    name: 'Wraithfire Cord',
     kind: 'armor',
     slot: 'waist',
     armorType: 'cloth',
@@ -2714,7 +2719,7 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
   },
   stormcallers_waistguard: {
     id: 'stormcallers_waistguard',
-    name: "Stormcaller's Waistguard",
+    name: 'Galecall Waistguard',
     kind: 'armor',
     slot: 'waist',
     armorType: 'mail',
@@ -2731,9 +2736,41 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     slot: 'mainhand',
     quality: 'legendary',
     weapon: { min: 42, max: 68, speed: 3.2 },
-    stats: { agi: 17, sta: 13, int: 14 },
+    // A druid caster/healer staff by deliberate choice: its 17 points sit in
+    // spirit (druid mana/healing) rather than agility, accepting that feral
+    // wearers lose real value from the swap (bear-form AP scales on agility).
+    // Hunters/rogues cannot equip it. Still exactly on the 44-pt legendary
+    // mainhand budget.
+    stats: { spi: 17, sta: 13, int: 14 },
     sellValue: 25000,
     requiredClass: ['druid'],
+    // Life and decay: a damaging spell may fester a nature DoT (Deathbloom); a heal
+    // may bloom a nature heal-over-time on its target (Lifebloom).
+    weaponProcs: [
+      {
+        id: 'deathbloom',
+        name: 'Deathbloom',
+        trigger: 'spellDamage',
+        chance: 0.15,
+        effects: [
+          {
+            kind: 'dot',
+            name: 'Deathbloom',
+            school: 'nature',
+            perTick: 12,
+            interval: 2,
+            duration: 8,
+          },
+        ],
+      },
+      {
+        id: 'lifebloom',
+        name: 'Lifebloom',
+        trigger: 'heal',
+        chance: 0.15,
+        effects: [{ kind: 'hot', name: 'Lifebloom', perTick: 10, interval: 2, duration: 8 }],
+      },
+    ],
   },
   kingsbane_last_oath: {
     id: 'kingsbane_last_oath',
@@ -2742,9 +2779,26 @@ export const ZONE3_ITEMS: Record<string, ItemDef> = {
     slot: 'mainhand',
     quality: 'legendary',
     weapon: { min: 46, max: 74, speed: 2.8 },
-    stats: { str: 24, sta: 20 },
+    // Rebalanced into a str/agi/sta hybrid within the fixed 44-pt legendary
+    // mainhand budget: 15 agi makes it a viable hunter ranged weapon (ranged AP +
+    // crit) while it stays usable by its warrior/paladin owners.
+    stats: { str: 15, agi: 15, sta: 14 },
     sellValue: 25000,
     requiredClass: ['warrior', 'paladin'],
+    // Thunderfury-style on-hit: a nature arc that blasts the target and chains to
+    // nearby foes, and slows the primary target's attack speed.
+    weaponProcs: [
+      {
+        id: 'thronebane_arc',
+        name: 'Chain Arc',
+        trigger: 'meleeHit',
+        chance: 0.1,
+        effects: [
+          { kind: 'chainArc', school: 'nature', damage: 42, jumps: 3, falloff: 0.6, radius: 8 },
+          { kind: 'attackSlow', name: 'Thunderclap', mult: 1.2, duration: 6 },
+        ],
+      },
+    ],
   },
   crownforged_dreadhelm: {
     id: 'crownforged_dreadhelm',

@@ -78,6 +78,7 @@ import { githubForAccount } from './github_db';
 import { forEachGuarded, runGuarded } from './guarded_iter';
 import { IpBlockList } from './ip_block';
 import { loadActiveBlockedIps } from './ip_block_db';
+import { LINKDEAD_GRACE_MS, planJoin } from './linkdead';
 import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips';
 import { trackReachedLevel5 } from './meta_capi';
 import {
@@ -146,6 +147,8 @@ const WHO_RESULT_LIMIT = 50;
 // between an account's characters, so the old allowance of a second online
 // character (self-trade by dual-boxing) is no longer needed. GMs are exempt.
 const MAX_ACTIVE_SESSIONS_PER_ACCOUNT = 1;
+// WS protocol-level ping cadence; see the keepalive interval in start().
+const WS_KEEPALIVE_PING_MS = 30_000;
 const RESTART_COUNTDOWN_TOTAL_SECONDS = 600;
 const RESTART_COUNTDOWN_STEPS = [
   { atSeconds: 0, text: 'Server restart in 10 minutes.' },
@@ -162,6 +165,45 @@ const RESTART_COUNTDOWN_STEPS = [
 const STALE_INPUT_SECONDS = 0.75;
 // Exponential moving average weight for the per-tick duration stat.
 const TICK_EMA_ALPHA = 0.05;
+// On-demand server tick-loop capture window bounds (ms), clamped in startPerfCapture.
+// The default when the admin caller sends none. Max 30s stays inside the profiler's
+// 1200-tick (60s) ring.
+const PERF_CAPTURE_MIN_MS = 3_000;
+const PERF_CAPTURE_MAX_MS = 30_000;
+const PERF_CAPTURE_DEFAULT_MS = 10_000;
+// sim.tick() internal phase names (already `sim.`-prefixed): must match the
+// lap?.(...) call sites in src/sim/sim.ts tick(). Fed by the injected cfg.perfLap
+// probe while a detailed capture is active (an admin capture or PERF_TICK_LOG=1).
+// TickProfiler.add() silently ignores an unregistered phase, so a name drift would
+// drop that timing without a trace: tests/server/tick_perf_capture.test.ts pins the
+// sim's emitted phase set against this list, exported for that guard.
+export const SIM_LAP_PHASES = [
+  'respawns',
+  'worldBosses',
+  'groundAoEs',
+  'despawnDecay',
+  'projectiles',
+  'p.move',
+  'p.doors',
+  'p.casting',
+  'p.autoAtk',
+  'p.regen',
+  'p.auras',
+  'mob.update',
+  'mob.auras',
+  'ent.misc',
+  'engaged',
+  'duels',
+  'arena',
+  'trades',
+  'lootRolls',
+  'instances',
+  'delves',
+  'market',
+  'postOffice',
+  'delayedEv',
+  'gridRefresh',
+].map((n) => `sim.${n}`);
 const ARENA_WIRE_HZ = 0.1;
 const ARENA_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * ARENA_WIRE_HZ)));
 
@@ -355,6 +397,15 @@ export interface ClientSession {
   joinedAt: number;
   dbSessionId: number | null; // play_sessions row, set once the insert lands
   left: boolean; // set in leave(); guards against the open-session insert landing after disconnect
+  // linkdead grace: true while the socket has dropped but the character is
+  // held in-world awaiting a reconnect. graceUntil is the epoch-ms deadline
+  // at which the held session is fully torn down via leave().
+  linkdead: boolean;
+  graceUntil: number;
+  // true while a keepalive ping is outstanding; the pong handler (attached
+  // next to the close/error handlers in ws_auth.ts) clears it. Still set at
+  // the next sweep means the socket is black-holed: terminate into the grace.
+  awaitingPong: boolean;
   chatTokens: number;
   chatLastRefill: number;
   chatLastRateError: number;
@@ -732,6 +783,25 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// A frozen server tick-loop profile captured over one on-demand window, plus the
+// context needed to read it: when it was taken, how long the window was, and the
+// crowd it was taken under. The admin dashboard renders this.
+export interface PerfCaptureResult {
+  capturedAt: number; // epoch ms the window closed
+  durationMs: number; // the (clamped) capture window length
+  online: number; // live sessions at capture close
+  simEntities: number; // sim entity count at capture close
+  profile: ReturnType<TickProfiler['profile']>;
+}
+
+// The /admin/api/perf/tick status envelope: whether a capture is currently running
+// (with when it ends, so the UI can show a countdown), plus the last frozen result.
+export interface PerfCaptureStatus {
+  capturing: boolean;
+  endsAt: number | null; // epoch ms the in-flight capture closes, or null
+  last: PerfCaptureResult | null;
+}
+
 export class GameServer {
   sim: Sim;
   clients = new Map<number, ClientSession>(); // by pid
@@ -750,6 +820,7 @@ export class GameServer {
   private lastWireSweepTick = 0;
   private interval: NodeJS.Timeout | null = null;
   private holderTierInterval: NodeJS.Timeout | null = null;
+  private keepaliveInterval: NodeJS.Timeout | null = null;
   private holderTierRefreshing = false; // overlap guard for the refresh cycle
   private playtimeInterval: NodeJS.Timeout | null = null;
   private lastPlaytimeGrantAt = new Map<number, number>(); // accountId -> sim time of last grant
@@ -784,11 +855,27 @@ export class GameServer {
     'bcastGrid',
     'bcastSelf',
     'social',
+    // sim.tick() internal phases, fed by the injected cfg.perfLap probe below.
+    // Populated only while the detailed capture is active (an on-demand admin
+    // capture or PERF_TICK_LOG=1); zero otherwise.
+    ...SIM_LAP_PHASES,
   ]);
-  // Per-loop scratch for broadcast sub-phase timing (ns), summed across clients.
-  // Only measured when PERF_TICK_LOG=1, the per-client hrtime reads would
-  // otherwise add needless work (and BigInt churn) to the hot path.
-  private readonly profileBroadcastPhases = process.env.PERF_TICK_LOG === '1';
+  // Detailed-timing switch. When true, the per-client broadcast sub-phase timing
+  // (bcastGrid/bcastSelf/visits) AND the sim.tick() perfLap sub-phases are measured;
+  // when false those hrtime reads are skipped so the steady-state loop pays nothing.
+  // Seeded from PERF_TICK_LOG for the CLI/local path, and flipped on for the duration
+  // of an admin-triggered capture (startPerfCapture) via the /admin/api/perf/tick route.
+  private perfDetailActive = process.env.PERF_TICK_LOG === '1';
+  // The host-side mark the injected sim perfLap probe diffs against; refreshed just
+  // before each sim.tick() call while a detailed capture is active.
+  private simLapMark = 0n;
+  // On-demand capture state (admin-triggered). While `perfCaptureEndsAtTick` is set,
+  // the loop is accumulating a fresh detailed window; when the loop reaches that tick
+  // it freezes `lastPerfCapture`. Only the single latest result is kept, in memory.
+  private perfCaptureEndsAtTick: number | null = null;
+  private perfCaptureEndsAtMs = 0;
+  private perfCaptureDurationMs = 0;
+  private lastPerfCapture: PerfCaptureResult | null = null;
   private bcastGridNs = 0n;
   private bcastSelfNs = 0n;
   // Crowd diagnostics (PERF_TICK_LOG only): the interest scan is O(viewers x
@@ -817,6 +904,16 @@ export class GameServer {
       // Raid lockouts end at the next 3 AM (the classic daily reset) in this realm's civil
       // time zone, so the whole realm shares one predictable reset (via REALM_RESET_TZ).
       raidResetMs: (nowMs) => nextRaidResetMs(nowMs, REALM_RESET_TIME_ZONE),
+      // Per-phase timing inside sim.tick(). The clock stays host-side (sim purity);
+      // `simLapMark` is refreshed right before each sim.tick() call in the loop. The
+      // probe is always passed but early-returns unless a detailed capture is active,
+      // so the steady-state loop pays only a branch per phase.
+      perfLap: (phase) => {
+        if (!this.perfDetailActive) return;
+        const t = process.hrtime.bigint();
+        this.tickProfiler.add(`sim.${phase}`, Number(t - this.simLapMark) / 1e6);
+        this.simLapMark = t;
+      },
     });
     this.social = new SocialService(this.socialDb, this.socialTransport());
     this.moderation = new ModerationService(this.moderationHost(), {
@@ -1076,6 +1173,7 @@ export class GameServer {
           while (acc >= DT) {
             this.clearStaleInputs();
             lap('stale');
+            if (this.perfDetailActive) this.simLapMark = process.hrtime.bigint();
             const events = this.sim.tick();
             lap('tick');
             this.routeEvents(events);
@@ -1085,6 +1183,7 @@ export class GameServer {
             lap('antibot');
             acc -= DT;
           }
+          this.expireLinkdeadSessions();
           this.broadcastSnapshots();
           lap('broadcast');
           this.tickProfiler.add('bcastGrid', Number(this.bcastGridNs) / 1e6);
@@ -1098,6 +1197,7 @@ export class GameServer {
           const tickMs = Number(process.hrtime.bigint() - now) / 1e6;
           this.tickProfiler.commit(tickMs);
           this.maybeLogTickPerf(tickMs);
+          this.finalizePerfCaptureIfDue();
           this.tickMsAvg =
             this.tickMsAvg === 0
               ? tickMs
@@ -1126,6 +1226,42 @@ export class GameServer {
     this.dailyRewardActivityInterval = setInterval(() => {
       void this.recordDailyRewardActivity();
     }, DAILY_REWARD_ACTIVITY_MS);
+    this.keepaliveInterval = setInterval(() => {
+      this.pingLiveSessions();
+    }, WS_KEEPALIVE_PING_MS);
+  }
+
+  // Protocol-level WS liveness sweep, every WS_KEEPALIVE_PING_MS. Two jobs:
+  // the pings keep NAT/proxy idle timers from silently dropping a quiet
+  // connection (an AFK player's client sends no input frames, the classic
+  // "kicked while AFK" report), and a peer that missed a whole ping interval
+  // (no pong; browsers answer automatically) is a black-holed socket (no
+  // FIN/RST ever arrives, e.g. a mobile WiFi-to-cellular handoff), so it is
+  // terminated into the linkdead grace. Without the pong check, a re-auth for
+  // the same character keeps hitting 'character already in world' until TCP
+  // gives up on the dead socket, which can take minutes; with it, the
+  // client's reconnect backoff resumes within a ping interval or two (the
+  // client tolerates that rejection mid-reconnect, src/net/reconnect_policy.ts).
+  pingLiveSessions(): void {
+    for (const session of this.clients.values()) {
+      if (session.linkdead || session.ws.readyState !== 1) continue;
+      if (session.awaitingPong) {
+        const ws = session.ws;
+        try {
+          ws.terminate();
+        } catch {
+          /* socket already torn down */
+        }
+        this.socketClosed(session, ws);
+        continue;
+      }
+      session.awaitingPong = true;
+      try {
+        session.ws.ping();
+      } catch {
+        /* socket torn down mid-iteration */
+      }
+    }
   }
 
   stop(): void {
@@ -1133,6 +1269,7 @@ export class GameServer {
     if (this.holderTierInterval) clearInterval(this.holderTierInterval);
     if (this.playtimeInterval) clearInterval(this.playtimeInterval);
     if (this.dailyRewardActivityInterval) clearInterval(this.dailyRewardActivityInterval);
+    if (this.keepaliveInterval) clearInterval(this.keepaliveInterval);
   }
 
   // Grant playtime reward points to each online account that has been ACTIVE (gave
@@ -1513,18 +1650,36 @@ export class GameServer {
         sourceUrl?: string | null;
       } = {},
   ): ClientSession | { error: string } {
-    if (this.sessionsByCharacterId.has(characterId)) return { error: 'character already in world' };
     // Anti-bot: cap simultaneous online characters per account. Accounts can
     // still own up to 10 characters; this only limits live sessions. GMs are
-    // exempt for supervision.
-    if (!isGm) {
-      let activeForAccount = 0;
-      for (const s of this.clients.values()) {
-        if (s.accountId === accountId) activeForAccount++;
-      }
-      if (activeForAccount >= MAX_ACTIVE_SESSIONS_PER_ACCOUNT) {
-        return { error: 'too many characters on this account are already in the world' };
-      }
+    // exempt for supervision. Linkdead sessions are special-cased (planJoin):
+    // the same character resumes its held session, and a different character
+    // on the account displaces them instead of being blocked by them.
+    const sameCharacter = this.sessionsByCharacterId.get(characterId) ?? null;
+    let liveOtherSessions = 0;
+    const linkdeadOthers: ClientSession[] = [];
+    for (const s of this.clients.values()) {
+      if (s.accountId !== accountId || s === sameCharacter) continue;
+      if (s.linkdead) linkdeadOthers.push(s);
+      else liveOtherSessions++;
+    }
+    const plan = planJoin({
+      accountId,
+      isGm,
+      sameCharacter,
+      liveOtherSessions,
+      maxPerAccount: MAX_ACTIVE_SESSIONS_PER_ACCOUNT,
+    });
+    if (plan.action === 'reject') return { error: plan.error };
+    if (plan.action === 'resume' && sameCharacter) {
+      return this.resumeSession(sameCharacter, ws, cls, meta);
+    }
+    // Logging in on a different character ends the account's linkdead grace
+    // now instead of at the end of its window: the player has moved on, so
+    // the held character logs out. leave() removes it from `clients`
+    // synchronously, so the new session's slot accounting stays correct.
+    for (const s of linkdeadOthers) {
+      void this.leave(s, 'replaced by a new character login');
     }
     const pid = this.sim.addPlayer(cls, name, { state: state ?? undefined, characterId });
     if (isGm) {
@@ -1556,6 +1711,9 @@ export class GameServer {
       joinedAt: Date.now(),
       dbSessionId: null,
       left: false,
+      linkdead: false,
+      graceUntil: 0,
+      awaitingPong: false,
       chatTokens: CHAT_RATE_BURST,
       chatLastRefill: Date.now() / 1000,
       chatLastRateError: 0,
@@ -1651,6 +1809,106 @@ export class GameServer {
     return session;
   }
 
+  // Rebind a linkdead session to a fresh socket. The character never left the
+  // world, so this only swaps the transport, refreshes the per-login account
+  // metadata, and resets the per-connection wire/input state so the new client
+  // receives a full snapshot (its input sequence also restarts at 1). The play
+  // session row stays open (the player was online the whole time) and no
+  // presence announce fires (friends never saw them leave).
+  private resumeSession(
+    session: ClientSession,
+    ws: WebSocket,
+    cls: import('../src/sim/types').PlayerClass,
+    meta: Parameters<GameServer['join']>[7] = {},
+  ): ClientSession {
+    session.ws = ws;
+    session.linkdead = false;
+    session.graceUntil = 0;
+    session.awaitingPong = false;
+    const sessionIp = meta.ip ?? '';
+    if (sessionIp !== session.ip) {
+      this.releaseIpSession(session.ip);
+      session.ip = sessionIp;
+      this.ipSessionCounts.set(sessionIp, (this.ipSessionCounts.get(sessionIp) ?? 0) + 1);
+    }
+    session.userAgent = meta.userAgent ?? '';
+    session.clientSeed = meta.clientSeed ?? '';
+    // per-login account state, freshly loaded by the auth path like any join
+    session.chatMutedUntil = meta.mutedUntil ? new Date(meta.mutedUntil).getTime() : null;
+    session.chatMuteReason = meta.reason ?? '';
+    session.chatStrikes = meta.chatStrikes ?? session.chatStrikes;
+    session.isAdmin = meta.isAdmin ?? false;
+    session.adminPermissions = new Set(meta.adminPermissions ?? []);
+    session.lastInputSeq = 0;
+    session.lastInputAt = this.sim.time;
+    session.lastSent = {};
+    session.sentEnts = new Map();
+    session.selfHeavyDirty = true;
+    session.lastWireRev = -1;
+    session.lastArenaWireTick = -ARENA_WIRE_INTERVAL_TICKS;
+    this.send(session, {
+      t: 'hello',
+      pid: session.pid,
+      seed: this.sim.cfg.seed,
+      name: session.name,
+      cls,
+      realm: REALM,
+      softWords: this.chatFilter.softWords(),
+      chatMutedUntil: session.chatMutedUntil ?? null,
+    });
+    // No self "entered the world" notice here: on a seamless reconnect the
+    // player never saw themselves leave (and friends never got a presence
+    // flap), so the fresh join notice would read as a glitch.
+    void this.sendSocialSnapshot(session.characterId);
+    return session;
+  }
+
+  // Entry point for a dropped socket (the ws 'close'/'error' handlers in
+  // main.ts, plus the backpressure terminate). Instead of logging the
+  // character out, hold the session linkdead for LINKDEAD_GRACE_MS so an
+  // accidental disconnect can resume seamlessly; the character stays in the
+  // sim and stays online for friends, analytics, and the play session row.
+  // Returns true when grace began (false: the session was already torn down,
+  // already linkdead, or the event came from a stale pre-resume socket).
+  socketClosed(session: ClientSession, ws: WebSocket): boolean {
+    // A late close/error from a socket that a resume already replaced must
+    // not tear down the live session riding the new socket.
+    if (session.ws !== ws) return false;
+    if (session.left || session.linkdead || !this.clients.has(session.pid)) return false;
+    if (session.spectating) this.exitSpectate(session, false);
+    session.linkdead = true;
+    session.graceUntil = Date.now() + LINKDEAD_GRACE_MS;
+    // Stop any held movement now; the sim keeps ticking this entity (it can
+    // still be attacked, healed, or die while linkdead, like any player).
+    const meta = this.sim.meta(session.pid);
+    if (meta) Object.assign(meta.moveInput, emptyMoveInput());
+    // Safety flush so a process crash during the grace window loses nothing.
+    void this.saveCharacter(session, { withMarket: true }).catch((err) =>
+      console.error(`linkdead save failed for ${session.name}:`, err),
+    );
+    return true;
+  }
+
+  // Tick-driven teardown of linkdead sessions whose grace window ran out.
+  private expireLinkdeadSessions(): void {
+    if (this.clients.size === 0) return;
+    const now = Date.now();
+    for (const session of this.clients.values()) {
+      if (!session.linkdead || now < session.graceUntil) continue;
+      console.log(
+        `- ${session.name} left (linkdead grace expired), ${this.clients.size - 1} online`,
+      );
+      void this.leave(session, 'linkdead grace expired');
+    }
+  }
+
+  private releaseIpSession(ip: string): void {
+    if (!ip) return;
+    const prev = this.ipSessionCounts.get(ip) ?? 1;
+    if (prev <= 1) this.ipSessionCounts.delete(ip);
+    else this.ipSessionCounts.set(ip, prev - 1);
+  }
+
   // Load the player's block list, send their friends/ignore/guild panel, and
   // let friends + guildmates know they've come online.
   private async initSocial(session: ClientSession): Promise<void> {
@@ -1694,11 +1952,7 @@ export class GameServer {
     session.left = true;
     this.clients.delete(session.pid);
     this.botDetector.releaseTrackingContext(session.botTrackingContext);
-    if (session.ip) {
-      const prev = this.ipSessionCounts.get(session.ip) ?? 1;
-      if (prev <= 1) this.ipSessionCounts.delete(session.ip);
-      else this.ipSessionCounts.set(session.ip, prev - 1);
-    }
+    this.releaseIpSession(session.ip);
     void this.recordOnlineSnapshot();
     this.devTierPids.delete(session.pid);
     this.social.forget(session.characterId);
@@ -1901,6 +2155,51 @@ export class GameServer {
     };
   }
 
+  // Start an on-demand detailed capture (admin-triggered). Clears the profiler so the
+  // window is clean, flips the detailed sub-phase timing on, and schedules the close
+  // `durationMs` (clamped) out in sim ticks. A second call while one is running just
+  // restarts the window. Returns the resulting status for the caller to echo back.
+  startPerfCapture(durationMs = PERF_CAPTURE_DEFAULT_MS): PerfCaptureStatus {
+    const clamped = Math.round(
+      Math.min(PERF_CAPTURE_MAX_MS, Math.max(PERF_CAPTURE_MIN_MS, durationMs)),
+    );
+    const ticks = Math.max(1, Math.round(clamped / (DT * 1000)));
+    this.tickProfiler.reset();
+    this.perfDetailActive = true;
+    this.perfCaptureDurationMs = clamped;
+    this.perfCaptureEndsAtTick = this.sim.tickCount + ticks;
+    this.perfCaptureEndsAtMs = Date.now() + clamped;
+    return this.perfCaptureStatus();
+  }
+
+  // The current capture status: whether one is in flight (with its close time for a UI
+  // countdown) and the last frozen result. Read by GET /admin/api/perf/tick.
+  perfCaptureStatus(): PerfCaptureStatus {
+    const capturing = this.perfCaptureEndsAtTick !== null;
+    return {
+      capturing,
+      endsAt: capturing ? this.perfCaptureEndsAtMs : null,
+      last: this.lastPerfCapture,
+    };
+  }
+
+  // Close an in-flight capture once the loop reaches its end tick: freeze the profile
+  // and revert the detailed-timing switch to its baseline (env, so PERF_TICK_LOG keeps
+  // working). Called once per loop body, right after commit.
+  private finalizePerfCaptureIfDue(): void {
+    if (this.perfCaptureEndsAtTick === null) return;
+    if (this.sim.tickCount < this.perfCaptureEndsAtTick) return;
+    this.lastPerfCapture = {
+      capturedAt: Date.now(),
+      durationMs: this.perfCaptureDurationMs,
+      online: this.clients.size,
+      simEntities: this.sim.entities.size,
+      profile: this.tickProfiler.profile(),
+    };
+    this.perfCaptureEndsAtTick = null;
+    this.perfDetailActive = process.env.PERF_TICK_LOG === '1';
+  }
+
   // Optional stutter trace (PERF_TICK_LOG=1): log a per-phase p95/max breakdown
   // when a loop body blows the 50 ms budget (throttled to ~1/s), plus a steady
   // heartbeat every 5 s. Off by default so production logs stay quiet.
@@ -1918,6 +2217,15 @@ export class GameServer {
         ` | p95/max ${['total', 'tick', 'broadcast', 'bcastSelf', 'bcastGrid', 'events', 'social'].map(fmt).join(' ')}` +
         ` | visits=${this.bcVisits} serializes=${this.bcSerializes} serializeMs=${round2(Number(this.bcSerializeNs) / 1e6)}`,
     );
+    // The sim.tick() internal breakdown, mean-sorted so the phase that actually eats
+    // the average (not just a spike) leads. Populated only while detailed timing is on.
+    const simPhases = SIM_LAP_PHASES.filter((n) => p[n] && p[n].mean > 0).sort(
+      (a, b) => p[b].mean - p[a].mean,
+    );
+    if (simPhases.length > 0) {
+      const fmtMean = (n: string) => `${n.slice(4)}=${p[n].mean}/${p[n].p95}/${p[n].max}`;
+      console.log(`[perf.sim] mean/p95/max ${simPhases.slice(0, 14).map(fmtMean).join(' ')}`);
+    }
   }
 
   suspiciousPlayers(): SuspiciousPlayer[] {
@@ -2296,6 +2604,13 @@ export class GameServer {
     const msg = rawMsg as ClientMessage;
     const sim = this.sim;
     const pid = session.pid;
+    // Deliberate logout: the client wants a clean leave, not a linkdead grace.
+    // Calling leave() immediately sets session.left = true, so the subsequent
+    // WebSocket close event (from the page reload) is a no-op in socketClosed().
+    if (msg.t === 'logout') {
+      void this.leave(session, 'logout');
+      return;
+    }
     if (msg.t === 'input') {
       if (session.spectating) return;
       const meta = sim.meta(pid);
@@ -2495,6 +2810,9 @@ export class GameServer {
         break;
       case 'harvest_node':
         if (typeof msg.node === 'string') sim.harvestNode(msg.node, pid);
+        break;
+      case 'craft_item':
+        if (typeof msg.recipe === 'string') sim.craftItem(msg.recipe, pid);
         break;
       case 'sell_all_junk':
         sim.sellAllJunk(pid);
@@ -3208,6 +3526,9 @@ export class GameServer {
     forEachGuarded(
       this.clients.values(),
       (session) => {
+        // no transport while linkdead; the resume path resets sentEnts/lastSent
+        // so the fresh socket starts from a full snapshot anyway
+        if (session.linkdead) return;
         const p = this.sim.entities.get(session.pid);
         const meta = this.sim.meta(session.pid);
         if (!p || !meta) return;
@@ -3231,13 +3552,13 @@ export class GameServer {
         const ents: string[] = [];
         const keep: number[] = [];
         const present = new Set<number>();
-        const gridStart = this.profileBroadcastPhases ? process.hrtime.bigint() : 0n;
+        const gridStart = this.perfDetailActive ? process.hrtime.bigint() : 0n;
         this.sim.grid.forEachInRadius(
           anchorEntity.pos.x,
           anchorEntity.pos.z,
           INTEREST_QUERY_RADIUS,
           (e, d2) => {
-            if (this.profileBroadcastPhases) this.bcVisits++;
+            if (this.perfDetailActive) this.bcVisits++;
             if (e.id === anchorEntity.id) return;
             if (!this.canObserveEntity(anchorEntity, e, d2)) return;
             const known = session.sentEnts.get(e.id);
@@ -3290,10 +3611,10 @@ export class GameServer {
         for (const id of session.sentEnts.keys()) {
           if (!present.has(id)) session.sentEnts.delete(id);
         }
-        const selfStart = this.profileBroadcastPhases ? process.hrtime.bigint() : 0n;
-        if (this.profileBroadcastPhases) this.bcastGridNs += selfStart - gridStart;
+        const selfStart = this.perfDetailActive ? process.hrtime.bigint() : 0n;
+        if (this.perfDetailActive) this.bcastGridNs += selfStart - gridStart;
         const selfJson = this.selfWireJson(session, anchorEntity, anchorMeta, anchorSession);
-        if (this.profileBroadcastPhases) this.bcastSelfNs += process.hrtime.bigint() - selfStart;
+        if (this.perfDetailActive) this.bcastSelfNs += process.hrtime.bigint() - selfStart;
         const keepJson = keep.length > 0 ? `,"keep":[${keep.join(',')}]` : '';
         this.sendRaw(session, `${head},"self":${selfJson},"ents":[${ents.join(',')}]${keepJson}}`);
       },
@@ -3337,7 +3658,7 @@ export class GameServer {
     }
     if (cache.tick === this.sim.tickCount) return cache;
     cache.tick = this.sim.tickCount;
-    const t0 = this.profileBroadcastPhases ? process.hrtime.bigint() : 0n;
+    const t0 = this.perfDetailActive ? process.hrtime.bigint() : 0n;
     const idJson = JSON.stringify(identityFields(e));
     const dynJson = JSON.stringify(dynamicFields(e));
     let changed = false;
@@ -3355,7 +3676,7 @@ export class GameServer {
       cache.fullJson = `{"id":${e.id},${idJson.slice(1, -1)},${dynJson.slice(1, -1)}}`;
       cache.liteJson = `{"id":${e.id},${dynJson.slice(1, -1)}}`;
     }
-    if (this.profileBroadcastPhases) {
+    if (this.perfDetailActive) {
       this.bcSerializeNs += process.hrtime.bigint() - t0;
       this.bcSerializes++;
     }
@@ -3396,6 +3717,8 @@ export class GameServer {
       sh: p.spellHaste,
       crit: p.critChance,
       dodge: p.dodgeChance,
+      crat: p.critRating,
+      hrat: p.hasteRating,
       eat: p.eating ? { remaining: round2(p.eating.remaining) } : null,
       drk: p.drinking ? { remaining: round2(p.drinking.remaining) } : null,
       opUntil: p.overpowerUntil > this.sim.time ? 1 : 0,
@@ -3461,8 +3784,15 @@ export class GameServer {
     // Gathering profession proficiency (Mining/Logging/Herbalism), a small
     // per-player read, so kept per-tick like the other small maps above. Wire
     // key `prof` and IWorld member `professionsState` are the settled names
-    // for the professions facet (#1164, src/sim/professions/CLAUDE.md).
+    // for the professions facet (#1164, src/sim/professions/CLAUDE.md). `gprof`
+    // mirrors the raw per-craft proficiency map for the `gatheringProficiency`
+    // IWorld data member (#1119), independent of the `professionsState` view.
     maybe('prof', this.sim.professionsStateFor(anchorSession.pid));
+    // Raw gathering-profession proficiency map (IWorld `gatheringProficiency`,
+    // #1119), a second small read alongside `prof` for the ORIGINAL flat-map
+    // shape used by the `/dev gather` chat cheat and existing consumers. Wire
+    // key `gprof`; see TERSE_TO_IWORLD/ALL_DELTA_KEYS in tests/snapshots.test.ts.
+    maybe('gprof', this.sim.gatheringProficiencyFor(anchorSession.pid));
     // stats + weapon stay per-tick: recalcPlayerStats re-derives them on every
     // stat-affecting aura gain/loss (Bear/Cat Form, shouts, debuffs, elixir
     // wear-off, a buff cast on you by someone else), none of which mark this
@@ -3692,6 +4022,31 @@ export class GameServer {
           `arena:${s.accountId}:${ev.ratingAfter}`,
           now,
         );
+      } else if (ev.type === 'delveObjectiveComplete' && ev.pid !== undefined) {
+        const s = this.clients.get(ev.pid);
+        if (!s) continue;
+        void dailyRewardService
+          .recordDelveClear(s.accountId, s.characterId, ev.delveId, ev.tierId)
+          .then((points) => {
+            if (points > 0) this.sendDailyRewardPointsGained(s, points);
+          })
+          .catch((err) => console.error('daily reward delve task failed:', err));
+      } else if (ev.type === 'delveChestLoot' && ev.pid !== undefined) {
+        const s = this.clients.get(ev.pid);
+        if (!s) continue;
+        void dailyRewardService
+          .recordDelveChestOpen(
+            s.accountId,
+            s.characterId,
+            ev.delveId,
+            ev.tierId,
+            ev.lootTier,
+            ev.bountiful,
+          )
+          .then((points) => {
+            if (points > 0) this.sendDailyRewardPointsGained(s, points);
+          })
+          .catch((err) => console.error('daily reward delve chest task failed:', err));
       }
     }
   }
@@ -4205,12 +4560,17 @@ export class GameServer {
     // 'close' handler funnels into the idempotent leave() for normal cleanup.
     if (isBackpressureExceeded(session.ws.bufferedAmount)) {
       if (!session.left) {
+        const ws = session.ws;
         try {
-          session.ws.terminate();
+          ws.terminate();
         } catch {
           /* socket already torn down */
         }
-        void this.leave(session, 'backpressure');
+        // a stuck reader is a network-quality problem, exactly what the
+        // linkdead grace exists for: hold the character and let the client
+        // reconnect on a fresh socket (terminate's own close event is a
+        // no-op after this; socketClosed is idempotent per socket)
+        this.socketClosed(session, ws);
       }
       return;
     }

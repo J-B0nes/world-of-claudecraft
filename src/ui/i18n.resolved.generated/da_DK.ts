@@ -313,7 +313,13 @@ export const da_DK: EnTranslations = {
       "hapticsOff": "Haptik fra",
       "toggleHaptics": "Slå haptik til/fra",
       "hotbarPage": "Evner",
-      "hotbarPageAria": "Vis næste sæt evner"
+      "hotbarPageAria": "Vis næste sæt evner",
+      "actionRing": "Kamphandlinger",
+      "actionPageToggle": "Skift handlingsside",
+      "actionPageIndicator": "Side {page}",
+      "targetCycle": "Byt mål",
+      "targetCycleShort": "Mål",
+      "spellbookPageLabel": "Side {page}"
     },
     "tutorial": {
       "moveBodyTouch": "Brug bevægelsesstikken til at bevæge dig og træk på skærmen for at se dig omkring. Tag et par skridt for at begynde.",
@@ -389,6 +395,7 @@ export const da_DK: EnTranslations = {
     "options": {
       "clickMoveLeft": "Venstreklik",
       "clickMoveRight": "Højreklik",
+      "version": "v{version} ({build})",
       "browserEffects": "Browsereffekter",
       "browserEffectsAuto": "Auto",
       "browserEffectsFull": "Fuld",
@@ -420,7 +427,9 @@ export const da_DK: EnTranslations = {
       "itemLevelLine": "Genstandsniveau {level}",
       "itemScoreLine": "Score {score}",
       "showSecondaryActionBar": "Vis sekundær handlingslinje",
-      "showDailyRewardsChest": "Vis kisten med daglige belønninger"
+      "showDailyRewardsChest": "Vis kisten med daglige belønninger",
+      "mobileCameraJoystick": "Kamera joystick",
+      "mobileLeftHanded": "Venstrehånds layout"
     },
     "controller": {
       "title": "Controller",
@@ -514,7 +523,9 @@ export const da_DK: EnTranslations = {
     "statInfo": {
       "fromYour": "Fra din {value} {stat}:",
       "names": {
-        "spellPower": "Besværgelseskraft"
+        "spellPower": "Besværgelseskraft",
+        "critRating": "Crit Rating",
+        "hasteRating": "Haste Rating"
       },
       "desc": {
         "str": "Øger din angrebsstyrke, så dine våbenslag rammer hårdere.",
@@ -527,7 +538,9 @@ export const da_DK: EnTranslations = {
         "spellPower": "Øger skaden fra dine besværgelser og styrken af dine helbredelser. Hvert point Intellekt giver en smule Besværgelseskraft, oven i det, der kommer fra udstyr eller buffs.",
         "dps": "Din anslåede våbenskade pr. sekund, der kombinerer dit våbens skade og hastighed med din angrebsstyrke.",
         "critChance": "Din chance for at et angreb rammer kritisk og gør dobbelt skade.",
-        "dodge": "Din chance for helt at undgå et indkommende nærkampsangreb og tage ingen skade."
+        "dodge": "Din chance for helt at undgå et indkommende nærkampsangreb og tage ingen skade.",
+        "critRating": "Crit rating from your gear and set bonuses, raising your critical strike chance. About 10 rating grants 1% crit.",
+        "hasteRating": "Haste rating from your gear and set bonuses, speeding up your attacks and spellcasting. About 10 rating grants 1% haste."
       },
       "effects": {
         "attackPower": "+{value} Angrebsstyrke",
@@ -567,6 +580,15 @@ export const da_DK: EnTranslations = {
     "itemSet": {
       "header": "{name} ({have}/{total})",
       "bonusLine": "({pieces}) {bonus}"
+    },
+    "itemProc": {
+      "onMeleeHit": "Chance on hit ({chance}%): {effect}",
+      "onSpellDamage": "Chance on your damaging spells ({chance}%): {effect}",
+      "onHeal": "Chance on your heals ({chance}%): {effect}",
+      "chainArc": "blasts the target with a {school} {name} ({damage}) that leaps to {jumps} nearby foes for decaying damage",
+      "attackSlow": "and slows the target attack speed by {pct}% for {duration} sec",
+      "dot": "festers {name}, a {school} damage-over-time dealing {total} over {duration} sec",
+      "hot": "blooms {name}, a heal-over-time restoring {total} over {duration} sec"
     },
     "questShare": {
       "notShareable": "Denne opgave kan ikke deles.",
@@ -995,6 +1017,7 @@ export const da_DK: EnTranslations = {
       "roleTag": {
         "levyst": "Levy St",
         "admin": "Admin",
+        "coredevs": "Core Dev",
         "devs": "Udvikler",
         "mods": "Moderator",
         "artists": "Kunstner"
@@ -1203,6 +1226,19 @@ export const da_DK: EnTranslations = {
       "mining": "Minedrift",
       "logging": "Skovhugst",
       "herbalism": "Urtekundskab"
+    },
+    "crafting": {
+      "title": "Håndværk",
+      "close": "Tæt håndværk",
+      "craft": "Håndværk",
+      "reagentsNeeded": "Kræver:",
+      "reagentLine": "{name}: {have}/{required}",
+      "empty": "Ingen opskrifter kendt endnu.",
+      "resultAria": "Håndværk {name}",
+      "craftedToast": "Udformet: {name}",
+      "insufficientMaterials": "Det har du ikke materialerne til.",
+      "unknownRecipe": "Den opskrift findes ikke.",
+      "comboRequirementUnmet": "You do not have both required crafts at the required tier for that recipe."
     }
   },
   "apiError": {
@@ -1319,6 +1355,7 @@ export const da_DK: EnTranslations = {
       "delves": "Delve",
       "reference": "Reference",
       "controls": "Styring",
+      "settings": "Indstillinger og ydeevne",
       "combat": "Kamp",
       "talents": "Talenter",
       "arena": "Arena & PvP",
@@ -1486,6 +1523,66 @@ export const da_DK: EnTranslations = {
       "mobileBody": "Berøringsstyring vises automatisk på telefoner og tablets: en bevægelsesstik til venstre, træk hvor som helst til højre for at kigge, og knapper på skærmen til dine evner og menuer.",
       "controllerHeading": "På en controller",
       "controllerBody": "Gamepads virker også, og controllerstyring er slået til som standard. Venstre pind bevæger dig, højre pind sigter kameraet, og knapperne foran og på skuldrene dækker dine evner, hop og interaktion. Åbn et hvilket som helst vindue for at få en markør frem på skærmen til menuer. Du kan ombinde knapperne og justere pindens dødzone, kamerahastighed, vibration og omvendt kig fra controllerafsnittet i spillets indstillinger."
+    },
+    "settingsPage": {
+      "heading": "Indstillinger og ydeevne",
+      "intro": "Få spillet til at se bedst ud, eller kør det hurtigste. Tre færdige loadouts, plus hvad enhver grafikfunktion virkelig gør.",
+      "wherePath": "Alt på denne side lever i spillet: Tryk på Esc og kig i Grafik, Interface og Performance Overlay.",
+      "fairnessTitle": "Fair af design",
+      "fairnessBody": "Ingen mulighed her bytter skønhed for magt. Lower indstillinger afgiver kun kosmetisk polering, aldrig information, du kæmper med: dine debuffs, cast bars, partysundhed og skadetal er identiske fra Low til Ultra. At spille på en beskeden maskine er aldrig et handicap.",
+      "loadoutsHeading": "Tre færdige loadouts",
+      "loadoutsIntro": "Start fra belastningen, der lyder som din maskine, og juster derefter én mulighed ad gangen, indtil den føles rigtig.",
+      "recommended": "Anbefales",
+      "whyLabel": "Hvorfor virker det:",
+      "tagReload": "efter genindlæsning",
+      "fpsTitle": "Bedste FPS",
+      "fpsTagline": "Til ældre bærbare computere, integreret grafik og batterispil.",
+      "fpsWhy": "Grafikkvalitet er hovedafbryderen, og gengivelseskvalitet er den stærkeste skyder: Med 70 % trækker verden omkring halvdelen af ​​pixels, mens grænsefladen forbliver perfekt skarp.",
+      "balancedTitle": "Balanceret",
+      "balancedTagline": "Det søde sted for de fleste maskiner og vores standardråd.",
+      "balancedWhy": "Medium bringer ægte skygger og fulde materialer; High tilføjer omgivende okklusion og blomstring. Under Ultra absorberer et indbygget sikkerhedsnet pludselige fald i travle kampe, så Balanced forbliver glat uden at passe baby.",
+      "visualsTitle": "Bedste Visuals",
+      "visualsTagline": "Skærmbilledetilstand til kraftfulde stationære maskiner.",
+      "visualsWhy": "Ultra gengiver med den højeste opløsning, din skærm tilbyder med den rigeste belysning. Det slukker også for sikkerhedsnettet, og det er kun til desktop: telefoner og appen topper ud ved High.",
+      "value50to70": "50 til 70 %",
+      "value90to100": "90 til 100 %",
+      "value100": "100 %",
+      "valueHighOrMedium": "High på en gaming-pc, Medium på en bærbar computer",
+      "valueOnOptional": "Til (valgfrit)",
+      "howHeading": "Hvordan mulighederne opfører sig",
+      "factDetectTitle": "Spillet tuner sig selv først",
+      "factDetectBody": "Ved din første lancering læser spillet din enhed og vælger et fornuftigt niveau, fra Low på en beskeden telefon til Ultra på et stærkt skrivebord. Ethvert valg, du selv træffer, vinder altid.",
+      "factReloadTitle": "To slags muligheder",
+      "factReloadBody": "Grafikkvalitet og de avancerede vælgere træder i kraft efter en genindlæsning, og panelet tilbyder en Genindlæs nu-knap, når det er nødvendigt. Hver anden mulighed gælder i det øjeblik, du ændrer den.",
+      "factGovernorTitle": "Et indbygget sikkerhedsnet",
+      "factGovernorBody": "På hvert niveau under Ultra tynder spillet stille og roligt græs, effekter og belysning et øjeblik, når en stor kamp spidser til, og genopretter dem derefter. Hvis du vælger Ultra, fortæller det, at du hellere vil beholde alle detaljer.",
+      "advancedHeading": "Den avancerede forudindstilling: bland din egen",
+      "advancedBody": "Avanceret starter fra High-niveauet og låser op for fire ekstra vælgere, så du kan bruge dine rammer, hvor du rent faktisk bemærker dem: Terrændetaljer, Løvtæthed, Effekter og belysning og Skyggekvalitet. Ligesom grafikkvalitet gælder de efter en genindlæsning.",
+      "advancedMixes": "To yndlingsblandinger: Hold Shadow Quality på High og indstil Effects & Lighting til Low for et sprødt, glødfrit look, der kører let, eller gør det omvendte for at bevare blomstringen og blødgøre skyggerne.",
+      "tableHeading": "Hver mulighed, forklaret",
+      "colSetting": "Indstilling",
+      "colDoes": "Hvad den gør",
+      "colImpact": "FPS virkning",
+      "impactNone": "Ingen",
+      "impactLight": "Lys",
+      "impactModerate": "Moderat",
+      "impactHeavy": "Tung",
+      "rowGraphicsQuality": "Hovedafbryderen. Hvert trin ændrer opløsning, skygger, materialer, løv og lyseffekter sammen. Den største enkeltstående forskel, du kan gøre.",
+      "rowRenderQuality": "Tegner 3D-verdenen med en lavere intern opløsning og skalerer den op; grænsefladen forbliver skarp. Den stærkeste øjeblikkelige skyder på svagere maskiner og højopløselige skærme.",
+      "rowFieldOfView": "Hvor meget af verden passer på skærmen, fra zoomet 55 til fejende 100 grader. Et komfortvalg; bredere visninger trækker lidt mere.",
+      "rowBrightness": "Sceneeksponering, mørkere eller lysere. Ren præference.",
+      "rowWeather": "Omgivende regn og sne. Kun atmosfære, og at slukke for den sparer lidt under storme.",
+      "rowBrowserEffects": "Hvor fancy selve grænsefladen får lov at være: glassløring, glød, animerede menuer. Auto matcher din browser; 3D-verdenen er uberørt på begge måder.",
+      "rowTerrainDetail": "Rige, blandede jordstrukturer kontra et enklere, hurtigere terrænlook.",
+      "rowFoliageDensity": "Hvor langt og hvor tykt græsset vokser omkring din karakter.",
+      "rowEffectsQuality": "Blomstring, omgivende okklusion, og hvor mange fakler og besværgelser, der kaster rigtigt lys. Den største enkeltbesparelse blandt de avancerede vælgere.",
+      "rowShadowQuality": "Skygge sprødhed. Low bevarer skygger, men blødgør deres kanter.",
+      "rowFrostedPanels": "Sløring af matteret glas bag vinduer. Smuk, og præcis den slags effekt en svagere browser føler; lad det være for det klassiske sprøde look.",
+      "rowReduceMotion": "Fjerner grænsefladeanimationer, så vinduer vises med det samme. Først en tilgængelighedsmulighed med en lille præstationsbonus.",
+      "rowPerfOverlay": "En skærmudlæsning af FPS, billedtid og mere. Slå den til, mens du tuner denne side, og skjul den derefter igen.",
+      "tableFoot": "Leder du efter en skyder til trækafstand eller en FPS kasket? Der er ikke noget at jage efter: Visningsafstand er en del af hvert kvalitetsniveau, og frame pacing følger din skærm.",
+      "mobileTitle": "På telefoner og tablets",
+      "mobileBody": "Mobile klarer mere for dig: Spillet vælger niveauet, holder opløsningen et tryk lavere for at beskytte batteri og varme og beholder de højeste niveauer kun på skrivebordet. Ovenstående belastninger gælder stadig; telefoner fyldes blot ud ved High."
     },
     "combat": {
       "intro": "Kamp følger velkendte klassiske MMO-regler. Du behøver aldrig at studere noget af det for at spille godt, dette er bare formen på hvordan kampe fungerer.",
@@ -2632,6 +2729,8 @@ export const da_DK: EnTranslations = {
     "title": "Download Desktop-launcher",
     "desc": "Hent den selvstændige launcher for optimeret ydeevne og fuldskærmsspil.",
     "macCta": "Download til macOS",
+    "linuxCta": "Download til Linux",
+    "linuxHint": "AppImage: gør det eksekverbart, og kør det derefter. Ingen installation nødvendig.",
     "windowsPending": "Windows-build afventer."
   },
   "comingSoon": {
@@ -3472,6 +3571,7 @@ export const da_DK: EnTranslations = {
     "rendererFailed": "Kunne ikke starte gengiveren: prøv at genindlæse. {error}",
     "enterTimeout": "Kunne ikke komme ind i verdenen. Forbindelsen fik timeout. Kører spilserveren?",
     "connectionLost": "Forbindelsen til serveren gik tabt.",
+    "reconnecting": "Forbindelse mistet. Genopretter forbindelse...",
     "connectionRejected": "Serveren lukkede forbindelsen."
   },
   "errors": {
@@ -7620,6 +7720,26 @@ export const da_DK: EnTranslations = {
           }
         }
       },
+      "q_archetype_acceptance": {
+        "title": "Et håndværk at kalde dit eget",
+        "text": "Hver eneste håndværker fra Eastbrook sætter sig til sidst over på et håndværk, som de kalder deres eget. Bevis dig selv med en enkelt gerning, {playerName}, og erklær din vej.",
+        "completion": "Din vej er valgt; gå det godt.",
+        "objectives": {
+          "0": {
+            "label": "Skovulv dræbt"
+          }
+        }
+      },
+      "q_prof_make_amends": {
+        "title": "Gøre bod",
+        "text": "For at afsætte et håndværk til et andet, skal en håndværker først råde bod på stien, der ikke er gået, {playerName}.",
+        "completion": "Foretagne ændringer; en ny vej er åben for dig.",
+        "objectives": {
+          "0": {
+            "label": "Skovulv dræbt"
+          }
+        }
+      },
       "q_drowned_choir": {
         "title": "Det Druknede Kor",
         "text": "Vaderne handler ikke alene. Blandt dem vandrer de Druknede Tilbedere - kulten, der sank med templet, stadig i deres rådne ornater, stadig syngende bønnen fra strandklipperne. Bring otte af dem til tavshed, og bring mig seks af de offergaver, de bærer. Jeg vil vide, hvad de agter at give deres gudinde.",
@@ -7876,7 +7996,8 @@ export const da_DK: EnTranslations = {
       "necromancers": {
         "name": "Mournweave klæder",
         "bonus2": "Du kan ikke stødes tilbage (100% modstand mod tilbagestød).",
-        "bonus3": "Øger intellekt med 10 og udholdenhed med 10."
+        "bonus3": "Øger intellekt med 10 og udholdenhed med 10.",
+        "bonus4": "Your spells have a chance to grant Clearcasting, making your next spell free."
       },
       "nighttalon": {
         "name": "Direfang pels",
