@@ -240,6 +240,27 @@ describe('ws auth character load lease', () => {
     expect(joinSpy).not.toHaveBeenCalled();
   });
 
+  it('clears the pending-join id after a bank-bonus rejection (a retry reaches the acquire)', async () => {
+    // The recompute rejects inside the pendingLeaseJoins try/finally: if the finally
+    // ever stopped clearing this throw site, the character would be locked out of the
+    // whole process after one transient DB error (every retry refused fail-closed).
+    const { deps, acquireSpy, joinSpy, bankBonusSpy } = makeDeps();
+    bankBonusSpy.mockRejectedValueOnce(new Error('db down'));
+    const wsAuth = createWsAuth(deps);
+    const first = fakeWs();
+    await expect(wsAuth.authenticateWebSocket(first.ws, authFrame(7), fakeReq())).rejects.toThrow(
+      'db down',
+    );
+
+    const second = fakeWs();
+    await wsAuth.authenticateWebSocket(second.ws, authFrame(7), fakeReq());
+
+    // The retry took the FRESH-JOIN arm end to end: recompute again, acquire, join.
+    expect(bankBonusSpy).toHaveBeenCalledTimes(2);
+    expect(acquireSpy).toHaveBeenCalledTimes(1);
+    expect(joinSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('refuses a second concurrent handshake for one character without touching the lease', async () => {
     const { deps } = makeDeps();
     // Park the first handshake inside the lease section: its acquire hangs, so the

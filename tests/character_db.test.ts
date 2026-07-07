@@ -394,6 +394,11 @@ describe('bankBonusFactsForAccount', () => {
     expect(sql).toMatch(/discord_links/);
     expect(sql).toMatch(/wallet_links/);
     expect(sql).toMatch(/referrals/);
+    // The referral DIRECTION: count referrals this account MADE (referrer = $1) whose
+    // REFEREE owns the level-10 character. A swap would count referrals RECEIVED and
+    // grant the wrong bonus to every referrer while passing every other assertion.
+    expect(sql).toMatch(/referrer_account_id\s*=\s*\$1/);
+    expect(sql).toMatch(/c\.account_id\s*=\s*r\.referee_account_id/);
     // Invariant: never a balance/holder-tier/chain read for the wallet fact.
     expect(sql).not.toMatch(/balance|holder|pubkey|chain/i);
     // Rows map straight onto the facts object.
