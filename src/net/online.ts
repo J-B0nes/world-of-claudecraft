@@ -1009,6 +1009,9 @@ export class ClientWorld implements IWorld {
   // client bundle like every other content table, so this needs no wire
   // round-trip. See src/world_api/professions.ts.
   recipeList: readonly RecipeDef[] = COMMON_RECIPES;
+  // Craft-result surface (#1127), mirrored from the server's `craftResult`
+  // event (applyEvent below). Null until this session's first craft attempt.
+  lastCraftResult: CraftResultView | null = null;
   // Active-archetype identity (#1129, superseded scope). Same not-yet-wired-on-the-
   // wire status as craftSkills/gatheringProficiency above: this change lands the
   // sim-side state machine + persistence only, so online play sees the all-unset
@@ -1022,9 +1025,6 @@ export class ClientWorld implements IWorld {
   acceptArchetypeQuest(_craftId: string): void {}
   advanceAmendsProgress(): void {}
   switchArchetype(_craftId: string): void {}
-  // Craft-result surface (#1127), mirrored from the server's `craftResult`
-  // event (applyEvent below). Null until this session's first craft attempt.
-  lastCraftResult: CraftResultView | null = null;
   // --- IWorldParty: raid-target marker mirror, from the self-wire `marks` (markerFor
   // reads it, no send). ---
   markers: Record<number, number> = {}; // entityId -> markerId, mirrored from the self-wire
