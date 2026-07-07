@@ -22,7 +22,7 @@ import { Sim } from '../src/sim/sim';
 
 // The personal-bank wire round-trip: bank_deposit / bank_withdraw / bank_buy_slots
 // resolve inside the authoritative Sim, ride the proximity-gated `bank` self-delta,
-// and mirror onto ClientWorld.bankInfo. This gate proves the Phase 3 acceptance
+// and mirror onto ClientWorld.bankInfo. This gate proves the IWorld bankInfo read-boundary
 // criteria: end-to-end deposit/withdraw/buy over the wire, a first snapshot that
 // carries the delta, an unchanged bank that omits the key WITHOUT wiping the client
 // mirror, a null encoding away from every banker, server authority against malformed
@@ -339,7 +339,7 @@ describe('bank wire round-trip', () => {
   });
 
   it('a bank-bonus stamped join rides the wire: bonusSlots, capacity, and byte-equal breakdown rows', () => {
-    // Phase 8: ws_auth stamps the recomputed grant into the join meta bag; addPlayer
+    // ws_auth stamps the recomputed grant into the join meta bag; addPlayer
     // writes bonusSlots + the breakdown into the character state; bankInfoFor exposes
     // them and the proximity-gated `bank` self-delta ships them. Here we stamp the meta
     // directly (the 8th join arg) to prove the whole state-to-wire path end to end.

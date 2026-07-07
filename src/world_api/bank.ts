@@ -7,7 +7,7 @@ import type { InvSlot } from '../sim/types';
 // serialized inside the character save exactly like inventory/bags. bankInfo
 // streams only while standing at a banker NPC (the mailInfo pattern). The base
 // 24 slots grow in copper-bought 6-slot blocks (BANK_EXPANSION_PRICES) plus a
-// later phase's server-stamped bonus slots.
+// server-stamped bonus-slot grant (recomputed at every join by the entitlement registry).
 // ---------------------------------------------------------------------------
 
 /** One row of the server-computed bonus-slot breakdown: which account action grants

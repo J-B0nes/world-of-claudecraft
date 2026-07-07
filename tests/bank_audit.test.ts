@@ -111,7 +111,7 @@ describe('auditBank', () => {
 
   it('reconciles ledger activity against an EMPTY bank when the state has none', () => {
     // Ledger rows for a character whose persisted state carries no bank at all is
-    // a corruption signature (found live in Phase 4 verification: the audit used
+    // a corruption signature (found live in QA verification: the audit used
     // to SKIP bankless characters entirely). A pre-bank character with no ledger
     // activity must still be skipped, never flagged.
     const findings = auditBank({

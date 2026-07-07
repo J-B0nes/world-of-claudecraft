@@ -1,6 +1,6 @@
 // Bank ledger: an OBSERVER of the sim's bank ops, never an authority. The sim bank
 // methods (bankDeposit / bankWithdraw / bankBuySlots) return void and emit no
-// success event by design this phase, and src/sim is out of scope, so the dispatch
+// success event by design (the ledger stays server-only, src/sim untouched), so the dispatch
 // site detects success by diffing the public read Sim.bankInfoFor(pid) BEFORE and
 // AFTER each call. A successful deposit/withdraw always changes the bank slot
 // multiset; a successful buy_slots always increases purchasedSlots (its price is

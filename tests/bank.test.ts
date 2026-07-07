@@ -1,4 +1,4 @@
-// Bank system (Phase 1): the pooled, guild-bank-ready character bank
+// Bank system: the pooled, guild-bank-ready character bank
 // (src/sim/bank.ts + the Sim delegates bankDeposit/bankWithdraw/bankBuySlots).
 // This pins the deposit/withdraw/buy rule matrix (every refusal moves nothing and
 // charges nothing), the container-agnostic moveBetweenContainers seam, item+copper
@@ -65,10 +65,10 @@ function moveFarFromBankers(sim: Sim, pid = sim.playerId): void {
   sim.rebucket(p);
 }
 
-// A fresh world whose default player already stands at a banker. The Phase 1 suite
-// drives the bank commands without placing the player, and the Phase 2 proximity
+// A fresh world whose default player already stands at a banker. The pooled-bank
+// command suite drives the bank commands without placing the player, and the proximity
 // gate refuses them unless a banker is in reach, so the shared setup moves to one.
-// Phase 1 assertions never read position, so the move is invisible to them; the
+// The command-suite assertions never read position, so the move is invisible to them; the
 // far-refusal cases below move away explicitly.
 const makeSim = (seed = 42) => {
   const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false });
@@ -77,7 +77,7 @@ const makeSim = (seed = 42) => {
 };
 const meta = (sim: Sim, pid = sim.playerId) => sim.meta(pid)!;
 
-// A multiplayer world (no default player) for the Phase 2 banker interaction
+// A multiplayer world (no default player) for the banker interaction
 // tests, mirroring the tests/mail.test.ts makeWorld idiom.
 const makeBankWorld = (seed = 42) => new Sim({ seed, playerClass: 'warrior', noPlayer: true });
 
@@ -416,7 +416,7 @@ describe('buy expansion slots', () => {
 });
 
 // ---------------------------------------------------------------------------
-describe('bonusSlots (Phase 8 seam, respected now)', () => {
+describe('bonusSlots (the entitlement-registry seam, respected by the sim)', () => {
   it('a directly-set bonusSlots raises capacity and admits more deposits', () => {
     const sim = makeSim();
     const m = meta(sim);
@@ -637,7 +637,7 @@ describe('determinism', () => {
   it('the same fixed bank-op script over 300 ticks yields identical state + events', () => {
     function run() {
       const sim = new Sim({ seed: 123, playerClass: 'warrior', autoEquip: false });
-      moveToBanker(sim); // Phase 2 gate: the scripted bank ops need a banker in reach
+      moveToBanker(sim); // proximity gate: the scripted bank ops need a banker in reach
       const m = sim.meta(sim.playerId)!;
       m.copper = LADDER_TOTAL;
       const texts: string[] = [];
@@ -776,7 +776,7 @@ describe('persistence and back-compat', () => {
     const sim2 = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
     const pid = sim2.addPlayer('warrior', 'Hoarder', { state: state as never });
     const m2 = meta(sim2, pid);
-    moveToBanker(sim2, pid); // Phase 2 gate: the deposit/withdraw below need a banker in reach
+    moveToBanker(sim2, pid); // proximity gate: the deposit/withdraw below need a banker in reach
     expect(m2.bank.inventory).toHaveLength(30); // nothing dropped
     expect(bankCapacity(m2.bank)).toBe(24);
     // a new deposit is refused (over capacity) and moves/charges nothing
@@ -890,7 +890,7 @@ describe('sanitizeBankState', () => {
     expect(ps(72)).toBe(72);
   });
 
-  it('clamps bonusSlots into [0, BANK_MAX_BONUS_SLOTS] (the Phase 8 registry ceiling)', () => {
+  it('clamps bonusSlots into [0, BANK_MAX_BONUS_SLOTS] (the entitlement-registry ceiling)', () => {
     const bs = (n: number) =>
       sanitizeBankState({ inventory: [], purchasedSlots: 0, bonusSlots: n }).bonusSlots;
     expect(bs(-4)).toBe(0);
@@ -904,10 +904,10 @@ describe('sanitizeBankState', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 2: the three Gilded Strongbox bursars (banker NPCs), the interact ->
+// The three Gilded Strongbox bursars (banker NPCs), the interact ->
 // bank-window cue they emit, and the proximity gate every bank command now
 // enforces. Standing in reach of any bursar is what unlocks the bank.
-describe('banker NPCs in the world (Phase 2)', () => {
+describe('banker NPCs in the world', () => {
   it('registers exactly the three Gilded Strongbox bursars as bankers', () => {
     const sim = makeBankWorld();
     expect(sim.bankerIds).toHaveLength(3);
@@ -919,7 +919,7 @@ describe('banker NPCs in the world (Phase 2)', () => {
   });
 });
 
-describe('interacting with a banker opens the bank (Phase 2)', () => {
+describe('interacting with a banker opens the bank', () => {
   const bankEvents = (evs: SimEvent[]) => evs.filter((e) => e.type === 'bank');
 
   for (const templateId of BANKERS) {
@@ -1014,7 +1014,7 @@ describe('interacting with a banker opens the bank (Phase 2)', () => {
   });
 });
 
-describe('bank commands require a nearby banker (Phase 2)', () => {
+describe('bank commands require a nearby banker', () => {
   const TOO_FAR = 'You are too far from the banker.';
 
   it('deposit is refused far from a banker (moves/charges nothing), then succeeds in reach', () => {
@@ -1139,7 +1139,7 @@ describe('bank commands require a nearby banker (Phase 2)', () => {
   });
 });
 
-describe('bankInfoFor read boundary (Phase 3)', () => {
+describe('bankInfoFor read boundary', () => {
   it('clones at the read boundary: mutating the returned BankInfo never touches sim state', () => {
     const sim = makeSim();
     const m = meta(sim);
@@ -1199,12 +1199,12 @@ describe('bankInfoFor read boundary (Phase 3)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 8: the server-stamped bank bonus (addPlayer's bankBonus opt). The HOST
+// The server-stamped bank bonus (addPlayer's bankBonus opt). The HOST
 // recomputes the total + per-source breakdown from account facts at every join
 // and stamps both; the sim only stores, clamps, and serves them. Offline worlds
 // never pass the opt, so the save's own (clamped) value and an empty breakdown
 // are the no-stamp arm.
-describe('server-stamped bank bonus (Phase 8)', () => {
+describe('server-stamped bank bonus', () => {
   const SOURCES = [
     { id: 'email', slots: 2, maxSlots: 2 },
     { id: 'discord', slots: 0, maxSlots: 2 },

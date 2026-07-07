@@ -311,6 +311,14 @@ directly, with a thin DOM/canvas consumer. Follow this shape for reusable/testab
 - **vendor_view.ts** / **vendor_window.ts**: the merchant window, the first migrated out of
   `hud.ts` by the recipe above (pure view decides sellable + buyback rows with prices; thin
   consumer paints `#vendor-window` from injected `deps`).
+- **bank_view.ts** / **bank_window.ts** (+ **bank_filter.ts**): the Gilded Strongbox bank
+  window. The DOM-free core builds the cell model, buy-slots pricing, and the
+  deposit-all-materials plan (`planDepositAllMaterials` simulates whole-stack sends without
+  mutating the world; summary via `depositAllSummaryKey`); the painter is a thin non-modal
+  companion of the bags cluster (the Hud docks them side by side via `body.bank-open`,
+  mobile-paired 50/50) with non-trapping focus capture/return. `bank_filter.ts` is the
+  locale-aware search/category/sort that preserves live `slotIndex` values verbatim, so a
+  filtered row still names the exact wire argument for deposit/withdraw.
 - **player_context_menu.ts**: pure `chatPlayerContextActions()` (whisper/invite/friend/ignore/
   report) for the right-click-player menu.
 - **auth_utils.ts**: login/char-select form helpers (password toggle, ARIA validity sync,

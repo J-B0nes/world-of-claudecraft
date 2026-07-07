@@ -3,13 +3,13 @@
 // one inventory list, nothing pins an item to a fixed cell) and per-character: the
 // state lives on PlayerMeta.bank and serializes INSIDE the character save, exactly
 // like inventory/bags. The base 24 slots grow in 6-slot blocks bought with copper
-// (BANK_EXPANSION_PRICES); server-stamped bonus slots wire in a later phase.
+// (BANK_EXPANSION_PRICES); bonus slots are server-stamped at join (server/bank_entitlements.ts).
 //
 // This follows the bags.ts pattern: pure move/capacity math a Vitest imports
 // directly, plus the three command bodies (bankDeposit/bankWithdraw/bankBuySlots)
 // as free functions `fn(ctx, ...)` behind SimContext. Backing state stays on Sim
 // (PlayerMeta.bank); Sim keeps thin same-named delegates. Each op has ONE entry
-// point, where the Phase 2 banker-proximity gate (nearBanker) now lives: the
+// point, where the banker-proximity gate (nearBanker) lives: the
 // player must stand near a `banker: true` NPC to deposit, withdraw, or buy slots.
 //
 // `src/sim`-pure: no DOM/Three/render-ui-game-net imports, no Math.random/Date.now
@@ -26,8 +26,8 @@ export const BANK_BASE_SLOTS = 24;
 /** Slots one copper expansion adds; also the granularity purchasedSlots stays on. */
 export const BANK_EXPANSION_SLOTS = 6;
 /** Copper cost of each successive expansion, cheapest first. The entry count is the
- *  purchase cap, so the purchased ceiling is 24 + 12*6 = 96 (an absolute 112 once a
- *  later phase stamps the bonus slots). Data-as-code: the price is always this table
+ *  purchase cap, so the purchased ceiling is 24 + 12*6 = 96 (an absolute 112 with the
+ *  server-stamped bonus slots). Data-as-code: the price is always this table
  *  lookup, never a client-supplied value, so it is inherently overflow-safe. */
 export const BANK_EXPANSION_PRICES: readonly number[] = [
   500, 1000, 2500, 5000, 10000, 20000, 40000, 80000, 150000, 300000, 600000, 1200000,
@@ -48,7 +48,7 @@ export function clampBonusSlots(raw: unknown): number {
 
 /** A character's bank: a pooled item list plus its two slot-budget contributions.
  *  `purchasedSlots` is always a multiple of BANK_EXPANSION_SLOTS in [0, 72];
- *  `bonusSlots` is server-stamped at join (0 offline and until Phase 8's registry). */
+ *  `bonusSlots` is server-stamped at join by the entitlement registry (0 offline). */
 export interface BankState {
   inventory: InvSlot[];
   purchasedSlots: number;

@@ -10160,7 +10160,7 @@ export class Hud {
     // A banker never gossips: divert to the sim interact, whose banker intercept
     // emits the bank event this HUD opens on (case 'bank'), identically in both
     // worlds. Routing through the sim keeps proximity server-authoritative; the
-    // authored greeting stays un-rendered by design (the Phase 5 adjudication).
+    // authored greeting stays un-rendered by design (a deliberate QA adjudication).
     if (NPCS[npc.templateId]?.banker) {
       this.sim.targetEntity(npc.id);
       this.sim.interact();

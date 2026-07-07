@@ -186,7 +186,7 @@ export class BankWindow {
   // In-flight guard for deposit-all: the ONLINE mirror lags the sent commands by about
   // a tick, so a rapid second click would re-plan from the STALE mirror and re-send
   // slot indices the server has already spliced, banking whatever shifted into them
-  // (the wrong-item class the Phase 5 stale-index prompt guard exists for). The button
+  // (the wrong-item class the stale-index prompt guard exists for). The button
   // stays disabled from send until the mirror echoes (refreshIfChanged sees a new data
   // signature) or the fallback timer clears a lost echo.
   private depositAllPending = false;
@@ -264,7 +264,7 @@ export class BankWindow {
     // Search focus survives a FULL rebuild too: the slow-band refreshIfChanged can
     // land a data repaint (a deposit's echo) moments after the player focused the
     // search box, and stealing focus to the close button mid-typing was a live bug
-    // (proven by the phase 6 smoke probe). The fresh input's value is restored from
+    // (proven by the online browser smoke probe). The fresh input's value is restored from
     // this.filter.search, so only focus + caret need carrying across.
     const searchEl = el.querySelector('.bag-search') as HTMLInputElement | null;
     const searchFocus =
@@ -310,7 +310,7 @@ export class BankWindow {
     // One shared scroll region holds the grid plus the bonus breakdown as its tail:
     // at a 360px-tall phone the rigid chrome (title, capacity, toolbar, buy row)
     // leaves less than one cell row of flex space, so a fixed below-the-buy-row
-    // footer either crushed the grid or clipped itself (found live in Phase 8 QA).
+    // footer either crushed the grid or clipped itself (found live in QA).
     // Scrolling past the last cells reaches the bonus copy on every viewport, and
     // the transactional buy row stays pinned below, always visible.
     const scroll = document.createElement('div');

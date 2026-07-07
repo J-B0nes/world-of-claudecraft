@@ -49,7 +49,7 @@ function makeDeps(opts: { joinResult?: any; hasSession?: boolean; acquireResult?
     return opts.acquireResult ?? true;
   });
   const releaseSpy = vi.fn(async (_characterId: number, _nonce?: string) => {});
-  // Phase 8: the fresh-join arm recomputes the bank bonus before acquiring the lease.
+  // Bank bonus: the fresh-join arm recomputes the bank bonus before acquiring the lease.
   const bankBonusSpy = vi.fn(async (_accountId: number) => ({
     bonusSlots: 0,
     sources: [] as unknown[],

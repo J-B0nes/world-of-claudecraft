@@ -114,7 +114,7 @@ describe('bags_window: bank-deposit mode wiring', () => {
   });
 });
 
-describe('bags_window: Phase 7 touch peek + bank-cluster close', () => {
+describe('bags_window: touch peek + bank-cluster close', () => {
   it('consults the shared peek guard FIRST in the bag cell click', () => {
     // On touch, a long-press peek shows the tooltip; the release click must consume
     // the peek and inspect the stack instead of running its action (use/sell/deposit/
@@ -137,7 +137,7 @@ describe('bags_window: Phase 7 touch peek + bank-cluster close', () => {
     // Chromium fires contextmenu at ~500ms on a touch hold, BEFORE the 950ms
     // tooltip peek timer, so without this gate a long-press meant to inspect a
     // destroyable item opened the destroy prompt out from under the peek (the
-    // release/v0.23.0 destroy affordance meeting the Phase 7 peek model). The
+    // release/v0.23.0 destroy affordance meeting the touch peek model). The
     // gate sits at the TOP of the handler, preventDefaults (the row is not in
     // the document-level native-menu suppress set), and fails safe to inspect
     // when a mobile-touch browser reports no pointerType (Firefox Android).
@@ -198,7 +198,7 @@ describe('bags_window: Phase 7 touch peek + bank-cluster close', () => {
     // bind steals the WCAG 2.4.3 focus return. The prompt's own keydown listener
     // stops the bubble, and once the prompt was detached mid-dispatch it must ALSO
     // cancel the default (or the activation ghost-clicks the re-landed focus).
-    // Escape-only handling (the pre-Phase-7 shape) reds this.
+    // The older Escape-only handling reds this.
     expect(painter).toMatch(
       /if \(ke\.key === 'Enter' \|\| ke\.key === ' ' \|\| ke\.code === 'Space'\) \{\s*ke\.stopPropagation\(\);\s*if \(!prompt\.isConnected\) ke\.preventDefault\(\);\s*return;\s*\}/,
     );

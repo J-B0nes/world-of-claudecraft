@@ -1553,19 +1553,19 @@ export const hudChromeStrings = {
     withdrawQuantityTitle: 'Withdraw {item}',
     withdrawQuantityInput: 'Quantity to withdraw',
     withdrawQuantityConfirm: 'Withdraw',
-    // Search / category / sort toolbar (Phase 6). The category chip and sort option
+    // Search / category / sort toolbar. The category chip and sort option
     // labels reuse the generic hudChrome.bags.* strings; only these bank-named aria
     // labels are distinct from the bags wording.
     filterGroupAria: 'Filter bank by category',
     sortAria: 'Sort bank items',
     searchAria: 'Search bank items by name',
-    // Deposit-all-materials button + its transient summary line (Phase 6). {count} is
+    // Deposit-all-materials button + its transient summary line. {count} is
     // the number of material stacks moved.
     depositAll: 'Deposit all materials',
     depositAllDone: 'Materials deposited: {count}.',
     depositAllFull: 'Materials deposited: {count}. Bank now full.',
     depositAllNone: 'Bank full: nothing deposited.',
-    // Bonus-slot breakdown footer (Phase 8, online only): a header total plus one row
+    // Bonus-slot breakdown footer (online only): a header total plus one row
     // per account source, advertising what linking earns. {count} is a slot count.
     bonusTitle: 'Bonus slots',
     bonusEarned: '+{count}',

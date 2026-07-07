@@ -84,12 +84,12 @@ function setup() {
     metaRequestUserData: vi.fn(() => ({ fbp: null, fbc: null })),
     metaEventSourceUrl: vi.fn(() => undefined as string | undefined),
     loadAccountCosmetics: vi.fn(async () => ({ completedQuestIds: [], mechChromaIds: [] })),
-    // Phase 4 lease deps: the happy path holds the lease so every existing case
+    // Character-lease deps: the happy path holds the lease so every existing case
     // reaches game.join unchanged; the lease branches themselves are covered by
     // tests/character_lease_ws.test.ts.
     acquireCharacterLease: vi.fn(async () => true),
     releaseCharacterLease: vi.fn(async () => {}),
-    // Phase 8: the fresh-join arm recomputes the bank bonus and stamps it into the join
+    // Bank bonus deps: the fresh-join arm recomputes the bank bonus and stamps it into the join
     // meta. The default returns an empty grant so every existing case reaches game.join
     // unchanged; the stamp/resume branches are pinned in the bank-bonus block below.
     bankBonusForAccount: vi.fn(async () => ({ bonusSlots: 0, sources: [] })),

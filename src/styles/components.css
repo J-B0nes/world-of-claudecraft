@@ -3228,7 +3228,7 @@
     font-size: 12px;
     text-align: right;
   }
-  /* Phase 6 search/category/sort toolbar. It reuses the bags filter-bar classes
+  /* Search/category/sort toolbar. It reuses the bags filter-bar classes
      (.bag-filter-bar/.bag-chips/.bag-chip/.bag-tools/.bag-search/.bag-sort), so most
      styling carries over; only the flex-none pin (so the toolbar never stretches in the
      column), the deposit-all action button, and the transient status line are bank
@@ -3277,7 +3277,7 @@
   /* The shared scroll region: the cell grid plus the bonus breakdown as its tail.
      At a 360px-tall phone the rigid chrome (title, capacity, toolbar, buy row)
      leaves under one cell row of flex space, so a fixed footer below the buy row
-     either crushed the grid or clipped itself (found live in Phase 8 QA); scrolling
+     either crushed the grid or clipped itself (found live in QA); scrolling
      one region reaches both. The two-row floor (2 x 40px cells + gap + padding)
      keeps the region usable before the window itself would overflow. */
   .bank-scroll {
@@ -3400,7 +3400,7 @@
     font-family: var(--title-font);
     font-size: 12px;
   }
-  /* Bonus-slot breakdown footer (Phase 8, online only): a compact non-interactive
+  /* Bonus-slot breakdown footer (online only): a compact non-interactive
      text block advertising the account-link and referral bonuses, riding as the TAIL
      of the .bank-scroll region (scrolling past the last cells reaches it on every
      viewport; a rigid below-the-buy-row footer clipped at 360px-tall phones). Tokens

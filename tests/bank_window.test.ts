@@ -206,7 +206,7 @@ describe('bank_window: hud.ts wiring', () => {
     // all funnel NPCs into openQuestDialog; the banker arm must divert to the sim
     // interact (whose banker intercept emits the bank event both hosts open on)
     // BEFORE any gossip renders, or the bank is unreachable in normal play. Found
-    // by the pre-Phase-9 cross-platform audit: every earlier smoke drove
+    // by a cross-platform audit: every earlier smoke drove
     // __game.sim.interact() directly, which masked the missing client trigger.
     expect(hud).toMatch(
       /openQuestDialog\(npcId: number\): void \{[\s\S]{0,700}?if \(NPCS\[npc\.templateId\]\?\.banker\) \{[\s\S]{0,160}?this\.sim\.targetEntity\(npc\.id\);[\s\S]{0,80}?this\.sim\.interact\(\);[\s\S]{0,40}?return;/,
@@ -247,7 +247,7 @@ describe('bank_window: static window element is wired in both game entries', () 
   });
 });
 
-describe('bank_window: Phase 6 search / sort / deposit-all', () => {
+describe('bank_window: search / sort / deposit-all', () => {
   it('mounts the toolbar between the capacity counter and the grid, always in bank state', () => {
     const capIdx = painter.indexOf("capacity.setAttribute('aria-label'");
     const barIdx = painter.indexOf('el.appendChild(this.buildFilterBar(model.empty));');
@@ -388,7 +388,7 @@ describe('bank_window: Phase 6 search / sort / deposit-all', () => {
   });
 });
 
-describe('bank_window: Phase 7 touch peek suppression', () => {
+describe('bank_window: touch peek suppression', () => {
   it('consults the shared peek guard FIRST in the cell click, before onSlotClick', () => {
     // A long-press peek shows the tooltip and marks the guard; the release click must
     // consume that peek and inspect the slot instead of withdrawing. The guard check
@@ -411,7 +411,7 @@ describe('bank_window: Phase 7 touch peek suppression', () => {
   });
 });
 
-describe('bank_window: Phase 7 mobile pairing (hud.mobile.css)', () => {
+describe('bank_window: mobile pairing (hud.mobile.css)', () => {
   it('pairs the bank cluster 50/50 at a SCALE-AWARE split point, mirroring the vendor', () => {
     // #ui's zoom multiplies author lengths, so a raw 50vw split only tiles at
     // uiScale 1 (halves gap above 1, overlap below 1; the 2026-07-07 QA finding).
@@ -436,7 +436,7 @@ describe('bank_window: Phase 7 mobile pairing (hud.mobile.css)', () => {
     expect(block).toContain('max-width: none');
     expect(block).toContain('top: max(10px, env(safe-area-inset-top))');
     // Full-height standalone (the issue-1577 bags rationale, adopted for the bank
-    // at the Phase 9 adjudication); the 50/50 pairing keeps its 72px reservation.
+    // by a deliberate QA adjudication); the 50/50 pairing keeps its 72px reservation.
     expect(block).toContain('bottom: max(10px, env(safe-area-inset-bottom))');
   });
 
@@ -487,7 +487,7 @@ describe('bank_window: Phase 7 mobile pairing (hud.mobile.css)', () => {
   });
 });
 
-describe('bank_window: Phase 7 keyboard a11y (non-modal activation + prompt Enter)', () => {
+describe('bank_window: keyboard a11y (non-modal activation + prompt Enter)', () => {
   it('bank and bags are in the non-modal Enter/Space activation guard (WCAG 2.1.1)', () => {
     // The bank cluster is non-modal, so canUseGameKeys() stays true while a bank
     // button has focus: without the guard, Enter opens chat and Space jumps instead
@@ -525,19 +525,19 @@ describe('bank_window: Phase 7 keyboard a11y (non-modal activation + prompt Ente
     // The prompt's own keydown listener must stop the bubble, and once the prompt
     // was detached mid-dispatch it must ALSO cancel the default (or the browser
     // runs the activation against the re-landed focus, Enter ghost-clicking
-    // [data-close]). Escape-only handling (the pre-Phase-7 shape) must red this.
+    // [data-close]). The older Escape-only handling must red this.
     expect(painter).toMatch(
       /if \(ke\.key === 'Enter' \|\| ke\.key === ' ' \|\| ke\.code === 'Space'\) \{\s*ke\.stopPropagation\(\);\s*if \(!prompt\.isConnected\) ke\.preventDefault\(\);\s*return;\s*\}/,
     );
   });
 });
 
-describe('bank_window: Phase 8 bonus-slot breakdown footer', () => {
+describe('bank_window: bonus-slot breakdown footer', () => {
   it('rides the bonus section as the tail of the shared .bank-scroll region', () => {
     // Order pin: grid into the scroll wrapper, bonus after it (the tail), the wrapper
     // into the window, and the transactional buy row pinned AFTER the wrapper so it
     // stays visible while the region scrolls (the 360px-phone budget: a fixed footer
-    // below the buy row crushed the grid or clipped itself, found live in Phase 8 QA).
+    // below the buy row crushed the grid or clipped itself, found live in QA).
     const renderBody = painter.slice(
       painter.indexOf('render(): void {'),
       painter.indexOf('refreshIfChanged(): void {'),
@@ -563,7 +563,7 @@ describe('bank_window: Phase 8 bonus-slot breakdown footer', () => {
     expect(painter).toMatch(/if \(!meta\) continue;/);
   });
 
-  it('references every Phase 8 bonus t() key (title, total, labels, adverts, progress, aria)', () => {
+  it('references every bonus t() key (title, total, labels, adverts, progress, aria)', () => {
     for (const key of [
       'hudChrome.bank.bonusTitle',
       'hudChrome.bank.bonusEarned',
@@ -618,7 +618,7 @@ describe('bank_window: Phase 8 bonus-slot breakdown footer', () => {
   });
 
   it('the .bank-scroll wrapper owns the scroll (two-row floor); the grid does not', () => {
-    // Found live at 740x360 (Phase 8 QA): a rigid flex:none footer below the buy row
+    // Found live in QA at 740x360: a rigid flex:none footer below the buy row
     // crushed the grid to a 4px sliver and clipped its own rows past the window
     // bottom. The contract: ONE scroll region (grid + bonus tail) with a two-row
     // floor, so cells and bonus copy are both reachable on every viewport.

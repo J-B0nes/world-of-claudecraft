@@ -2588,7 +2588,7 @@ export class Sim {
       get marketListings() {
         return sim.marketListings;
       },
-      // Banker anchor list (Phase 2 bank system): the live array of every banker
+      // Banker anchor list (bank system): the live array of every banker
       // NPC id, read by bank.ts's proximity gate. Sim-owned, never reassigned.
       get bankerIds() {
         return sim.bankerIds;
@@ -6099,7 +6099,7 @@ export class Sim {
   // Thin delegates to the bank free functions (bank.ts). The bank state lives on
   // PlayerMeta.bank and serializes inside the character save; server/game.ts and
   // the IWorld surface call these unchanged, reaching the inventory hub through
-  // the SimContext. Each op has one entry point (a later phase gates proximity here).
+  // the SimContext. Each op has one entry point, gated on banker proximity (nearBanker).
 
   bankDeposit(slotIndex: number, count?: number, pid?: number): void {
     bankMod.bankDeposit(this.ctx, slotIndex, count, pid);

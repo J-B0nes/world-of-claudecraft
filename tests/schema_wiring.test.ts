@@ -112,7 +112,7 @@ describe('ensureSchema wires every schema module at boot', () => {
   });
 
   it('applies the bank-system tables (character_leases, bank_ledger) idempotently', async () => {
-    // Phase 4 of the bank system: the per-character load lease and the append-only
+    // Bank system tables: the per-character load lease and the append-only
     // bank op ledger both live inline in the core SCHEMA string. Pin them by name so
     // they can never regress to defined-but-unwired (the DISCORD_SCHEMA lesson), and
     // boot twice to pin that a re-boot re-applies the same additive statements.

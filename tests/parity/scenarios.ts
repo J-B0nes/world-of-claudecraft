@@ -3739,7 +3739,7 @@ function inventoryVendor(): Scenario {
   };
 }
 
-// Personal bank (Phase 3): the per-character deposit box. A player stands at a
+// Personal bank: the per-character deposit box. A player stands at a
 // bursar and moves a stack in and out through the pooled deposit/withdraw commands,
 // then buys a slot expansion. Exercises every state transition the bank owns:
 //  - bankDeposit partial (a fraction of a fungible stack leaves the bags);

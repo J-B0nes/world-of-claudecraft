@@ -18,7 +18,7 @@ export type BankItemLookup = (itemId: string) => { quality?: string } | undefine
 
 /** One occupied bank cell. `slotIndex` is the index into BankInfo.slots and is
  *  the exact wire argument for bankDeposit/bankWithdraw (order is preserved, no
- *  sort/filter this phase). */
+ *  sort/filter here; the window layer's search/sort, bank_filter.ts, keeps slotIndex intact). */
 export interface BankSlotModel {
   slotIndex: number;
   itemId: string;
@@ -85,7 +85,7 @@ export type BankViewModel =
 
 /** Map the proximity-gated bank snapshot to the render model. `info` is null away
  *  from a banker (both worlds), which yields the 'away' state. Slot order and
- *  indices are preserved verbatim (search/sort is a later phase). */
+ *  indices are preserved verbatim (search/sort lives in the window layer, bank_filter.ts). */
 export function buildBankView(info: BankInfo | null, lookup: BankItemLookup): BankViewModel {
   if (!info) return { kind: 'away' };
   const used = info.slots.length;

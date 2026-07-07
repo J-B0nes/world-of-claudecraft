@@ -5,11 +5,11 @@
 // one parameterized query and server/main.ts pipes them through computeBankBonus,
 // so this module stays a host-agnostic leaf a Vitest imports directly.
 //
-// EXTENSIBILITY (the packet's acceptance criterion): a new source is one more row
+// EXTENSIBILITY (the registry's design contract): a new source is one more row
 // in BANK_BONUS_SOURCES. computeBankBonus emits one BankBonusSource per registry
 // row, so adding a row grows the breakdown by exactly one entry and changes no
-// existing row or the wire SHAPE. Two such rows are already approved but BLOCKED on
-// their platform-link systems being built separately (state.md decision 4):
+// existing row or the wire SHAPE. Two such rows are already approved by the
+// maintainer but BLOCKED on their platform-link systems being built separately:
 //   { id: 'x_follow',      slotsPerUnit: 2, capUnits: 1, units: (f) => (f.xFollowing ? 1 : 0) }
 //   { id: 'twitch_follow', slotsPerUnit: 2, capUnits: 1, units: (f) => (f.twitchFollowing ? 1 : 0) }
 // Do NOT add them until those link facts exist. When one lands it also bumps the

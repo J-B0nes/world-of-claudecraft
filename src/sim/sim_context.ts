@@ -159,7 +159,7 @@ export interface SimContextPrimitives {
   // read-only view (never reassigned by the readout).
   readonly devCommands: boolean;
   readonly marketListings: MarketListing[];
-  // Phase 2 bank system: the live array of every `banker: true` NPC id, seeded by
+  // Bank system: the live array of every `banker: true` NPC id, seeded by
   // the Sim ctor NPC loop. bank.ts reads it to gate deposit/withdraw/buy-slots on
   // standing near a banker. Sim-owned, mutated only at construction (push), never
   // reassigned, so a live read-only view like `marketListings`.
