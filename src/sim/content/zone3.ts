@@ -843,6 +843,10 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     boss: true,
     elite: true,
     canSwim: false,
+    // The mountain does not path around camp furniture: every chase step walks
+    // the straight line through fences, buildings, and the waterline, so he can
+    // always go directly at his target and never wedges on a collider.
+    phasesThroughObstacles: true,
     ccImmune: true,
     // A raid boss cannot be perma-snared by a wall of Frostbolts / Hamstrings: slows do
     // not stick to him (ccImmune already blocks stun/root/etc; slow is separate).
@@ -860,21 +864,26 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     dmgPerLevel: 10.3,
     attackSpeed: 2.4,
     armorPerLevel: 46,
-    moveSpeed: 5.8,
+    // Faster than a player's base run speed (7, entity.ts): Thunzharr cannot be
+    // outrun on foot, so there is no kite even before the Howling Gale snare lands.
+    moveSpeed: 11.6,
     aggroRadius: 18,
     aoePulse: {
       min: 36,
       max: 50,
       radius: 12,
-      every: 8,
+      every: 12,
       name: 'Thunderclap',
       school: 'nature',
       fx: 'nova',
     },
     stomp: {
       radius: 11,
-      every: 16,
-      duration: 3,
+      every: 24,
+      // A short pin, not a shutdown: at 11.6 vs a base run of 7 the boss closes
+      // about 7yd in 1.5s, enough to be on top of anyone caught mid-flight
+      // without benching the raid for whole GCDs.
+      duration: 1.5,
       min: 18,
       max: 28,
       name: 'Seismic Stomp',
@@ -883,11 +892,10 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     // Howling Gale: the anti-kite snare. Gale-force winds pin every player within 40yd
     // to 70% move speed for 6s, re-slammed every 5s (so uptime is permanent while you
     // stand in the storm, and the snare lingers if you flee the radius). Unlike the
-    // other pulses this one also fires while Thunzharr is CHASING, so a hunter whose
-    // run speed (7) outpaces the boss (5.8) can no longer kite it forever: once snared
-    // to 4.9yd/s the boss (5.8) still closes and the melee, Thunderclap, and Stomp come
-    // online. A gentle 30% snare, not a hard 80% one: it denies a permanent kite without
-    // rooting the raid in place.
+    // other pulses this one also fires while Thunzharr is CHASING. With the boss now
+    // outrunning base run speed (11.6 vs 7) the snare is a second layer: it keeps a
+    // sprint-cooldown or speed-buffed runner from opening a gap. A gentle 30% snare,
+    // not a hard 80% one: it denies a permanent kite without rooting the raid in place.
     aoeSlow: {
       radius: 40,
       mult: 0.7,
@@ -898,7 +906,7 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     },
     summonAdds: { mobId: 'thunzharr_stormling', count: 2, atHpPct: [0.66, 0.33] },
     knockback: { chance: 0.3, distance: 7, name: 'Tectonic Heave' },
-    stoneskin: { amount: 500, every: 18, duration: 9, name: 'Mountainhide', school: 'nature' },
+    stoneskin: { amount: 500, every: 27, duration: 9, name: 'Mountainhide', school: 'nature' },
     // Stormcall: the telegraphed hardcast. A 3.5s cast bar the whole raid can see
     // (and the yell announces), then a heavy nature nova on everyone within 30yd,
     // roughly double a Thunderclap pulse on a much longer cadence.
@@ -906,7 +914,7 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
       castId: 'thunzharr_stormcall',
       name: 'Stormcall',
       castTime: 3.5,
-      every: 25,
+      every: 40,
       radius: 30,
       min: 70,
       max: 90,
@@ -920,9 +928,10 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
     },
     // Loud: a mountain-sized voice. Every yell (engage/summon/enrage + these battle
     // cries) carries 350yd, far past the 100yd default, and he bellows one of these
-    // lines every 9s in combat so the whole of Thornpeak knows he is awake.
+    // lines once a minute in combat: the whole of Thornpeak still knows he is awake,
+    // but the barks never drown out the raid's chat.
     battleYells: {
-      every: 9,
+      every: 60,
       range: 350,
       lines: [
         'THUNDER ANSWERS! The peak has teeth again!',
@@ -949,7 +958,7 @@ export const ZONE3_MOBS: Record<string, MobTemplate> = {
       { itemId: 'soulflame_cord', chance: 0.08, rollGroup: 'thunzharr_t2_belt' },
       { itemId: 'stormcallers_waistguard', chance: 0.08, rollGroup: 'thunzharr_t2_belt' },
     ],
-    scale: 8, // a large, imposing world boss that reads on the skyline without being mountain-sized. Visual scale is DECOUPLED from combat reach: his melee is pinned to a ~17yd (scale-5) body in combatProfileForMob (mob_combat.ts), so the Howling Gale snare, not a giant swing, is what keeps him unkitable.
+    scale: 8, // a large, imposing world boss that reads on the skyline without being mountain-sized. Visual scale is DECOUPLED from combat reach: his melee is pinned to a ~17yd (scale-5) body in combatProfileForMob (mob_combat.ts), so his move speed and the Howling Gale snare, not a giant swing, are what keep him unkitable.
     color: 0x7d8a99,
   },
   // Stormlings: lesser storm elementals Thunzharr tears loose from itself at the
