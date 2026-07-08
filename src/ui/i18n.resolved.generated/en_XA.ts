@@ -622,6 +622,7 @@ export const en_XA: EnTranslations = {
         "jitter": "[Ĵíţţéŕ]",
         "predLead": "[Þŕéðíçţíóñ Ļéáð]",
         "snapshot": "[Šñáþšĥóţ Ŕáţé]",
+        "serverTick": "[Šéŕʋéŕ Ţíçķ Ŕáţé]",
         "connection": "[Çóññéçţíóñ]",
         "drawCalls": "[Ðŕáŵ Çáļļš]",
         "triangles": "[Ţŕíáñĝļéš]",

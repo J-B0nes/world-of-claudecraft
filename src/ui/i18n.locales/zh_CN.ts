@@ -14,6 +14,8 @@
 import type { TranslationKey } from '../i18n.catalog';
 
 export const zh_CN: Partial<Record<TranslationKey, string>> = {
+  'hudChrome.vcup.guildBoardWl': '{wins} 胜，{losses} 负',
+  'hudChrome.vcup.shootPower': '力度',
   'hudChrome.discord.roleTag.coredevs': '核心开发者',
   'hudChrome.options.version': 'v{version}（{build}）',
   'auth.emailPlaceholder': 'you@example.com',
@@ -311,6 +313,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perf.labels.jitter': '抖动',
   'hudChrome.perf.labels.predLead': '预测提前量',
   'hudChrome.perf.labels.snapshot': '快照频率',
+  'hudChrome.perf.labels.serverTick': '服务器刻率',
   'hudChrome.perf.labels.connection': '连接',
   'hudChrome.perf.labels.drawCalls': '绘制调用',
   'hudChrome.perf.labels.triangles': '三角面',

@@ -14,6 +14,8 @@
 import type { TranslationKey } from '../i18n.catalog';
 
 export const ko_KR: Partial<Record<TranslationKey, string>> = {
+  'hudChrome.vcup.guildBoardWl': '{wins}승 {losses}패',
+  'hudChrome.vcup.shootPower': '파워',
   'hudChrome.discord.roleTag.coredevs': '핵심 개발자',
   'hudChrome.options.version': 'v{version} ({build})',
   'auth.emailPlaceholder': 'you@example.com',
@@ -325,6 +327,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perf.labels.jitter': '지터',
   'hudChrome.perf.labels.predLead': '예측 리드',
   'hudChrome.perf.labels.snapshot': '스냅샷 전송률',
+  'hudChrome.perf.labels.serverTick': '서버 틱 속도',
   'hudChrome.perf.labels.connection': '연결',
   'hudChrome.perf.labels.drawCalls': '드로우 콜',
   'hudChrome.perf.labels.triangles': '삼각형',

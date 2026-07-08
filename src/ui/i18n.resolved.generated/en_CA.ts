@@ -622,6 +622,7 @@ export const en_CA: EnTranslations = {
         "jitter": "Jitter",
         "predLead": "Prediction Lead",
         "snapshot": "Snapshot Rate",
+        "serverTick": "Server Tick Rate",
         "connection": "Connection",
         "drawCalls": "Draw Calls",
         "triangles": "Triangles",
