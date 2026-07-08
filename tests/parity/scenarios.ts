@@ -2997,6 +2997,7 @@ function c4aCastingLifecycle(): Scenario {
     coverage: [
       'castAbility timed-cast START (mage fireball) + Math.max gcd arm',
       'updateCasting progress + finish -> applyAbility spell-hit roll (rng) -> runEffects',
+      'single-slot spell queue (#1360): tail-window press queues, fires on completion',
       'pushbackCast timed branch (+CAST_PUSHBACK_SEC) via dealDamage mid-cast',
       'updateCasting silence branch -> cancelCast (priest lesser_heal, holy)',
       'castAbility channel START (warlock drain_life): spend+arm at START',
@@ -3044,6 +3045,15 @@ function c4aCastingLifecycle(): Scenario {
       sim.dealDamage(mob, eMage, 40, false, 'physical', null, 'hit'); // pushbackCast timed branch
       rec.snapshot('mage-pushback');
       rec.tick(120); // let the 2.5s cast (+ pushback) finish -> applyAbility -> runEffects
+
+      // --- mage: spell queue (#1360) — a press in the cast tail queues, fires on completion ---
+      eMage.resource = eMage.maxResource;
+      face(eMage, mob);
+      sim.castAbility('fireball', mage); // second timed-cast START (fresh 2.5s, no pushback)
+      rec.tick(43); // drain into the tail: 2.5 - 43*0.05 = 0.35s remaining, inside the 0.4s window
+      sim.castAbility('fireball', mage); // queues instead of erroring "You are busy."
+      rec.snapshot('mage-queued');
+      rec.tick(20); // finishes the in-flight cast (fires the queued one) and lets it progress
 
       // --- priest: timed self-heal start -> silence lands -> updateCasting cancel ---
       ePriest.hp = Math.max(1, ePriest.maxHp - 1000);

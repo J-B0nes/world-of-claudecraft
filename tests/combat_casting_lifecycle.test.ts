@@ -19,7 +19,11 @@ import { createMob } from '../src/sim/entity';
 import { advancePendingProjectiles } from '../src/sim/projectile_travel';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
-import { CAST_PUSHBACK_SEC, CHANNEL_PUSHBACK_FRACTION } from '../src/sim/types';
+import {
+  CAST_PUSHBACK_SEC,
+  CAST_QUEUE_WINDOW_SEC,
+  CHANNEL_PUSHBACK_FRACTION,
+} from '../src/sim/types';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -265,6 +269,68 @@ describe('casting_lifecycle: pushbackCast', () => {
     pushbackCast(p);
     expect(p.channeling).toBe(true);
     expect(p.castRemaining).toBeCloseTo(Math.max(0, rem0 - tot0 * CHANNEL_PUSHBACK_FRACTION), 9);
+  });
+});
+
+describe('casting_lifecycle: spell queue (#1360)', () => {
+  it('errors on a press outside the queue window (unchanged behavior)', () => {
+    const { sim, p, meta } = makeSim('mage', 12);
+    spawnTarget(sim, p);
+    castAbility(sim.ctx, 'fireball', p.id);
+    expect(p.castRemaining).toBeGreaterThan(CAST_QUEUE_WINDOW_SEC);
+    const errors: Array<Record<string, any>> = [];
+    const orig = (sim as any).emit.bind(sim);
+    (sim as any).emit = (e: Record<string, any>) => {
+      errors.push(e);
+      orig(e);
+    };
+    castAbility(sim.ctx, 'fireball', p.id);
+    expect(p.queuedCastAbility).toBeNull();
+    expect(errors.some((e) => e.type === 'error' && e.text === 'You are busy.')).toBe(true);
+    void meta;
+  });
+
+  it('queues a press within the tail of the cast and fires it on completion', () => {
+    const { sim, p } = makeSim('mage', 12);
+    spawnTarget(sim, p);
+    castAbility(sim.ctx, 'fireball', p.id);
+    while (p.castRemaining > CAST_QUEUE_WINDOW_SEC) sim.tick();
+    expect(p.castingAbility).toBe('fireball'); // still finishing the first cast
+
+    castAbility(sim.ctx, 'fireball', p.id);
+    expect(p.queuedCastAbility).toBe('fireball');
+    expect(p.castingAbility).toBe('fireball'); // the in-flight cast is untouched
+
+    // finish draining the first cast; the tick that completes it fires the queued one
+    while (p.queuedCastAbility) sim.tick();
+    expect(p.queuedCastAbility).toBeNull();
+    expect(p.castingAbility).toBe('fireball'); // the queued cast just started
+    expect(p.castRemaining).toBeGreaterThan(CAST_QUEUE_WINDOW_SEC);
+  });
+
+  it('keeps only a single queued slot: a later press overwrites the earlier one', () => {
+    const { sim, p } = makeSim('priest', 12);
+    p.hp = Math.max(1, p.maxHp - 500);
+    castAbility(sim.ctx, 'lesser_heal', p.id);
+    while (p.castRemaining > CAST_QUEUE_WINDOW_SEC) sim.tick();
+
+    castAbility(sim.ctx, 'lesser_heal', p.id);
+    expect(p.queuedCastAbility).toBe('lesser_heal');
+    castAbility(sim.ctx, 'lesser_heal', p.id); // a second press replaces the queued slot
+    expect(p.queuedCastAbility).toBe('lesser_heal');
+  });
+
+  it('drops the queued cast when the current cast is interrupted, not completed', () => {
+    const { sim, p } = makeSim('mage', 12);
+    spawnTarget(sim, p);
+    castAbility(sim.ctx, 'fireball', p.id);
+    while (p.castRemaining > CAST_QUEUE_WINDOW_SEC) sim.tick();
+    castAbility(sim.ctx, 'fireball', p.id);
+    expect(p.queuedCastAbility).toBe('fireball');
+
+    cancelCast(sim.ctx, p);
+    expect(p.queuedCastAbility).toBeNull();
+    expect(p.castingAbility).toBeNull();
   });
 });
 
