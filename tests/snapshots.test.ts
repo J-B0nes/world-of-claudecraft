@@ -1870,7 +1870,7 @@ describe('active title wire (Book of Deeds)', () => {
     const after = lastSnap(fc.sent);
     expect(after.self.deeds).toHaveProperty('pvp_duel_first_win');
     expect(after.self.dstats.counters.duelsWon).toBe(1);
-    expect(after.self.renown).toBeGreaterThan(0);
+    expect(after.self.renown).toBe(5); // exactly pvp_duel_first_win's renown, from a base of 0
   });
 
   it('a second client sees the first client entity title after the re-wire', () => {
@@ -1900,6 +1900,34 @@ describe('active title wire (Book of Deeds)', () => {
     broadcast(server);
     (viewerB as any).applySnapshot(lastSnap(fcB.sent));
     expect(viewerB.entities.get(a.pid)?.title).toBe('prog_veteran');
+
+    // A clears; the identity JSON loses the key, so A re-wires as a full
+    // record WITHOUT `title` and B's mirror must return to null (the ?? null
+    // default in the apply, not a stale carry-over)
+    server.handleMessage(a, JSON.stringify({ t: 'cmd', cmd: 'deed_set_title', deedId: null }));
+    sim.tick();
+    fcB.sent.length = 0;
+    broadcast(server);
+    (viewerB as any).applySnapshot(lastSnap(fcB.sent));
+    expect(viewerB.entities.get(a.pid)?.title).toBeNull();
+  });
+
+  it('a fresh player wires an empty earned map and null title that decode faithfully', () => {
+    const server = new GameServer();
+    const fc = fakeWs();
+    const session = joinServer(server, fc, 1, 'Fresh');
+    broadcast(server);
+    const snap = lastSnap(fc.sent);
+    // empty-value fidelity on the wire (the 40-key presence test above only
+    // proves the keys ride the first snapshot)
+    expect(snap.self.deeds).toEqual({});
+    expect(snap.self.atitle).toBeNull();
+    expect(snap.self.renown).toBe(0);
+    const client = bareClient(session.pid);
+    (client as any).applySnapshot(snap);
+    expect(client.deedsEarned.size).toBe(0);
+    expect(client.activeTitle).toBeNull();
+    expect(client.renown).toBe(0);
   });
 });
 

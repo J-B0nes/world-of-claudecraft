@@ -890,14 +890,23 @@ describe('active title selection (setActiveTitle)', () => {
     grantDeed(sim.ctx, meta, 'prog_first_steps');
     sim.setActiveTitle('prog_first_steps');
     expect(meta.activeTitle).toBe('prog_veteran');
+    expect(e.title).toBe('prog_veteran');
 
     // earned, but the reward is a border, not a title
     grantDeed(sim.ctx, meta, 'prog_prestige_10');
     sim.setActiveTitle('prog_prestige_10');
     expect(meta.activeTitle).toBe('prog_veteran');
+    expect(e.title).toBe('prog_veteran');
 
     // unknown/deleted id
     sim.setActiveTitle('prog_not_a_deed');
+    expect(meta.activeTitle).toBe('prog_veteran');
+    expect(e.title).toBe('prog_veteran');
+
+    // content drift: EARNED on an older content version but since removed
+    // from DEEDS (the earned-map hit must not bypass the catalog check)
+    meta.deedsEarned.set('zz_removed_by_content_patch', '2025-01-01');
+    sim.setActiveTitle('zz_removed_by_content_patch');
     expect(meta.activeTitle).toBe('prog_veteran');
     expect(e.title).toBe('prog_veteran');
   });
@@ -924,6 +933,25 @@ describe('active title selection (setActiveTitle)', () => {
     const pid = sim2.addPlayer('warrior', 'Loaded', { state });
     expect(sim2.players.get(pid)!.activeTitle).toBe('prog_veteran');
     expect(sim2.entities.get(pid)!.title).toBe('prog_veteran');
+  });
+
+  it('a save written before titles existed (no activeTitle key) loads as untitled', () => {
+    const sim = makeSim();
+    const { meta } = primary(sim);
+    grantDeed(sim.ctx, meta, 'prog_veteran');
+    const state = sim.serializeCharacter(sim.playerId)!;
+    // activeTitle is optional on CharacterState precisely so old saves load;
+    // the serializer also omits it when null, and this pins that both forms
+    // (absent key, never-set) land untitled
+    const legacy: CharacterState = { ...state };
+    delete legacy.activeTitle;
+
+    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const pid = sim2.addPlayer('warrior', 'Legacy', { state: legacy });
+    expect(sim2.players.get(pid)!.activeTitle).toBeNull();
+    expect(sim2.entities.get(pid)!.title).toBeNull();
+    // the earned record itself still loads
+    expect(sim2.players.get(pid)!.deedsEarned.has('prog_veteran')).toBe(true);
   });
 
   it('a stale saved title (earned record lost) loads as untitled instead of dangling', () => {
