@@ -4697,6 +4697,7 @@ export const nl_NL: EnTranslations = {
       "offGlobalCooldown": "Buiten de globale afkoeltijd",
       "friendlyTarget": "Vriendelijk doelwit",
       "enemyTarget": "Vijandig doelwit",
+      "selfOnly": "Self only",
       "damageRange": "{min} tot {max}",
       "finisherDamage": "{base} plus {perCombo} per combopunt"
     },

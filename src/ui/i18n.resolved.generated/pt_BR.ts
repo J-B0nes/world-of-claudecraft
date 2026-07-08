@@ -4697,6 +4697,7 @@ export const pt_BR: EnTranslations = {
       "offGlobalCooldown": "Fora da recarga global",
       "friendlyTarget": "Alvo aliado",
       "enemyTarget": "Alvo inimigo",
+      "selfOnly": "Self only",
       "damageRange": "{min} a {max}",
       "finisherDamage": "{base} mais {perCombo} por ponto de combo"
     },

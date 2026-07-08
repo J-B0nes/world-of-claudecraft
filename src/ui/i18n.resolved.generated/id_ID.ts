@@ -4697,6 +4697,7 @@ export const id_ID: EnTranslations = {
       "offGlobalCooldown": "Di luar jeda global",
       "friendlyTarget": "Target kawan",
       "enemyTarget": "Target musuh",
+      "selfOnly": "Self only",
       "damageRange": "{min} hingga {max}",
       "finisherDamage": "{base} ditambah {perCombo} per poin kombo"
     },

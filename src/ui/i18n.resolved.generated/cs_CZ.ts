@@ -4697,6 +4697,7 @@ export const cs_CZ: EnTranslations = {
       "offGlobalCooldown": "Mimo globální dobu obnovy",
       "friendlyTarget": "Přátelský cíl",
       "enemyTarget": "Nepřátelský cíl",
+      "selfOnly": "Self only",
       "damageRange": "{min} až {max}",
       "finisherDamage": "{base} plus {perCombo} za combo bod"
     },

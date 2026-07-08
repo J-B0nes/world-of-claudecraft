@@ -10,6 +10,7 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -55,6 +56,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "es_ES": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -100,6 +102,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "fr_FR": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -145,6 +148,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "fr_CA": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -191,6 +195,7 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "en_CA": [],
   "it_IT": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -236,6 +241,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "de_DE": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -293,6 +299,7 @@ export const pending: Record<string, readonly string[]> = {
     "entities.mobs.yumi_cat.name"
   ],
   "pt_BR": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -341,6 +348,7 @@ export const pending: Record<string, readonly string[]> = {
     "entities.mobs.yumi_cat.name"
   ],
   "cs_CZ": [
+    "abilityUi.tooltip.selfOnly",
     "entities.items.arcanite_bar.name",
     "entities.items.ashwood_log.name",
     "entities.items.elderwood_log.name",
@@ -391,6 +399,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "nl_NL": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -436,6 +445,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "pl_PL": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -481,6 +491,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "id_ID": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -526,6 +537,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "tr_TR": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -571,6 +583,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "sv_SE": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -616,6 +629,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "vi_VN": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
@@ -661,6 +675,7 @@ export const pending: Record<string, readonly string[]> = {
     "yumi.respawn.title"
   ],
   "da_DK": [
+    "abilityUi.tooltip.selfOnly",
     "entities.abilities.sunder_armor.description",
     "entities.mobs.training_dummy.name",
     "entities.mobs.yumi_cat.name",
