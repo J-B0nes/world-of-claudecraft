@@ -81,6 +81,39 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     expect(DEEDS.prog_tools_of_the_trade.renown).toBe(10);
     expect(DEEDS.dgn_nythraxis_crypt.renown).toBe(10);
     expect(DEEDS.chr_marsh_first_cast.renown).toBe(5);
+    // Full trigger literals: the evaluator's .every() is proven elsewhere, but
+    // only a literal pin catches a quest id quietly dropped from a chain list.
+    expect(DEEDS.prog_crown_below.trigger).toEqual({
+      kind: 'quests',
+      questIds: [
+        'q_nythraxis_restless_dead',
+        'q_nythraxis_graves',
+        'q_nythraxis_sealed_crypt',
+        'q_nythraxis_bound_guardian',
+        'q_nythraxis_scourges_end',
+      ],
+    });
+    expect(DEEDS.prog_mere_at_rest.trigger).toEqual({
+      kind: 'quests',
+      questIds: ['q_drowned_choir', 'q_palecoil', 'q_silence_the_choir', 'q_drowned_moon'],
+    });
+    expect(DEEDS.prog_callused_hands.trigger).toEqual({
+      kind: 'quest',
+      questId: 'q_prof_intro',
+    });
+    expect(DEEDS.prog_tools_of_the_trade.trigger).toEqual({
+      kind: 'stat',
+      stat: 'hubCraftsPerformed',
+      count: 1,
+    });
+    expect(DEEDS.dgn_nythraxis_crypt.trigger).toEqual({
+      kind: 'quest',
+      questId: 'q_nythraxis_sealed_crypt',
+    });
+    expect(DEEDS.chr_marsh_first_cast.trigger).toEqual({
+      kind: 'visit',
+      markId: 'fish:mirefen_marsh',
+    });
   });
 
   it('ships exactly 19 titles and 3 borders', () => {
