@@ -564,7 +564,6 @@ export const ZONE1_NPCS: Record<string, NpcDef> = {
       'gathering_sickle',
       'bronze_sickle',
       'silverleaf_sickle',
-      'simple_fishing_pole',
     ],
     greeting: 'Fresh bread, clean water, fair prices. What can I get you?',
   },

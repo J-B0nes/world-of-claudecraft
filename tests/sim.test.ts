@@ -1086,10 +1086,11 @@ describe('food, drink, vendor', () => {
     expect(sim.copper).toBe(80);
   });
 
-  it('a general vendor in each of zone 1, 2, and 3 also sells a simple fishing pole', () => {
-    for (const templateId of ['trader_wilkes', 'provisioner_hale', 'quartermaster_bree']) {
+  it('a general vendor in each of zone 2 and 3 also sells a simple fishing pole', () => {
+    for (const templateId of ['provisioner_hale', 'quartermaster_bree']) {
       expect(NPCS[templateId].vendorItems).toContain('simple_fishing_pole');
     }
+    expect(NPCS.trader_wilkes.vendorItems).not.toContain('simple_fishing_pole');
   });
 
   it('rejects fishing away from fishable water', () => {
