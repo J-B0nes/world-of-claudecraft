@@ -93,7 +93,13 @@ function isShamanShock(abilityId: string): boolean {
 }
 
 export function updateCasting(ctx: SimContext, p: Entity, meta: PlayerMeta): void {
-  if (!p.castingAbility) return;
+  if (!p.castingAbility) {
+    // a queued press held back by a still-running GCD (see fireQueuedCast) retries
+    // here every tick until the GCD clears, instead of being dropped once at the
+    // moment the cast that queued it completed.
+    if (p.queuedCastAbility) fireQueuedCast(ctx, p);
+    return;
+  }
   if (isStunned(p)) {
     cancelCast(ctx, p);
     return;
@@ -160,11 +166,16 @@ export function updateCasting(ctx: SimContext, p: Entity, meta: PlayerMeta): voi
   }
 }
 
-// Consumes the single-slot spell queue (see CAST_QUEUE_WINDOW_SEC) on cast
-// completion, firing the queued ability exactly as a fresh castAbility press.
+// Consumes the single-slot spell queue (see CAST_QUEUE_WINDOW_SEC), firing the
+// queued ability exactly as a fresh castAbility press. A cast shorter than the
+// flat GCD (the common hasted case) can complete before the GCD armed at its
+// start clears: hold the slot in that case and let updateCasting retry every
+// tick until the GCD is gone, instead of dropping the press.
 function fireQueuedCast(ctx: SimContext, p: Entity): void {
   const queued = p.queuedCastAbility;
   if (!queued) return;
+  const res = ctx.resolvedAbility(queued, p.id);
+  if (res && !res.def.offGcd && p.gcdRemaining > 0) return;
   const aim = p.queuedCastAim;
   p.queuedCastAbility = null;
   p.queuedCastAim = null;
@@ -250,8 +261,9 @@ export function castAbility(
     return;
   }
   // note: a queued press fires here, re-running the full castAbility gate set
-  // (including this GCD check). A cast shorter than the GCD can complete while
-  // the GCD is still running, silently dropping the queued press with no error.
+  // (including this GCD check). fireQueuedCast holds the slot instead of calling
+  // in when the GCD is still running, so this early return only fires for a
+  // same-tick player press racing the GCD, not for a queued follow-up.
   if (!ability.offGcd && p.gcdRemaining > 0) return; // silent, classic spams this
   const togglingOff = isToggleBuff(ability) && p.auras.some((a) => a.id === ability.id);
   const sharedCooldown = isShamanShock(ability.id)

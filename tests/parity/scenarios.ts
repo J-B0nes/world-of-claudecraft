@@ -26,6 +26,7 @@ import { Sim } from '../../src/sim/sim';
 import { addThreat } from '../../src/sim/threat';
 import {
   type Aura,
+  CAST_QUEUE_WINDOW_SEC,
   DT,
   dist2d,
   type Entity,
@@ -3049,9 +3050,20 @@ function c4aCastingLifecycle(): Scenario {
       // --- mage: spell queue (#1360): a press in the cast tail queues, fires on completion ---
       eMage.resource = eMage.maxResource;
       face(eMage, mob);
-      sim.castAbility('fireball', mage); // second timed-cast START (fresh 2.5s, no pushback)
-      rec.tick(43); // drain into the tail: 2.5 - 43*0.05 = 0.35s remaining, inside the 0.4s window
+      sim.castAbility('fireball', mage); // second timed-cast START (fresh cast, no pushback)
+      // drain to inside the queue window: tick one at a time (cast time varies by rank/level,
+      // so a hardcoded tick count would silently drift outside the window) until castRemaining
+      // is within CAST_QUEUE_WINDOW_SEC but the cast has not yet completed.
+      while (eMage.castRemaining > CAST_QUEUE_WINDOW_SEC) rec.tick(1);
+      if (!(eMage.castingAbility && eMage.castRemaining > 0)) {
+        throw new Error(
+          'c4a_casting_lifecycle: fireball cast completed before entering the queue window',
+        );
+      }
       sim.castAbility('fireball', mage); // queues instead of erroring "You are busy."
+      if (eMage.queuedCastAbility !== 'fireball') {
+        throw new Error('c4a_casting_lifecycle: press inside the queue window did not queue');
+      }
       rec.snapshot('mage-queued');
       rec.tick(20); // finishes the in-flight cast (fires the queued one) and lets it progress
 
