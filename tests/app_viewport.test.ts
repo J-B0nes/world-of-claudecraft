@@ -73,7 +73,7 @@ describe('syncAppViewport', () => {
     expect(props['--app-vh']).toBe('905px');
   });
 
-  it('uses the visible viewport for portrait touch gameplay so Safari chrome does not cover controls', () => {
+  it('uses the visible viewport for the portrait rotate prompt so Safari chrome does not cover it', () => {
     const { win, props } = fakeWin({
       innerWidth: 390,
       innerHeight: 844,

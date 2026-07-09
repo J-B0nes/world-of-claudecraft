@@ -301,10 +301,13 @@ class FakeClassList {
 
 class FakeElement extends EventTarget {
   classList = new FakeClassList();
+  dataset: Record<string, string> = {};
   style: {
     transform: string;
     left: string;
     top: string;
+    right: string;
+    bottom: string;
     display: string;
     overflowY: string;
     height: string;
@@ -312,6 +315,8 @@ class FakeElement extends EventTarget {
     transform: '',
     left: '',
     top: '',
+    right: '',
+    bottom: '',
     display: '',
     overflowY: '',
     height: '',
@@ -390,6 +395,8 @@ function installMobileControlDom(): {
   moveJoystick: FakeElement;
   cameraJoystick: FakeElement;
   jumpButton: FakeElement;
+  moreButton: FakeElement;
+  moreModal: FakeElement;
   emoteButton: FakeElement;
   discordButton: FakeElement;
   donateButton: FakeElement;
@@ -410,6 +417,8 @@ function installMobileControlDom(): {
     ['mobile-camera-joystick', new FakeElement()],
     ['mobile-camera-stick', new FakeElement()],
     ['mobile-jump', new FakeElement()],
+    ['mobile-more', new FakeElement()],
+    ['mobile-extra-controls', new FakeElement()],
     ['mobile-emote', new FakeElement()],
     ['mobile-discord', new FakeElement()],
     ['mobile-donate', new FakeElement()],
@@ -423,7 +432,10 @@ function installMobileControlDom(): {
     matchMedia(query: string): FakeMediaQueryList;
   };
   windowTarget.matchMedia = () => new FakeMediaQueryList();
-
+  Object.defineProperties(windowTarget, {
+    innerWidth: { value: 390, configurable: true },
+    innerHeight: { value: 844, configurable: true },
+  });
   const documentFake = documentTarget as EventTarget & {
     body: FakeElement;
     visibilityState: DocumentVisibilityState;
@@ -442,6 +454,8 @@ function installMobileControlDom(): {
     moveJoystick: elements.get('mobile-move-joystick')!,
     cameraJoystick: elements.get('mobile-camera-joystick')!,
     jumpButton: elements.get('mobile-jump')!,
+    moreButton: elements.get('mobile-more')!,
+    moreModal: elements.get('mobile-extra-controls')!,
     emoteButton: elements.get('mobile-emote')!,
     discordButton: elements.get('mobile-discord')!,
     donateButton: elements.get('mobile-donate')!,
@@ -952,6 +966,25 @@ describe('MobileControls pointer lifecycle', () => {
     );
 
     expect(document.body.classList.contains('mobile-more-open')).toBe(false);
+  });
+
+  it('keeps the More drawer centered when opened', () => {
+    const { moreButton, moreModal } = installMobileControlDom();
+    const input = {
+      setTouchMove: () => {},
+      clearTouchMove: () => {},
+      setTouchLook: () => {},
+      setTouchLookVector: () => {},
+    } as unknown as Input;
+    new MobileControls(input, mobileCallbacks()).start();
+
+    moreButton.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+
+    expect(moreModal.style.left).toBe('50%');
+    expect(moreModal.style.top).toBe('50%');
+    expect(moreModal.style.right).toBe('auto');
+    expect(moreModal.style.bottom).toBe('auto');
+    expect(moreModal.style.transform).toBe('translate(-50%, -50%)');
   });
 
   it('fires the Jump callback immediately on pointerdown without double-firing the generated click', () => {

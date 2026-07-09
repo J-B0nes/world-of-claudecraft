@@ -19,7 +19,7 @@ describe('mobile window layout CSS', () => {
     );
   });
 
-  it('does not keep the old portrait-hostile 100vw minus 170px window width', () => {
+  it('does not keep the old cramped mobile 100vw minus 170px window width', () => {
     expect(mobileCss).not.toContain('calc(100vw - 170px)');
     expect(mobileCss).toContain(
       'width: min(430px, calc(var(--app-vw) / var(--ui-scale, 1) - 20px));',
@@ -38,18 +38,7 @@ describe('mobile window layout CSS', () => {
     );
   });
 
-  it('stacks vendor and bank companion windows vertically in portrait', () => {
-    const portraitAt = mobileCss.indexOf('@media (orientation: portrait)');
-    expect(portraitAt).toBeGreaterThan(0);
-    const portraitCss = mobileCss.slice(portraitAt);
-    expect(portraitCss).toContain('--mobile-window-stack-pane-height');
-    expect(portraitCss).toContain('body.mobile-touch.vendor-open #vendor-window');
-    expect(portraitCss).toContain('body.mobile-touch.bank-open #bank-window');
-    expect(portraitCss).toContain('body.mobile-touch.vendor-open #bags');
-    expect(portraitCss).toContain('body.mobile-touch.bank-open #bags');
-  });
-
-  it('sizes the portrait map from the app viewport so zoom controls do not dominate it', () => {
+  it('sizes the mobile map from the app viewport so zoom controls do not dominate it', () => {
     const start = mobileCss.indexOf('body.mobile-touch #map-window {');
     expect(start).toBeGreaterThan(0);
     const block = mobileCss.slice(start, mobileCss.indexOf('}', start));

@@ -51,7 +51,9 @@
     pointer-events: none !important;
   }
   body.mobile-touch.game-active:not(.mobile-more-open) #mobile-extra-controls {
-    display: none !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
   body.mobile-touch #game-canvas {
     touch-action: none;
@@ -421,6 +423,12 @@
   body.mobile-touch #mobile-more {
     position: static;
     z-index: 19;
+  }
+  body.mobile-touch #mobile-more .ui-icon {
+    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  body.mobile-touch.mobile-more-open #mobile-more .ui-icon {
+    transform: rotate(38deg);
   }
   body.mobile-touch .mobile-btn:active {
     transform: translateY(1px);
@@ -1054,11 +1062,16 @@
     left: 50%;
     top: 50%;
     bottom: auto;
-    transform: translate(-50%, -50%);
-    display: none;
+    --mobile-more-open-transform: translate(-50%, -50%);
+    --mobile-more-closed-transform: translate(-50%, -46%) scale(0.96);
+    transform: var(--mobile-more-closed-transform);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
     width: min(440px, calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)));
     --window-pad: 10px;
-    pointer-events: auto;
+    pointer-events: none;
     z-index: 100;
     border: 1px solid var(--mobile-glass-border);
     border-radius: 10px;
@@ -1079,10 +1092,27 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    will-change: transform, opacity;
+    transition:
+      opacity 150ms ease,
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s linear 180ms;
   }
   body.mobile-touch.mobile-more-open #mobile-extra-controls {
-    display: flex;
-    flex-direction: column;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: var(--mobile-more-open-transform);
+    transition:
+      opacity 150ms ease,
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.mobile-touch #mobile-extra-controls,
+    body.mobile-touch #mobile-more .ui-icon {
+      transition: none;
+    }
   }
   body.mobile-touch #mobile-extra-controls .panel-title {
     /* 48px, not the old 32px: the close button is a 40x40 absolute-pinned touch
@@ -2795,64 +2825,6 @@
   body.mobile-touch.bank-open #bags .bag-chip {
     flex: 0 0 auto;
   }
-  @media (orientation: portrait) {
-    body.mobile-touch.vendor-open,
-    body.mobile-touch.bank-open {
-      --mobile-window-stack-gap: 8px;
-      --mobile-window-stack-top: max(10px, env(safe-area-inset-top));
-      --mobile-window-stack-bottom: max(10px, env(safe-area-inset-bottom));
-      --mobile-window-stack-pane-height: calc(
-        (
-          var(--app-vh) /
-          var(--ui-scale, 1) -
-          var(--mobile-window-stack-top) -
-          var(--mobile-window-stack-bottom) -
-          var(--mobile-window-stack-gap)
-        ) /
-        2
-      );
-    }
-    body.mobile-touch.vendor-open #vendor-window,
-    body.mobile-touch.vendor-open #bags,
-    body.mobile-touch.bank-open #bank-window,
-    body.mobile-touch.bank-open #bags {
-      left: max(10px, env(safe-area-inset-left));
-      right: max(10px, env(safe-area-inset-right));
-      width: auto;
-      max-width: none;
-      transform: none;
-      box-sizing: border-box;
-      z-index: 95;
-      border-radius: 5px;
-    }
-    body.mobile-touch.vendor-open #vendor-window,
-    body.mobile-touch.bank-open #bank-window {
-      top: var(--mobile-window-stack-top);
-      bottom: auto;
-      height: var(--mobile-window-stack-pane-height);
-      max-height: none;
-      border-right-width: 2px;
-    }
-    body.mobile-touch.vendor-open #vendor-window {
-      overflow-y: auto;
-    }
-    body.mobile-touch.bank-open #bank-window {
-      overflow: hidden;
-    }
-    body.mobile-touch.vendor-open #bags,
-    body.mobile-touch.bank-open #bags {
-      top: calc(
-        var(--mobile-window-stack-top) +
-        var(--mobile-window-stack-pane-height) +
-        var(--mobile-window-stack-gap)
-      );
-      bottom: var(--mobile-window-stack-bottom);
-      height: auto;
-      max-height: none;
-      overflow: hidden;
-      border-left: 2px solid var(--border);
-    }
-  }
   /* Short landscape phones: the 50/50 pairing box (viewport minus the 10px top
      inset and the 72px tray reservation) cannot hold the full-toolbar chrome, the
      two-row grid floor (components.css .bank-scroll), AND the buy row, so the buy
@@ -3458,33 +3430,6 @@
     line-height: 1.45;
   }
 
-  @media (orientation: portrait) {
-    body.mobile-touch #mobile-combat-controls {
-      /* Portrait resets JUST this trio back to btn-scale only (no chrome-scale): its
-         42x44 buttons already sit on the 40px floor, so the 0.85 shrink would drop
-         them under it. The rest of the chrome still scales via the token in portrait;
-         web in-game is landscape-locked regardless, so the trio never actually renders
-         portrait in play. */
-      transform: scale(var(--btn-scale, 1));
-      grid-template-columns: repeat(5, 42px);
-      gap: 6px;
-    }
-    body.mobile-touch .mobile-btn {
-      width: 42px;
-      height: 44px;
-      font-size: 16px;
-    }
-    /* Portrait bar is 5x42px + 4x6px gaps = 234px wide (native app: web
-       gameplay is landscape-locked); shrink the chip to the 44px button
-       height and re-dock it past the narrower bar. */
-    body.mobile-touch #mobile-consumables {
-      left: calc(max(12px, env(safe-area-inset-left)) + 234px * var(--btn-scale, 1) + 8px);
-    }
-    body.mobile-touch #mobile-consumables-toggle {
-      height: 44px;
-    }
-  }
-
   @media (orientation: landscape) {
     body.mobile-touch[data-start-panel="mode-select"] #homepage-views-container {
       align-items: center;
@@ -3658,6 +3603,8 @@
     }
     body.mobile-touch #mobile-extra-controls {
       left: 50%;
+      --mobile-more-open-transform: translateX(-50%);
+      --mobile-more-closed-transform: translate(-50%, 10px) scale(0.96);
       /* True vertical centering (the base rule's top:50%/translate(-50%,-50%))
          let this 4-row, 16-pill grid grow tall enough on a short landscape
          viewport to overlap the fixed bottom control row (Autorun/Jump/combat
@@ -3674,7 +3621,7 @@
          landscape position here is correct regardless. */
       top: max(8px, env(safe-area-inset-top)) !important;
       bottom: auto !important;
-      transform: translateX(-50%) !important;
+      transform: var(--mobile-more-closed-transform) !important;
       --window-pad: 8px;
       /* No --ui-scale division: body-level window outside the zoomed #ui.
          120px clears the bottom control row (Autorun/Jump/combat cluster +
@@ -3686,6 +3633,9 @@
         env(safe-area-inset-top) -
         env(safe-area-inset-bottom)
       );
+    }
+    body.mobile-touch.mobile-more-open #mobile-extra-controls {
+      transform: var(--mobile-more-open-transform) !important;
     }
     body.mobile-touch #mobile-extra-grid {
       /* 4 columns in landscape too (issue 1577 round 2 (4)), matching the base
