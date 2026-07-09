@@ -27,12 +27,15 @@ import type * as http from 'node:http';
 import {
   LEADERBOARD_MAX,
   LEADERBOARD_PAGE_SIZE,
+  paginateDeedsLeaderboard,
   paginateDevLeaderboard,
   paginateGuildLeaderboard,
   paginateLeaderboard,
 } from '../src/sim/leaderboard_page';
 import type { ArenaFormat } from '../src/sim/types';
 import type {
+  DeedsLeaderboardEntry,
+  DeedsLeaderboardSelf,
   DevLeaderboardEntry,
   GuildLeaderboardEntry,
   LeaderboardEntry,
@@ -78,6 +81,8 @@ const LEADERBOARD_SCOPE_GLOBAL = 'global';
 const LEADERBOARD_GUILD_BOARD = 'guilds';
 /** The ?board value that selects the open-source contributor (developer) board. */
 const LEADERBOARD_DEV_BOARD = 'devs';
+/** The ?board value that selects the Renown (deeds) board. */
+const LEADERBOARD_DEEDS_BOARD = 'deeds';
 /** Upper bound for the legacy ?limit=N single-page board (mirrors LEADERBOARD_MAX). */
 export const LEADERBOARD_LEGACY_LIMIT_MAX = LEADERBOARD_MAX;
 /** How many arena ranks the public ladder returns (mirrors the legacy fixed arg). */
@@ -127,6 +132,11 @@ export interface LeaderboardRuntime {
   getGuildLeaderboard(scope: LeaderboardScope): Promise<GuildLeaderboardEntry[]>;
   /** Cache-fronted contributor (developer) leaderboard read (main.ts topContributors). */
   getDevLeaderboard(): Promise<DevLeaderboardEntry[]>;
+  /** Cache-fronted Renown (deeds) board read (main.ts getDeedsLeaderboard):
+   *  the FULL pre-cap public entry list; the handler pages it. */
+  getDeedsLeaderboard(): Promise<DeedsLeaderboardEntry[]>;
+  /** The caller's Renown-board standing off the same cache, null when unranked. */
+  deedsSelfRank(accountId: number): Promise<DeedsLeaderboardSelf | null>;
   /** Cache-fronted GitHub releases proxy read (main.ts getReleases). */
   getReleases(): Promise<ReleaseEntry[]>;
   /** The repo slug the releases feed reports (main.ts GITHUB_REPO). */
@@ -258,6 +268,31 @@ export function buildGuildBoard(
 ): unknown {
   const slice = paginateGuildLeaderboard(entries as GuildLeaderboardEntry[], page, pageSize);
   return { realm, scope, board: 'guilds', metric: 'guildLifetimeXp', ...slice };
+}
+
+/**
+ * The Renown (deeds) board body: its own golden case. Account-level and
+ * therefore GLOBAL-ONLY (Renown counts each deed once per ACCOUNT and accounts
+ * span realms, so a realm scope is not well defined): the body always carries
+ * scope 'global' whatever ?scope said. `self` rides only when the route
+ * resolved an authenticated caller who is on the board.
+ */
+export function buildDeedsBoard(
+  realm: string,
+  entries: readonly DeedsLeaderboardEntry[],
+  page: number,
+  pageSize: number,
+  self: DeedsLeaderboardSelf | null,
+): unknown {
+  const slice = paginateDeedsLeaderboard(entries as DeedsLeaderboardEntry[], page, pageSize);
+  return {
+    realm,
+    scope: LEADERBOARD_SCOPE_GLOBAL,
+    board: 'deeds',
+    metric: 'renown',
+    ...slice,
+    ...(self ? { self } : {}),
+  };
 }
 
 /** The contributor (developer) board body: the dev-metric slice, its own golden case. */
@@ -453,6 +488,26 @@ async function leaderboardHandler(ctx: Ctx): Promise<void> {
     const page = decodePage(firstQueryValue(ctx.query.page));
     const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
     json(ctx.res, 200, buildDevBoard(REALM, scope, entries, page, pageSize));
+    return;
+  }
+  // The Renown (deeds) board fork. GLOBAL-ONLY like the dev board is
+  // realm-agnostic: the decoder stays lenient (?scope is accepted and ignored)
+  // and buildDeedsBoard fixes scope 'global'. Auth is OPTIONAL and composed
+  // IN-HANDLER, never as route middleware: mounting optionalReadAccount on the
+  // shared route would newly 401 present-but-invalid tokens on the existing
+  // boards, breaking their parity. Here an anonymous caller gets the board
+  // with no self row; a present token is validated per module convention
+  // (invalid -> 401 auth.token_invalid, locked -> 403) and a ranked caller
+  // gets their self row. The legacy main.ts arm serves the same body with the
+  // lenient legacy bearer shape (the authz-gap-close divergence class).
+  if (firstQueryValue(ctx.query.board) === LEADERBOARD_DEEDS_BOARD) {
+    await optionalReadAccount(ctx, async () => {
+      const entries = await rt.getDeedsLeaderboard();
+      const page = decodePage(firstQueryValue(ctx.query.page));
+      const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
+      const self = ctx.account ? await rt.deedsSelfRank(ctx.account.accountId) : null;
+      json(ctx.res, 200, buildDeedsBoard(REALM, entries, page, pageSize, self));
+    });
     return;
   }
   const entries = await rt.getLeaderboard(scope);

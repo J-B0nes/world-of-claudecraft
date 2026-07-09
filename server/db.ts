@@ -65,6 +65,15 @@ export const pool = new Pool({ connectionString: DATABASE_URL, max: DB_POOL_MAX_
 const REALM_SQL_DEFAULT = REALM.replace(/'/g, "''");
 const LIFETIME_XP_EXPR = "((state->>'lifetimeXp')::bigint)";
 
+// The one eligibility predicate every public board query embeds VERBATIM (via
+// a JOIN or EXISTS over `accounts a`): banned and currently-suspended accounts
+// are delisted from every player-derived board, and an expired suspension
+// relists on its own. Exported so the board queries here, the daily-rewards
+// board reads (daily_rewards_db.ts), and the moderation guard test all bind to
+// the same fragment. Static text, never interpolated with user input.
+export const ELIGIBLE_ACCOUNT_SQL =
+  'a.banned_at IS NULL AND (a.suspended_until IS NULL OR a.suspended_until <= now())';
+
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS accounts (
   id SERIAL PRIMARY KEY,
@@ -674,8 +683,10 @@ CREATE TABLE IF NOT EXISTS character_deeds (
   UNIQUE (character_id, deed_id)
 );
 CREATE INDEX IF NOT EXISTS character_deeds_deed ON character_deeds(deed_id);
--- Forward-placed for the account-Renown roll-up the leaderboard read will
--- issue; no query consumes it yet.
+-- Forward-placed for a filtered account roll-up. The Renown board's
+-- deedsBoardRows read landed as a full-table aggregation (cached in main.ts),
+-- so no query consumes this index yet; kept for the per-account reads a
+-- future account page will issue.
 CREATE INDEX IF NOT EXISTS character_deeds_account ON character_deeds(account_id);
 CREATE INDEX IF NOT EXISTS character_deeds_character_earned
   ON character_deeds(character_id, earned_at DESC);
@@ -2213,6 +2224,8 @@ export async function topArenaRatings(
       WHERE realm = $1
         AND state IS NOT NULL
         AND ${winsExpr} + ${lossesExpr} > 0
+        AND EXISTS (SELECT 1 FROM accounts a
+                     WHERE a.id = characters.account_id AND ${ELIGIBLE_ACCOUNT_SQL})
       ORDER BY rating DESC, wins DESC, name ASC
       LIMIT $2`,
     [REALM, Math.max(1, Math.min(100, limit))],
@@ -2261,6 +2274,8 @@ export async function topLifetimeXp(
            FROM characters
           WHERE state IS NOT NULL
             AND COALESCE((state->>'lifetimeXp')::bigint, 0) > 0
+            AND EXISTS (SELECT 1 FROM accounts a
+                         WHERE a.id = characters.account_id AND ${ELIGIBLE_ACCOUNT_SQL})
           ORDER BY lifetime_xp DESC, level DESC, name ASC
           LIMIT $1`,
         [cap],
@@ -2272,6 +2287,8 @@ export async function topLifetimeXp(
            FROM characters
           WHERE realm = $1 AND state IS NOT NULL
             AND COALESCE((state->>'lifetimeXp')::bigint, 0) > 0
+            AND EXISTS (SELECT 1 FROM accounts a
+                         WHERE a.id = characters.account_id AND ${ELIGIBLE_ACCOUNT_SQL})
           ORDER BY lifetime_xp DESC, level DESC, name ASC
           LIMIT $2`,
         [REALM, cap],
@@ -2313,9 +2330,15 @@ export async function topGuilds(
                 COUNT(gm.character_id)                                AS member_count,
                 COALESCE(SUM(COALESCE((c.state->>'lifetimeXp')::bigint, 0)), 0) AS total_lifetime_xp,
                 COALESCE(MAX(COALESCE((c.state->>'level')::int, 0)), 0)         AS top_level`;
+  // The eligibility predicate applies to the MEMBER characters inside the SUM:
+  // a banned or suspended member's XP stops inflating the guild score (and its
+  // seat leaves member_count) without delisting the whole guild. A guild whose
+  // every member is ineligible drops off the board like any empty guild.
   const fromJoin = `FROM guilds g
            JOIN guild_members gm ON gm.guild_id = g.id
-           JOIN characters c ON c.id = gm.character_id`;
+           JOIN characters c ON c.id = gm.character_id
+            AND EXISTS (SELECT 1 FROM accounts a
+                         WHERE a.id = c.account_id AND ${ELIGIBLE_ACCOUNT_SQL})`;
   const groupOrder = `GROUP BY g.id, g.name, g.realm
           ORDER BY total_lifetime_xp DESC, member_count DESC, g.name ASC`;
   const res = opts.global
@@ -2341,6 +2364,78 @@ export async function topGuilds(
     memberCount: Number(r.member_count),
     totalLifetimeXp: Number(r.total_lifetime_xp),
     topLevel: Number(r.top_level),
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Renown board reads (the account-level deeds leaderboard). The scoring is
+// pure JS (server/deeds_board.ts) over the raw rows; Renown values come from
+// the in-memory content table, never SQL. Both reads are cache-fronted in
+// main.ts, never run per request under load.
+// ---------------------------------------------------------------------------
+
+/** One character_deeds row for the Renown roll-up (deeds_board.ts input). */
+export interface DeedsBoardRow {
+  accountId: number;
+  characterId: number;
+  deedId: string;
+  earnedAt: Date | string;
+}
+
+// The full earned-deed row set for eligible accounts, cross-realm (the board
+// is account-level and accounts span realms, so it has exactly one global
+// scope). Deliberately no LIMIT: the aggregation needs the complete set, the
+// table is tiny at current scale, and the result is cached behind the board
+// TTL. If character_deeds ever outgrows memory the aggregation moves into
+// SQL; it must never become a capacity cap that can drop legitimate accounts.
+export async function deedsBoardRows(): Promise<DeedsBoardRow[]> {
+  const res = await pool.query(
+    `SELECT cd.account_id, cd.character_id, cd.deed_id, cd.earned_at
+       FROM character_deeds cd
+       JOIN characters c ON c.id = cd.character_id
+       JOIN accounts a ON a.id = cd.account_id
+      WHERE ${ELIGIBLE_ACCOUNT_SQL}`,
+  );
+  return res.rows.map((r) => ({
+    accountId: Number(r.account_id),
+    characterId: Number(r.character_id),
+    deedId: String(r.deed_id),
+    earnedAt: r.earned_at,
+  }));
+}
+
+/** The display-character fill for ranked accounts: name, realm, class, level,
+ *  and the selected title (a deed id the client localizes; never English). */
+export interface DeedsBoardCharacterRow {
+  id: number;
+  name: string;
+  class: PlayerClass;
+  level: number;
+  realm: string;
+  activeTitle: string | null;
+}
+
+// One IN query for the board's display characters. Names/realms are read live
+// at each cache refresh (never persisted in the board), so a rename shows
+// within one board TTL.
+export async function charactersForDeedsBoard(
+  characterIds: readonly number[],
+): Promise<DeedsBoardCharacterRow[]> {
+  if (characterIds.length === 0) return [];
+  const res = await pool.query(
+    `SELECT id, name, class, level, realm, state->>'activeTitle' AS active_title
+       FROM characters
+      WHERE id = ANY($1::int[])`,
+    [characterIds],
+  );
+  return res.rows.map((r) => ({
+    id: Number(r.id),
+    name: r.name,
+    class: r.class,
+    level: Number(r.level),
+    realm: r.realm,
+    activeTitle:
+      typeof r.active_title === 'string' && r.active_title !== '' ? r.active_title : null,
   }));
 }
 

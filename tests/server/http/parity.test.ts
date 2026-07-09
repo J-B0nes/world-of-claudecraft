@@ -139,6 +139,13 @@ const API_REQUEST_CORPUS: readonly ApiRequestSpec[] = [
   // BOTH passes, proving the migrated leaderboardHandler devs fork is byte-identical
   // to the legacy handleApi arm.
   { name: 'leaderboard_devs', method: 'GET', url: '/api/leaderboard?board=devs' },
+  // ?board=deeds (the account-level Renown board): dual-served like the other
+  // boards, so the anonymous shape must stay byte-identical on both dispatch
+  // paths (the shared buildDeedsBoard builder + the same main.ts cache). Only
+  // the present-but-invalid bearer diverges (legacy lenient-anonymous vs the
+  // router-validated 401), the authz-gap-close class, and a token lookup is a
+  // db read so it cannot live in this db-free corpus anyway.
+  { name: 'leaderboard_deeds', method: 'GET', url: '/api/leaderboard?board=deeds' },
   { name: 'leaderboard_scope_global', method: 'GET', url: '/api/leaderboard?scope=global' },
   { name: 'leaderboard_scope_realm', method: 'GET', url: '/api/leaderboard?scope=realm' },
   { name: 'leaderboard_limit5', method: 'GET', url: '/api/leaderboard?limit=5' },

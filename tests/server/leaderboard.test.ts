@@ -20,6 +20,7 @@ import { SHEET_RECENT_DEEDS, type SheetRank } from '../../server/character_sheet
 import type { ArenaLeaderRow, CharacterRow, CharacterSearchRow } from '../../server/db';
 import {
   ARENA_LEADERBOARD_LIMIT,
+  buildDeedsBoard,
   buildDevBoard,
   buildGuildBoard,
   buildLegacyLimitBoard,
@@ -54,6 +55,7 @@ import {
 import { DEEDS } from '../../src/sim/content/deeds';
 import { LEADERBOARD_PAGE_SIZE } from '../../src/sim/leaderboard_page';
 import type {
+  DeedsLeaderboardEntry,
   DevLeaderboardEntry,
   GuildLeaderboardEntry,
   LeaderboardEntry,
@@ -90,6 +92,19 @@ function devRow(rank: number): DevLeaderboardEntry {
   return { rank, login: `dev${rank}`, mergedPrs: 100 - rank, devTier: 5 };
 }
 
+function deedsRow(rank: number): DeedsLeaderboardEntry {
+  return {
+    rank,
+    name: `Chronicler${rank}`,
+    realm: 'Claudemoon',
+    cls: 'warrior' as DeedsLeaderboardEntry['cls'],
+    level: 20,
+    renown: 500 - rank,
+    deedCount: 40 - rank,
+    title: rank === 1 ? 'prog_veteran' : null,
+  };
+}
+
 function arenaRow(name: string): ArenaLeaderRow {
   return { name, class: 'mage', level: 60, rating: 1800, wins: 20, losses: 5 };
 }
@@ -116,6 +131,8 @@ function fakeRuntime(overrides: Partial<LeaderboardRuntime> = {}): LeaderboardRu
     getLeaderboard: async () => [],
     getGuildLeaderboard: async () => [],
     getDevLeaderboard: async () => [],
+    getDeedsLeaderboard: async () => [],
+    deedsSelfRank: async () => null,
     getReleases: async () => [],
     githubRepo: 'levy-street/world-of-claudecraft',
     releasesMaxLimit: 20,
@@ -254,6 +271,37 @@ describe('response builders (convention B deferred: leaders key preserved)', () 
     expect(body.metric).toBe('landedCommits');
     expect(Array.isArray(body.leaders)).toBe(true);
     expect(body.total).toBe(2);
+  });
+
+  it('buildDeedsBoard tags board=deeds, the renown metric, and a FIXED global scope', () => {
+    const body = buildDeedsBoard(REALM_NAME, [deedsRow(1), deedsRow(2)], 0, 50, null) as Record<
+      string,
+      unknown
+    >;
+    expect(body.board).toBe('deeds');
+    expect(body.metric).toBe('renown');
+    // Account-level board: the scope is always 'global', whatever ?scope said.
+    expect(body.scope).toBe('global');
+    expect(body.realm).toBe(REALM_NAME);
+    expect(Array.isArray(body.leaders)).toBe(true);
+    expect(body.total).toBe(2);
+    // No self row for an anonymous or unranked caller: the key is ABSENT, not null.
+    expect('self' in body).toBe(false);
+    // The entry is the public shape: character-faced, never an account id.
+    const first = (body.leaders as Record<string, unknown>[])[0];
+    expect(first.name).toBe('Chronicler1');
+    expect(first.renown).toBe(499);
+    expect(first.deedCount).toBe(39);
+    expect(first.title).toBe('prog_veteran');
+    expect('accountId' in first).toBe(false);
+  });
+
+  it('buildDeedsBoard attaches the self standing when the route resolved one', () => {
+    const body = buildDeedsBoard(REALM_NAME, [deedsRow(1)], 0, 50, {
+      rank: 12,
+      topPercent: 4,
+    }) as Record<string, unknown>;
+    expect(body.self).toEqual({ rank: 12, topPercent: 4 });
   });
 });
 
@@ -546,6 +594,100 @@ describe('leaderboard handler (through the injected cache-fronted runtime)', () 
     await handlerFor('/api/leaderboard')(ctx);
     expect(scopes).toEqual(['global']);
     expect((captured(ctx.res).body as Record<string, unknown>).scope).toBe('global');
+  });
+
+  it('serves the Renown fork anonymously with no self row and no self read', async () => {
+    const selfReads: number[] = [];
+    configureLeaderboardRuntime(
+      fakeRuntime({
+        getDeedsLeaderboard: async () => [deedsRow(1), deedsRow(2)],
+        deedsSelfRank: async (accountId) => {
+          selfReads.push(accountId);
+          return { rank: 1, topPercent: 1 };
+        },
+      }),
+    );
+    const ctx = fakeCtx({ method: 'GET', url: '/api/leaderboard', query: { board: 'deeds' } });
+    await handlerFor('/api/leaderboard')(ctx);
+    const { status, body } = captured(ctx.res);
+    expect(status).toBe(200);
+    const b = body as Record<string, unknown>;
+    expect(b.board).toBe('deeds');
+    expect(b.metric).toBe('renown');
+    expect(b.total).toBe(2);
+    expect('self' in b).toBe(false);
+    // Anonymous callers never trigger the self-rank read at all.
+    expect(selfReads).toEqual([]);
+  });
+
+  it('ignores ?scope on the Renown fork: the body always says global', async () => {
+    configureLeaderboardRuntime(fakeRuntime({ getDeedsLeaderboard: async () => [deedsRow(1)] }));
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/leaderboard',
+      query: { board: 'deeds', scope: 'realm' },
+    });
+    await handlerFor('/api/leaderboard')(ctx);
+    expect((captured(ctx.res).body as Record<string, unknown>).scope).toBe('global');
+  });
+
+  it('serves the self standing to an authenticated ranked caller', async () => {
+    configureLeaderboardRuntime(
+      fakeRuntime({
+        getDeedsLeaderboard: async () => [deedsRow(1)],
+        deedsSelfRank: async (accountId) => (accountId === 77 ? { rank: 12, topPercent: 4 } : null),
+      }),
+    );
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/leaderboard',
+      query: { board: 'deeds' },
+      account: { accountId: 77, scope: 'read' },
+    });
+    await handlerFor('/api/leaderboard')(ctx);
+    const b = captured(ctx.res).body as Record<string, unknown>;
+    expect(b.self).toEqual({ rank: 12, topPercent: 4 });
+  });
+
+  it('serves an authenticated but UNRANKED caller the board with no self key', async () => {
+    configureLeaderboardRuntime(
+      fakeRuntime({
+        getDeedsLeaderboard: async () => [deedsRow(1)],
+        deedsSelfRank: async () => null,
+      }),
+    );
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/leaderboard',
+      query: { board: 'deeds' },
+      account: { accountId: 5, scope: 'read' },
+    });
+    await handlerFor('/api/leaderboard')(ctx);
+    const b = captured(ctx.res).body as Record<string, unknown>;
+    expect(b.board).toBe('deeds');
+    expect('self' in b).toBe(false);
+  });
+
+  it('rejects a malformed bearer on the Renown fork instead of serving it as anonymous', async () => {
+    configureLeaderboardRuntime(fakeRuntime());
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/leaderboard',
+      query: { board: 'deeds' },
+      headers: { authorization: 'Bearer not-a-real-token' },
+    });
+    await expect(handlerFor('/api/leaderboard')(ctx)).rejects.toMatchObject({
+      status: 401,
+      code: 'auth.token_missing',
+    });
+  });
+
+  it('keeps the shared route free of middleware so the existing boards stay anonymous', () => {
+    // The Renown fork composes its optional auth IN-HANDLER; mounting it on the
+    // route would newly reject present-but-invalid tokens on the player, guild,
+    // and dev boards, breaking their legacy parity.
+    const route = routes.find((r) => r.path === '/api/leaderboard');
+    expect(route?.middleware).toBeUndefined();
   });
 });
 

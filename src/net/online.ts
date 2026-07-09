@@ -65,6 +65,7 @@ import {
   type DailyRewardLeaderboardPage,
   type DailyRewardSpinResult,
   type DailyRewardStatus,
+  type DeedsLeaderboardPage,
   type DeedsRarity,
   type DelveCompanionInfo,
   type DelveDailyInfo,
@@ -2715,6 +2716,42 @@ export class ClientWorld implements IWorld {
         pageCount: data.pageCount ?? 1,
         total: data.total ?? data.leaders?.length ?? 0,
         pageSize: data.pageSize ?? pageSize,
+      };
+    } catch {
+      return empty;
+    }
+  }
+
+  // Renown board (REST GET, no wire command): ?board=deeds ranks ACCOUNTS by
+  // lifetime deed Renown, character-faced and global-only. The bearer rides
+  // the read so a ranked caller's `self` standing comes back on the page; any
+  // failure (offline, 401, non-JSON) resolves the empty page like the other
+  // boards, never a throw.
+  async deedsLeaderboard(
+    page = 0,
+    pageSize = LEADERBOARD_PAGE_SIZE,
+  ): Promise<DeedsLeaderboardPage> {
+    const empty: DeedsLeaderboardPage = {
+      leaders: [],
+      page: 0,
+      pageCount: 1,
+      total: 0,
+      pageSize,
+    };
+    try {
+      const res = await fetch(
+        apiUrl(`/api/leaderboard?board=deeds&page=${page}&pageSize=${pageSize}`, this.base),
+        { headers: { Authorization: `Bearer ${this.token}` } },
+      );
+      if (!res.ok) return empty;
+      const data = await res.json();
+      return {
+        leaders: data.leaders ?? [],
+        page: data.page ?? page,
+        pageCount: data.pageCount ?? 1,
+        total: data.total ?? data.leaders?.length ?? 0,
+        pageSize: data.pageSize ?? pageSize,
+        ...(data.self ? { self: data.self } : {}),
       };
     } catch {
       return empty;

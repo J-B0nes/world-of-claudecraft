@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
 import { WebSocketServer } from 'ws';
+import { DEEDS } from '../src/sim/content/deeds';
 import {
   LEADERBOARD_MAX,
   LEADERBOARD_PAGE_SIZE,
@@ -12,7 +13,12 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { virtualLevel } from '../src/sim/types';
-import type { GuildLeaderboardEntry, LeaderboardEntry } from '../src/world_api';
+import type {
+  DeedsLeaderboardEntry,
+  DeedsLeaderboardSelf,
+  GuildLeaderboardEntry,
+  LeaderboardEntry,
+} from '../src/world_api';
 import {
   configureAccountRuntime,
   handleAccount2faDisable,
@@ -60,11 +66,13 @@ import {
   bankBonusFactsForAccount,
   type CharacterRow,
   characterCountsByRealm,
+  charactersForDeedsBoard,
   chatMuteStatusForAccount,
   closeOrphanSessions,
   createAccount,
   createCharacterCapped,
   createCompanionToken,
+  deedsBoardRows,
   deleteCharacter,
   ensureSchema,
   findAccount,
@@ -101,6 +109,12 @@ import {
   touchLogin,
 } from './db';
 import { configureDeedsRuntime } from './deeds';
+import {
+  buildDeedsBoardEntries,
+  computeDeedsBoard,
+  deedsBoardSelf,
+  type RankedDeedsAccount,
+} from './deeds_board';
 import { deedRarityCounts, recentDeedsForCharacter } from './deeds_db';
 import { publicRarityPayload } from './deeds_records';
 import {
@@ -159,7 +173,7 @@ import {
 import { configureInternalRuntime, handleInternalApi } from './internal';
 import { isConnectionRefused } from './ip_block';
 import { pruneExpiredBlockedIps } from './ip_block_db';
-import { configureLeaderboardRuntime, type ReleaseEntry } from './leaderboard';
+import { buildDeedsBoard, configureLeaderboardRuntime, type ReleaseEntry } from './leaderboard';
 import { MAX_MAP_SAVE_BYTES } from './maps';
 import {
   mapDeleteCore,
@@ -176,6 +190,7 @@ import {
   cleanReportReason,
   createPlayerReport,
   createSuspiciousRegistrationReport,
+  setOnAccountModerated,
 } from './moderation_db';
 import { createNativeAttestationChallenge } from './native_attestation';
 import { handleOAuth, seedOAuthClients } from './oauth';
@@ -415,6 +430,83 @@ async function getGuildLeaderboard(scope: 'realm' | 'global'): Promise<GuildLead
     return cached?.entries ?? [];
   }
 }
+
+// Renown (deeds) board cache. Same compute-once/serve-from-memory shape as
+// the boards above, but ONE entry, not one per scope: the board is
+// account-level and accounts span realms, so it is GLOBAL-ONLY by design.
+// `entries` is the public, display-character-faced list (paged by the route;
+// NEVER carries an account id); `ranked` keeps the accountId-keyed ranking
+// INTERNALLY for the self-rank read, and totalRanked is the pre-cap total the
+// percentile uses.
+interface DeedsBoardCache {
+  at: number;
+  entries: DeedsLeaderboardEntry[];
+  ranked: RankedDeedsAccount[];
+  totalRanked: number;
+}
+let deedsBoardCache: DeedsBoardCache | null = null;
+
+async function refreshDeedsBoard(): Promise<DeedsBoardCache> {
+  const board = computeDeedsBoard(await deedsBoardRows(), DEEDS);
+  if (board.unknownDeedIds.length > 0) {
+    // Rows for removed/renamed content are skipped, never scored; surface the
+    // ids so a content rename is noticed instead of silently shrinking scores.
+    console.error('deeds board: skipping unknown deed ids:', board.unknownDeedIds.join(', '));
+  }
+  // buildDeedsBoardEntries faces each ranked account with its display
+  // character and SKIPS an account whose character vanished mid-refresh
+  // (deleted between the row read and this fill; the rows cascade away by the
+  // next refresh), never minting a blank row.
+  const entries = buildDeedsBoardEntries(
+    board.ranked,
+    await charactersForDeedsBoard(board.ranked.map((a) => a.displayCharacterId)),
+  );
+  deedsBoardCache = {
+    at: Date.now(),
+    entries,
+    ranked: board.ranked,
+    totalRanked: board.totalRanked,
+  };
+  return deedsBoardCache;
+}
+
+// Freshness gate shared by the two board reads below: serve the cache inside
+// the TTL, else refresh, else stale-serve (or null before the first success).
+async function ensureDeedsBoard(): Promise<DeedsBoardCache | null> {
+  if (deedsBoardCache && Date.now() - deedsBoardCache.at < LEADERBOARD_TTL_MS) {
+    return deedsBoardCache;
+  }
+  try {
+    return await refreshDeedsBoard();
+  } catch (err) {
+    console.error('deeds board refresh failed:', err);
+    return deedsBoardCache;
+  }
+}
+
+async function getDeedsLeaderboard(): Promise<DeedsLeaderboardEntry[]> {
+  return (await ensureDeedsBoard())?.entries ?? [];
+}
+
+async function deedsSelfRank(accountId: number): Promise<DeedsLeaderboardSelf | null> {
+  const cache = await ensureDeedsBoard();
+  return cache ? deedsBoardSelf(cache.ranked, accountId) : null;
+}
+
+// Moderation delisting is immediate, never TTL-bound: null EVERY cached board
+// scope after a successful moderateAccount of any action kind, so a ban
+// delists and an unban relists on the next read. Arena is served uncached by
+// design, and the daily-rewards board reads run per request (the SQL
+// exclusion in daily_rewards_db.ts is the whole mechanism), so neither has a
+// cache to bust here.
+function bustBoardCaches(): void {
+  leaderboardCache.realm = null;
+  leaderboardCache.global = null;
+  guildLeaderboardCache.realm = null;
+  guildLeaderboardCache.global = null;
+  deedsBoardCache = null;
+}
+setOnAccountModerated(bustBoardCaches);
 
 // Deed rarity cache. Same compute-once/serve-from-memory shape as the boards
 // above, one entry (the aggregate is global/cross-realm by design). 5 minutes:
@@ -1453,6 +1545,23 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
           ...devSlice,
         });
       }
+      // ?board=deeds is the Renown board: ACCOUNTS ranked by lifetime deed
+      // Renown, character-faced. GLOBAL-ONLY by design (accounts span realms),
+      // so ?scope is accepted and ignored and the body always carries scope
+      // 'global' (buildDeedsBoard fixes it). The bearer is resolved LENIENTLY
+      // here, the legacy arms' shape (cf. the realms arm): a missing, invalid,
+      // or locked token serves the board anonymously with no self row, while
+      // the router-owned arm validates a present token (the labeled
+      // authz-gap-close divergence class); anonymous and valid-token responses
+      // are byte-identical on both dispatch paths via the shared builder.
+      if (params.get('board') === 'deeds') {
+        const deedsEntries = await getDeedsLeaderboard();
+        const deedsPageSize = Number(params.get('pageSize')) || LEADERBOARD_PAGE_SIZE;
+        const deedsPage = Number(params.get('page')) || 0;
+        const bearer = await bearerScopeAccount(req).catch(() => null);
+        const self = bearer ? await deedsSelfRank(bearer.accountId) : null;
+        return json(res, 200, buildDeedsBoard(REALM, deedsEntries, deedsPage, deedsPageSize, self));
+      }
       const entries = await getLeaderboard(scope);
       // Legacy ?limit=N (home-page board): top N as a single page, no paging UI.
       const limitParam = params.get('limit');
@@ -1886,6 +1995,8 @@ configureLeaderboardRuntime({
   getLeaderboard,
   getGuildLeaderboard,
   getDevLeaderboard: () => topContributors(),
+  getDeedsLeaderboard,
+  deedsSelfRank,
   getReleases,
   // A getter, not a value: configureLeaderboardRuntime runs at module load (before
   // startServer primes the config), but leaderboard.ts reads rt.githubRepo only at
@@ -2338,6 +2449,7 @@ export async function startServer(): Promise<http.Server> {
     void refreshGuildLeaderboard('global').catch((err) =>
       console.error('guild leaderboard refresh failed (global):', err),
     );
+    void refreshDeedsBoard().catch((err) => console.error('deeds board refresh failed:', err));
   };
   warmLeaderboards();
   setInterval(warmLeaderboards, LEADERBOARD_TTL_MS).unref();

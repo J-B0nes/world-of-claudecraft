@@ -42,7 +42,8 @@
 //   bank.ts             IWorldBank           per-character deposit box (proximity-gated info +
 //                                            deposit/withdraw/buy-slots)
 //   vale_cup.ts         IWorldValeCup        Vale Cup boarball queue/roles/betting/practice
-//   deeds.ts            IWorldDeeds          earned deeds, lifetime stats, renown, active title
+//   deeds.ts            IWorldDeeds          earned deeds, lifetime stats, renown, active title,
+//                                            rarity + the account-Renown leaderboard reads
 //
 // THREE GATES pin this seam (run before any facet edit; the literal counts are
 // pinned THERE and re-stale here, so this prose stays count-free):
@@ -84,6 +85,7 @@ import type { IWorldValeCup } from './world_api/vale_cup';
 
 // --- pass-through sim re-exports: downstream imports these FROM world_api ---
 export type {
+  DeedsLeaderboardPage,
   DevLeaderboardPage,
   GuildLeaderboardPage,
   LeaderboardPage,
@@ -111,7 +113,11 @@ export type {
   DailyRewardStatus,
   DailyRewardTaskView,
 } from './world_api/daily_rewards';
-export type { DeedsRarity } from './world_api/deeds';
+export type {
+  DeedsLeaderboardEntry,
+  DeedsLeaderboardSelf,
+  DeedsRarity,
+} from './world_api/deeds';
 export type {
   DelveCompanionInfo,
   DelveDailyInfo,

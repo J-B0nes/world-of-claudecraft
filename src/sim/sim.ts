@@ -157,10 +157,12 @@ import * as interaction from './interaction';
 import { meetsLevelRequirement } from './item_level_req';
 import * as items from './items';
 import {
+  type DeedsLeaderboardPage,
   type DevLeaderboardPage,
   type GuildLeaderboardPage,
   LEADERBOARD_PAGE_SIZE,
   type LeaderboardPage,
+  paginateDeedsLeaderboard,
   paginateDevLeaderboard,
   paginateGuildLeaderboard,
   paginateLeaderboard,
@@ -2473,6 +2475,12 @@ export class Sim {
   // helper. Online play overrides this with the cached server query.
   devLeaderboard(page = 0, pageSize = LEADERBOARD_PAGE_SIZE): Promise<DevLeaderboardPage> {
     return Promise.resolve(paginateDevLeaderboard([], page, pageSize));
+  }
+  // The Renown board is account-level (accounts live only on the server), so
+  // the offline sandbox ranks none: an empty page through the same helper, and
+  // never a self row. Online play overrides this with the cached server query.
+  deedsLeaderboard(page = 0, pageSize = LEADERBOARD_PAGE_SIZE): Promise<DeedsLeaderboardPage> {
+    return Promise.resolve(paginateDeedsLeaderboard([], page, pageSize));
   }
 
   dailyRewards(): Promise<DailyRewardStatus> {
