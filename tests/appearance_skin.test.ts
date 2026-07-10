@@ -99,4 +99,22 @@ describe('appearance skin selection', () => {
     applyMaterials(mesh, {} as VisualDef, 0xffffff, null);
     expect((mesh.material as THREE.MeshStandardMaterial).map).toBe(defaultTexture);
   });
+
+  it('restores every embedded default texture on a multi-material mesh', () => {
+    const defaultTextures = [new THREE.Texture(), new THREE.Texture()];
+    const alternateTexture = new THREE.Texture();
+    const sourceMaterials = defaultTextures.map((map) => new THREE.MeshStandardMaterial({ map }));
+    const mesh = new THREE.Mesh(new THREE.BufferGeometry(), sourceMaterials);
+    mesh.userData.bodyMesh = true;
+
+    applyMaterials(mesh, {} as VisualDef, 0xffffff, alternateTexture);
+    expect((mesh.material as THREE.MeshStandardMaterial[]).map((material) => material.map)).toEqual(
+      [alternateTexture, alternateTexture],
+    );
+
+    applyMaterials(mesh, {} as VisualDef, 0xffffff, null);
+    expect((mesh.material as THREE.MeshStandardMaterial[]).map((material) => material.map)).toEqual(
+      defaultTextures,
+    );
+  });
 });
