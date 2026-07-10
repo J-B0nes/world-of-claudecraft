@@ -186,6 +186,14 @@ describe('keybind_conflicts against the REAL Keybinds steal semantics', () => {
     const kb = new Keybinds('conflict-test');
     const before = rowsOf(kb);
 
+    // Post-modernization baseline: the default layout ships NO keyboard duplicate
+    // (the old KeyH collision is gone), and the strafe keys ship unbound-by-default,
+    // so they are the only baseline unbound actions (in registry order).
+    const baseline = computeKeybindConflicts(before, []);
+    expect(baseline.duplicateCodes).toEqual([]);
+    expect(baseline.unbound).toEqual(['strafeLeft', 'strafeRight']);
+    expect(baseline.unbound).not.toContain('interact');
+
     // interact defaults to its only code KeyF; steal it onto bags (default KeyB).
     expect(kb.codeAt('interact', 0)).toBe('KeyF');
     const eviction = describeEviction(before, 'bags', 'KeyF');
@@ -195,15 +203,15 @@ describe('keybind_conflicts against the REAL Keybinds steal semantics', () => {
     const after = computeKeybindConflicts(rowsOf(kb), []);
 
     // The real bind removed KeyF from interact, so the stolen code is on exactly one
-    // action now (the steal never leaves the moved code duplicated).
-    expect(after.duplicateCodes).not.toContain('KeyF');
-    // interact, whose sole code was stolen, is now fully unbound and the ONLY one listed.
+    // action now (the steal never leaves the moved code duplicated), and still no dupes.
+    expect(after.duplicateCodes).toEqual([]);
+    // interact, whose sole code was stolen, is now fully unbound and joins the strafe
+    // pair in the unbound list (registry order: strafe rows precede interact).
     expect(kb.codeAt('interact', 0)).toBeNull();
-    expect(after.unbound).toEqual(['interact']);
+    expect(after.unbound).toEqual(['strafeLeft', 'strafeRight', 'interact']);
     expect(after.keyboardWarning).toBe(true);
 
-    // Bonus real-data check: the default layout ships one genuine collision, KeyH on both
-    // Target Nearest Friendly and Damage Meters, so the detector surfaces it as expected.
-    expect(after.duplicateCodes).toContain('KeyH');
+    // The KeyH pair no longer collides (Damage Meters moved to KeyZ).
+    expect(after.duplicateCodes).not.toContain('KeyH');
   });
 });
