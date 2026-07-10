@@ -110,7 +110,8 @@ server store always canonical.
    `scripts/convert_deed_icons_webp.mjs` (regenerates
    `src/ui/deed_image_ids.ts`); an artless deed falls back to its procedural
    category crest, so art can trail the deed. Flag new ids to the maintainer
-   for the commissioned set.
+   for the commissioned set (a line in the PR body listing the new ids is
+   enough).
 7. Steam: if the deed is marquee, legible, and spoiler-safe, add its
    `ACH_<UPPER_SNAKE>` mapping in `server/steam/achievement_map.ts` (hard
    cap 100 registered names; API names are stable forever).
@@ -125,8 +126,11 @@ the root `CLAUDE.md` content rule points here.
   seven server-assisted `feat_*` world/realm firsts): the v1 evaluator is
   strictly per-character and `server/deeds_records.ts` is observer-only; an
   account-level grant lane must exist first.
-- **`prog_ringwright`**: jewelcrafting, inscription, and enchanting have
-  zero recipes today, so the deed would be visible yet unearnable.
+- **`prog_ringwright`**: jewelcrafting and inscription have zero recipes
+  today, and enchanting (which ships an enchant table and gains skill from
+  disenchant and apply-enchant in the sim) has no player-facing wiring on
+  any host yet, so the ten-craft ring cannot complete and the deed would be
+  visible yet unearnable.
 - **The salvage pair** (`soc_first_salvage`, `soc_salvage_50`): salvage has
   no player-facing wiring on any host yet (no `IWorld` member, no UI caller,
   no wire or server command).

@@ -242,3 +242,27 @@ resolutions above and never rewrites them.
       archetype selection itself predates the v1 baseline), and the
       catalog stays class and archetype agnostic besides (resolution 18).
       No deed ships.
+21. Post-round deferral recheck (2026-07-10, after the upstream enchanting
+    profession PR #1712 merged into this branch): resolution 16's
+    parenthetical "the upstream enchanting PR is not merged here" no longer
+    holds, and "zero recipes" no longer describes enchanting: an ENCHANTS
+    table now lives in src/sim/content/enchants.ts, and disenchant plus
+    apply-enchant gain flat enchanting skill in the sim. Every deferral
+    STANDS on the surviving ground: neither disenchant nor apply-enchant has
+    player-facing wiring on any host (no IWorld member, no UI caller, no
+    wire or server command; the module documents its own not-yet-wired
+    status, the salvageItem class), jewelcrafting and inscription still have
+    zero recipes, and salvage wiring is unchanged (resolution 17 holds).
+    prog_ringwright, soc_first_salvage, and soc_salvage_50 stay
+    untranscribed, and no enchanting deed ships (the resolution 20
+    inert-system class; revisit when the player-facing surface lands).
+    collection.md's "fully-enchanted equipment" rejection is superseded in
+    its premise (per-item enchantment state now exists on ItemInstancePayload
+    and PlayerMeta.equipmentInstance) but stands in its conclusion for the
+    same no-wiring reason; any future coverage lands as NEW deeds per
+    resolution 15. Two evaluator-side effects of the merge were fixed in
+    code the same day, test-first: the enchanting skill-gain sites now mark
+    the player deeds-dirty (the crafting.ts craftItem contract), and
+    retroFallbackGrants no longer reads craftSkills.enchanting as proof of a
+    first craft (it would have permanently misgranted prog_first_craft to a
+    disenchant-only character on join).
