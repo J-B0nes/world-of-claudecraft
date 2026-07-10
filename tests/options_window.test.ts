@@ -391,6 +391,28 @@ describe('options_window: search go-to + synonyms + typeahead (P4)', () => {
     expect(body).toContain('this.categoryVisible(cat)');
   });
 
+  it('surfaces the keyless language + theme rows in global search, editable (M3)', () => {
+    const search = painter.slice(painter.indexOf('private renderSearchResults'));
+    const body = search.slice(0, search.indexOf('\n  /** True when a category'));
+    // The non-settings rows are folded into their home category group, matched by
+    // label/synonym, and rendered through the SAME bespoke painters as the detail.
+    expect(body).toContain('NON_SETTING_SEARCH_ROWS.filter(');
+    expect(body).toContain('nonSettingRowMatches(r, t(r.labelKey), query)');
+    expect(body).toContain('this.languageRow(group)');
+    expect(body).toContain('this.themeRow(group)');
+  });
+
+  it('applies the Advanced-graphics preset gate to the search visibleKeys (M4)', () => {
+    const search = painter.slice(painter.indexOf('private renderSearchResults'));
+    const body = search.slice(0, search.indexOf('\n  /** True when a category'));
+    // The four Advanced sub-pickers must not surface (or be editable) via search
+    // until the Advanced preset (5), mirroring the renderCategoryDetail gate.
+    expect(body).toContain(
+      "cat.id === 'graphics' && Math.round(hooks.settings.get('graphicsPreset')) !== 5",
+    );
+    expect(body).toContain('for (const k of ADVANCED_GFX_KEYS) visibleKeys.delete(k);');
+  });
+
   it('gives long listboxes first-letter typeahead (language picker)', () => {
     // The shared dropdown builder wires the pure typeahead for 7+ options.
     expect(hud).toContain('items.length >= TYPEAHEAD_MIN_OPTIONS');

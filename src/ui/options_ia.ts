@@ -780,6 +780,40 @@ export function categoriesForSearch(rawQuery: string): CategoryId[] {
   return [...ids];
 }
 
+/** A rendered row that carries NO settings key (language, theme preset), so it is
+ *  absent from buildSearchIndex (which is settings-key-only, and whose index test
+ *  asserts every row names a REAL settings key). Global search consumes THIS list
+ *  so both rows stay reachable, matched by label OR a synonym and rendered through
+ *  the painter's bespoke languageRow / themeRow. */
+export interface NonSettingSearchRow {
+  control: 'language' | 'themePreset';
+  labelKey: TranslationKey;
+  categoryId: CategoryId;
+  sectionId: string;
+  /** Extra search terms beyond the label (contains-match, like SEARCH_SYNONYMS). */
+  synonyms: readonly string[];
+}
+
+/** The two non-settings rows homed in Interface > general. Their labelKey mirrors
+ *  the CATEGORY_SECTIONS.interface general rows, so search and the detail pane name
+ *  the same control. */
+export const NON_SETTING_SEARCH_ROWS: readonly NonSettingSearchRow[] = [
+  {
+    control: 'language',
+    labelKey: 'hud.options.language',
+    categoryId: 'interface',
+    sectionId: 'general',
+    synonyms: ['language', 'locale'],
+  },
+  {
+    control: 'themePreset',
+    labelKey: 'hudChrome.theme.preset',
+    categoryId: 'interface',
+    sectionId: 'general',
+    synonyms: ['theme', 'colour', 'color', 'appearance'],
+  },
+];
+
 /** Build the STRUCTURAL search index from the SAME descriptor tables the panes
  *  render: one row per rendered control that carries a settings key + label, so
  *  the index cannot drift from what is shown (a test asserts the equality). */

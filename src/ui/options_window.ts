@@ -80,6 +80,7 @@ import {
   type CategoryId,
   categoriesForSearch,
   categorySettingKeys,
+  NON_SETTING_SEARCH_ROWS,
   OVERVIEW_PINS,
   OVERVIEW_QUICK_ACTIONS,
   type QuickActionId,
@@ -104,6 +105,7 @@ import {
   type ChoiceControl,
   categoryChangedCount,
   categoryResetKeys,
+  nonSettingRowMatches,
   type OptionsControl,
   type OptionsSettingsSource,
   renderCategory,
@@ -2034,14 +2036,29 @@ export class OptionsWindow {
     const shownCats = new Set<CategoryId>();
     for (const cat of CATEGORIES) {
       const catMatches = matches.filter((m) => m.categoryId === cat.id);
-      if (catMatches.length === 0) continue;
+      // Non-settings rows (language, theme preset) carry no settings key, so they
+      // are absent from buildSearchIndex; surface any that match by label/synonym
+      // in the SAME category group, rendered through the bespoke languageRow /
+      // themeRow so a searched row stays fully editable in place (M3).
+      const nsRows = this.categoryVisible(cat)
+        ? NON_SETTING_SEARCH_ROWS.filter(
+            (r) => r.categoryId === cat.id && nonSettingRowMatches(r, t(r.labelKey), query),
+          )
+        : [];
+      if (catMatches.length === 0 && nsRows.length === 0) continue;
       const model = renderCategory(cat.id, env);
       const visibleKeys = new Set(
         model.sections.flatMap((s) => s.rows.map((r) => r.key).filter(Boolean)),
       );
+      // Preset-then-detail: the four Advanced graphics sub-pickers are hidden in
+      // the Graphics category until the Advanced preset (5), so they must not
+      // surface (or be editable) through search either (M4, mirrors the
+      // renderCategoryDetail gate).
+      if (cat.id === 'graphics' && Math.round(hooks.settings.get('graphicsPreset')) !== 5)
+        for (const k of ADVANCED_GFX_KEYS) visibleKeys.delete(k);
       const rows = catMatches.filter((m) => visibleKeys.has(m.settingKey));
-      if (rows.length === 0) continue;
-      total += rows.length;
+      if (rows.length === 0 && nsRows.length === 0) continue;
+      total += rows.length + nsRows.length;
       shownCats.add(cat.id);
       const group = el('div', 'opt-result-group');
       const crumb = el('div', 'opt-result-crumb');
@@ -2052,11 +2069,13 @@ export class OptionsWindow {
       goto.textContent = t('hudChrome.options.searchGoTo', { category: t(cat.nameKey) });
       // Go to section: jump to the home category and land a STEADY .is-active-row
       // highlight on the target row (no flash animation), driven through the shared
-      // focus path so the cursor is identical to a keyboard/controller landing.
-      const landKey = rows[0].settingKey;
+      // focus path so the cursor is identical to a keyboard/controller landing. A
+      // language/theme-only match carries no data-key row to land on, so it just
+      // navigates to the category.
+      const landKey = rows[0]?.settingKey;
       goto.addEventListener('click', () => {
         this.setActiveCategory(cat.id);
-        this.highlightRow(landKey);
+        if (landKey) this.highlightRow(landKey);
       });
       crumb.append(name, goto);
       group.appendChild(crumb);
@@ -2065,6 +2084,10 @@ export class OptionsWindow {
         if (!row) continue;
         const control = buildControlFromRow(source, row);
         if (control) this.applyControls(group, [control], hooks, () => this.render());
+      }
+      for (const ns of nsRows) {
+        if (ns.control === 'language') this.languageRow(group);
+        else this.themeRow(group);
       }
       detail.appendChild(group);
     }

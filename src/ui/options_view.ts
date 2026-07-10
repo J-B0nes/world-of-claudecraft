@@ -22,6 +22,7 @@ import {
   type CategoryId,
   categorySettingKeys,
   type EnvGating,
+  type NonSettingSearchRow,
   type OptionRow,
   RAIL_GROUPS,
   type RailGroupId,
@@ -668,4 +669,20 @@ export function rowMatchesQuery(labelText: string, settingKey: string, rawQuery:
     if (target === settingKey && term.toLowerCase().includes(q)) return true;
   }
   return false;
+}
+
+/** Global / section search for a NON-settings row (language, theme preset): matches
+ *  its label OR any explicit synonym (contains-match, mirroring rowMatchesQuery and
+ *  the synonym overlay semantics). An empty query matches. These rows carry no
+ *  settings key, so they are searched through this helper rather than rowMatchesQuery
+ *  + the settings-key SEARCH_SYNONYMS overlay. */
+export function nonSettingRowMatches(
+  row: NonSettingSearchRow,
+  labelText: string,
+  rawQuery: string,
+): boolean {
+  const q = rawQuery.trim().toLowerCase();
+  if (!q) return true;
+  if (labelText.toLowerCase().includes(q)) return true;
+  return row.synonyms.some((term) => term.toLowerCase().includes(q));
 }

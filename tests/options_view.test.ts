@@ -6,6 +6,7 @@ import {
   CATEGORY_SECTIONS,
   categoryOf,
   categorySettingKeys,
+  NON_SETTING_SEARCH_ROWS,
   OVERVIEW_PINS,
   settingRow,
 } from '../src/ui/options_ia';
@@ -20,6 +21,7 @@ import {
   buildOptionsMenu,
   categoryChangedCount,
   categoryResetKeys,
+  nonSettingRowMatches,
   type OptionsControl,
   type OptionsSettingsSource,
   renderCategory,
@@ -586,6 +588,40 @@ describe('options_view: section-scope search (P2)', () => {
     expect(rowMatchesQuery('Reduce Motion', 'reduceMotion', 'motion')).toBe(true);
     // "fps" is a synonym for showFps only: it must not match an unrelated row.
     expect(rowMatchesQuery('Reduce Motion', 'reduceMotion', 'fps')).toBe(false);
+  });
+});
+
+describe('options_view: non-settings row search (M3, language + theme preset)', () => {
+  const langRow = NON_SETTING_SEARCH_ROWS.find((r) => r.control === 'language');
+  const themeRow = NON_SETTING_SEARCH_ROWS.find((r) => r.control === 'themePreset');
+
+  it('the two keyless rows are homed in Interface > general with their real labels', () => {
+    expect(langRow).toBeDefined();
+    expect(themeRow).toBeDefined();
+    for (const r of NON_SETTING_SEARCH_ROWS) {
+      expect(r.categoryId).toBe('interface');
+      expect(r.sectionId).toBe('general');
+    }
+    expect(langRow?.labelKey).toBe('hud.options.language');
+    expect(themeRow?.labelKey).toBe('hudChrome.theme.preset');
+  });
+
+  it('matches the language row by label and its synonyms (language, locale)', () => {
+    // Guard the exact assertion: nonSettingRowMatches must be defined.
+    if (!langRow) throw new Error('language search row missing');
+    expect(nonSettingRowMatches(langRow, 'Language', '')).toBe(true); // empty matches
+    expect(nonSettingRowMatches(langRow, 'Language', 'lang')).toBe(true); // label substring
+    expect(nonSettingRowMatches(langRow, 'Language', 'LOCALE')).toBe(true); // synonym (ci)
+    expect(nonSettingRowMatches(langRow, 'Language', 'volume')).toBe(false);
+  });
+
+  it('matches the theme row by label and its synonyms (theme, colour/color, appearance)', () => {
+    if (!themeRow) throw new Error('theme search row missing');
+    expect(nonSettingRowMatches(themeRow, 'Theme', 'theme')).toBe(true);
+    expect(nonSettingRowMatches(themeRow, 'Theme', 'colour')).toBe(true);
+    expect(nonSettingRowMatches(themeRow, 'Theme', 'color')).toBe(true);
+    expect(nonSettingRowMatches(themeRow, 'Theme', 'appearance')).toBe(true);
+    expect(nonSettingRowMatches(themeRow, 'Theme', 'fps')).toBe(false);
   });
 });
 
