@@ -4311,6 +4311,20 @@
   body.mobile-touch #options-menu .opt-switch[aria-checked="true"]::before {
     transform: translateX(22px);
   }
+  /* WCAG 2.5.8 / house floor: the pill visual stays 52x30, but the control's OWN
+     tap target must clear 40x40 (the 48px ROW is not the switch box). ::before is
+     the thumb, so extend the hit area with a transparent ::after that reaches the
+     40px --touch-min height (52px wide already clears it); a tap on the pseudo is
+     dispatched to the button, so the switch box itself now meets the floor. */
+  body.mobile-touch #options-menu .opt-switch::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: var(--touch-min);
+    transform: translateY(-50%);
+  }
   body.mobile-touch #options-menu .opt-seg-btn {
     height: var(--control-h-touch);
     padding: 0 var(--spacing-md);
@@ -4318,6 +4332,20 @@
   }
   body.mobile-touch #options-menu .opt-slider {
     max-width: none;
+  }
+  /* Spec section 9: 20px slider thumb on touch (a comfortable finger-drag target;
+     base.css sizes the custom thumb to 16px). Size BOTH engine thumbs; the gold
+     accent track + --range-fill gold fill are painted on the track pseudo, which is
+     untouched, so they still render. margin-top re-centers the 20px thumb on the
+     6px track. */
+  body.mobile-touch #options-menu .opt-slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -7px;
+  }
+  body.mobile-touch #options-menu .opt-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
   }
   body.mobile-touch #options-menu .search-input {
     font-size: 16px;
