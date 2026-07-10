@@ -5884,6 +5884,15 @@ export const sv_SE: EnTranslations = {
       "linen_scrap": {
         "name": "Linnetrasa"
       },
+      "arcane_dust": {
+        "name": "Arkanstoft"
+      },
+      "arcane_essence": {
+        "name": "Arkanessens"
+      },
+      "arcane_shard": {
+        "name": "Arkanskärva"
+      },
       "fen_muster_order": {
         "name": "Kärrbros mönstringsorder"
       },
