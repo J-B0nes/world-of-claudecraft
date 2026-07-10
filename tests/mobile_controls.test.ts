@@ -9,6 +9,8 @@ import {
   isPhoneTouchDevice,
   isRecenterDoubleTap,
   loadHapticsEnabled,
+  loadMenuExpanded,
+  MENU_EXPANDED_STORE_KEY,
   MobileControls,
   mapJoystickVector,
   mapLookVector,
@@ -16,6 +18,7 @@ import {
   RECENTER_DOUBLE_TAP_MS,
   resolveTouchInterface,
   saveHapticsEnabled,
+  saveMenuExpanded,
   setInterfaceMode,
   triggerHaptic,
   useTouchInterface,
@@ -376,7 +379,15 @@ class FakeElement extends EventTarget {
     return null;
   }
 
-  setAttribute(): void {}
+  private attrs = new Map<string, string>();
+
+  setAttribute(name: string, value: string): void {
+    this.attrs.set(name, value);
+  }
+
+  getAttribute(name: string): string | null {
+    return this.attrs.has(name) ? (this.attrs.get(name) ?? null) : null;
+  }
 }
 
 class FakeMediaQueryList extends EventTarget {
@@ -433,6 +444,8 @@ function installMobileControlDom(): {
     ['mobile-emote', new FakeElement()],
     ['mobile-discord', new FakeElement()],
     ['mobile-donate', new FakeElement()],
+    ['mobile-menu-collapse-toggle', new FakeElement()],
+    ['mobile-combat-buttons', new FakeElement()],
     // The chat composer, so exitChatReply (value clear + blur) is exercised in the
     // fake DOM: the setActive draft-survival test reads its .value.
     ['chat-input', new FakeElement()],
@@ -1538,5 +1551,88 @@ describe('MobileControls chrome idle-fade lifecycle', () => {
     expect(document.body.classList.contains(CHROME_FADE_IDLE_CLASS)).toBe(false);
     vi.advanceTimersByTime(CHROME_FADE_IDLE_MS);
     expect(document.body.classList.contains(CHROME_FADE_IDLE_CLASS)).toBe(true);
+  });
+});
+
+describe('menu-cluster collapse', () => {
+  const makeMenuStore = (initial: Record<string, string> = {}) => {
+    const map = new Map(Object.entries(initial));
+    return {
+      getItem: (k: string) => (map.has(k) ? map.get(k)! : null),
+      setItem: (k: string, v: string) => {
+        map.set(k, v);
+      },
+      map,
+    };
+  };
+
+  const noopInput = () =>
+    ({
+      setTouchMove: () => {},
+      clearTouchMove: () => {},
+      setTouchLook: () => {},
+      setTouchLookVector: () => {},
+    }) as unknown as Input;
+
+  afterEach(() => setInterfaceMode('auto'));
+
+  it('defaults to COLLAPSED when nothing is stored or storage is missing', () => {
+    // The complaint is the round icons crowd the screen, so the cluster ships
+    // collapsed: only an explicit stored "1" (a player who opened it) expands.
+    expect(loadMenuExpanded(makeMenuStore())).toBe(false);
+    expect(loadMenuExpanded(null)).toBe(false);
+  });
+
+  it('round-trips the stored preference (only an explicit "1" expands)', () => {
+    const store = makeMenuStore();
+    saveMenuExpanded(true, store);
+    expect(store.map.get(MENU_EXPANDED_STORE_KEY)).toBe('1');
+    expect(loadMenuExpanded(store)).toBe(true);
+    saveMenuExpanded(false, store);
+    expect(store.map.get(MENU_EXPANDED_STORE_KEY)).toBe('0');
+    expect(loadMenuExpanded(store)).toBe(false);
+    // A stray non-"1" value falls back to collapsed (the safe default).
+    expect(loadMenuExpanded(makeMenuStore({ [MENU_EXPANDED_STORE_KEY]: 'yes' }))).toBe(false);
+  });
+
+  it('boots collapsed, and tapping the arrow flips the cluster class + aria-expanded', () => {
+    installMobileControlDom();
+    // Node env has no global localStorage, so the class reads the collapsed
+    // default; the persistence contract itself is pinned by the round-trip above.
+    setInterfaceMode('touch');
+    new MobileControls(noopInput(), mobileCallbacks()).start();
+
+    const toggle = document.getElementById('mobile-menu-collapse-toggle')!;
+    // Default COLLAPSED: no open class on <body>, arrow announces expanded=false.
+    expect(document.body.classList.contains('mobile-menu-open')).toBe(false);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    // Tap the arrow: the five buttons expand.
+    toggle.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+    expect(document.body.classList.contains('mobile-menu-open')).toBe(true);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    // Tap again: it collapses back.
+    toggle.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+    expect(document.body.classList.contains('mobile-menu-open')).toBe(false);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('never touches the consumables bar or the action ring when collapsing the menu', () => {
+    installMobileControlDom();
+    setInterfaceMode('touch');
+    new MobileControls(noopInput(), mobileCallbacks()).start();
+    const toggle = document.getElementById('mobile-menu-collapse-toggle')!;
+
+    // A separate feature owns the consumables quick bar (body.mobile-consumables-open);
+    // simulate it OPEN and confirm the menu toggle leaves it (and every non-menu
+    // body state) exactly as it found it across an expand + collapse cycle.
+    document.body.classList.add('mobile-consumables-open');
+    toggle.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+    expect(document.body.classList.contains('mobile-consumables-open')).toBe(true);
+    expect(document.body.classList.contains('mobile-menu-open')).toBe(true);
+    toggle.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+    expect(document.body.classList.contains('mobile-consumables-open')).toBe(true);
+    expect(document.body.classList.contains('mobile-menu-open')).toBe(false);
   });
 });

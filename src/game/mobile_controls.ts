@@ -73,6 +73,35 @@ export function saveHapticsEnabled(
   }
 }
 
+// The top-left menu-button cluster (Chat/Social/Quests/Settings/More) ships
+// COLLAPSED behind an arrow chip, because its round icons crowd the play field
+// (live PR #1736 feedback). Only a player who taps it open is remembered as
+// expanded across sessions; the absent/any-other value is the collapsed default.
+// Own localStorage key, like music's ev_music_on and the haptics flag above.
+export const MENU_EXPANDED_STORE_KEY = 'woc_menu_expanded';
+
+export function loadMenuExpanded(
+  storage: Pick<Storage, 'getItem'> | null = safeLocalStorage(),
+): boolean {
+  if (!storage) return false;
+  try {
+    return storage.getItem(MENU_EXPANDED_STORE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function saveMenuExpanded(
+  on: boolean,
+  storage: Pick<Storage, 'setItem'> | null = safeLocalStorage(),
+): void {
+  try {
+    storage?.setItem(MENU_EXPANDED_STORE_KEY, on ? '1' : '0');
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /** Fire a haptic pulse when enabled and the Vibration API exists. Returns whether it fired. */
 export function triggerHaptic(
   pattern: number | number[],
@@ -235,6 +264,10 @@ export function mapJoystickVector(x: number, y: number, deadzone = DEADZONE): To
 export class MobileControls {
   private active = false;
   private hapticsOn = loadHapticsEnabled();
+  // Whether the top-left menu-button cluster is expanded; persisted, default
+  // collapsed. Applied to <body> on start() so the CSS reveal matches the
+  // stored preference before the first tap.
+  private menuExpanded = loadMenuExpanded();
   private joyPointer: number | null = null;
   private lookPointer: number | null = null;
   // Camera joystick is opt-in (settings.mobileCameraJoystick, def false): hidden
@@ -464,6 +497,7 @@ export class MobileControls {
       musicBtn?.classList.toggle('mm-muted', !on);
     });
     this.bindHapticsToggle('mobile-haptics');
+    this.bindMenuCollapseToggle('mobile-menu-collapse-toggle');
     this.bindButton('mobile-more', () => {
       const open = !document.body.classList.contains('mobile-more-open');
       this.root?.classList.toggle('expanded', open);
@@ -596,6 +630,43 @@ export class MobileControls {
       label.textContent = this.hapticsOn
         ? t('hudChrome.mobile.haptics')
         : t('hudChrome.mobile.hapticsOff');
+  }
+
+  /** The menu-cluster collapse handle: an always-visible arrow chip that shows or
+   *  hides the five top-left menu buttons (Chat/Social/Quests/Settings/More).
+   *  Like the haptics toggle it is a STATEFUL, persisted toggle reflected via
+   *  aria-expanded, so it bypasses bindButton (no More-tray auto-close, no
+   *  callback). It touches ONLY the mobile-menu-open body class the CSS reveal
+   *  keys off, so the consumables bar and the action ring stay put. */
+  private bindMenuCollapseToggle(id: string): void {
+    const button = document.getElementById(id);
+    if (!button) return;
+    // Apply the persisted state up front so the arrow and <body> agree before the
+    // first tap (the static markup ships collapsed; a stored expand re-opens it).
+    this.syncMenuCollapseToggle(button);
+    bindTouchTap(button, (e) => {
+      if (!this.active) return;
+      e.preventDefault();
+      triggerHaptic(HAPTIC_TAP, this.hapticsOn);
+      this.menuExpanded = !this.menuExpanded;
+      saveMenuExpanded(this.menuExpanded);
+      this.syncMenuCollapseToggle(button);
+      button.blur();
+    });
+  }
+
+  /** Reflect the collapse state: the mobile-menu-open body class the CSS reveal
+   *  keys off, the arrow's aria-expanded, and its show/hide accessible name (both
+   *  the aria-label and the title come from t(), matching guide/chrome.ts's menu
+   *  toggle). */
+  private syncMenuCollapseToggle(button: HTMLElement): void {
+    document.body.classList.toggle('mobile-menu-open', this.menuExpanded);
+    button.setAttribute('aria-expanded', this.menuExpanded ? 'true' : 'false');
+    const label = this.menuExpanded
+      ? t('hudChrome.mobile.hideMenuButtons')
+      : t('hudChrome.mobile.showMenuButtons');
+    button.setAttribute('aria-label', label);
+    button.setAttribute('title', label);
   }
 
   /** The Chat button taps to open the keyboard composer, but a long press toggles
