@@ -85,7 +85,7 @@ integration, where it is the platform's own term.
 | UI window | `src/ui/deeds_view.ts` (pure core, in `UI_PURE_CORES`) + `src/ui/deeds_window.ts` (cold painter window) |
 | Name localization | `src/ui/deed_i18n.ts` (entity-style English table, like `talent_i18n.ts`; outside the catalog so M16 does not apply) |
 | Chrome strings | `hudChrome.deeds.*` section in `src/ui/i18n.catalog/hud_chrome.ts` (sanctioned English-only domain) |
-| Keybind action | `deeds` (default `KeyZ`; `KeyY` is taken by the Vale Cup window, verified during packet authoring) |
+| Keybind action | `deeds` (default `Shift+KeyZ` since the v0.24.0 merge: Damage Meters claimed bare `KeyZ` upstream as the last free ergonomic letter, so the Book of Deeds parks on the shifted layer of the same key; `KeyY` is taken by the Vale Cup window) |
 | DB table (records) | `character_deeds` (realm TEXT with NO default; account_id; character_id; deed_id; earned_at; UNIQUE(character_id, deed_id)) |
 | DB table (Steam) | `steam_links` (account_id, steam_id, created_at; link is never an auth path) |
 | Server Steam domain | `server/steam/` (RouteDef modules + `achievement_map.ts` mapping deed id to `ACH_<UPPER_SNAKE>`, max 100 entries) |

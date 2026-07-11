@@ -4431,6 +4431,7 @@
     color: #ffe9a0;
     font-family: var(--title-font);
     margin-top: -2px;
+  }
   /* ---------- AAA window-frame adoption: master-detail windows (batch 2) ---------- */
   /* The quest log, mailbox, social panel, and spellbook adopt the shared
      window-frame grammar (src/ui/window_frame.ts; spec 6.1 + 8). Each mounts the

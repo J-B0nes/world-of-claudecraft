@@ -231,7 +231,7 @@ Press `G` or the arena button to queue. Matchmaking teleports fighters into a pr
 - **Eating and drinking**: sit to restore over 18 seconds, broken by damage or standing, and yes, you can eat and drink at once.
 - **Vendors** that buy food and water and sell honest white gear, with coin shown in gold, silver, and copper.
 - **A personal bank** (the Gilded Strongbox): bursars in each hub town keep a vault per character, from 24 slots up to 96 with coin-bought expansions, plus bonus slots earned online for a verified email, linked accounts, and referrals.
-- **The Book of Deeds**: an achievement journal (default `Z`) of quests, kills, clears, and delights, paying out cosmetic titles you can wear on your nameplate, in chat, and on the boards, plus a HUD tracker for the deeds you are chasing, per-zone Chronicles kept by Chronicler NPCs, and a lifetime Renown leaderboard; the public list lives at `/wiki/deeds`.
+- **The Book of Deeds**: an achievement journal (default `Shift+Z`) of quests, kills, clears, and delights, paying out cosmetic titles you can wear on your nameplate, in chat, and on the boards, plus a HUD tracker for the deeds you are chasing, per-zone Chronicles kept by Chronicler NPCs, and a lifetime Renown leaderboard; the public list lives at `/wiki/deeds`.
 - **Mob AI**: wander, proximity aggro by level difference, social pulls, chase, leash and reset, corpse loot, and respawns, with a rare spawn (Old Greyjaw) on a long timer.
 - **Fishing** spots with their own loot tables and rare catches.
 - **Cosmetic skins** rolled at uncommon, rare, and epic rarity, purely for looks.
