@@ -58,7 +58,6 @@ async function renderLb(
   return w;
 }
 
-
 describe('LeaderboardWindow: stale async board responses', () => {
   function rankedPlayersPage(): LeaderboardPage {
     return {

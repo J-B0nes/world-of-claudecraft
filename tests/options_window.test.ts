@@ -76,7 +76,9 @@ describe('options_window: WCAG 2.2 AA', () => {
 
 describe('options_window: deed-broadcast account row', () => {
   it('renders ONLY when the online seam is wired (offline shows no row)', () => {
-    expect(painter).toContain('if (hooks?.deedBroadcasts) buildDeedBroadcastRow(body, hooks.deedBroadcasts);');
+    expect(painter).toContain(
+      'if (hooks?.deedBroadcasts) buildDeedBroadcastRow(body, hooks.deedBroadcasts);',
+    );
     // The hooks seam is optional by declaration: offline main.ts never wires it.
     expect(hudTs).toMatch(/deedBroadcasts\?: \{/);
   });
