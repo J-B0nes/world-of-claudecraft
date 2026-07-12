@@ -4,6 +4,7 @@ import type { TutorialStep } from '../src/ui/tutorial';
 import {
   tutorialBodyPlan,
   tutorialNeedsRerender,
+  tutorialSlayHintPlan,
   tutorialStepDiffersByTouch,
 } from '../src/ui/tutorial_copy';
 
@@ -107,4 +108,36 @@ describe('touch tutorial copy is control-accurate', () => {
       expect(text).not.toMatch(FORBIDDEN);
     });
   }
+});
+
+describe('tutorialSlayHintPlan', () => {
+  // The slay step's objective body (hud.tutorial.slayBody) never explains HOW to
+  // engage a wolf; this hint is appended to teach targeting the first time a
+  // brand-new player needs it (playtester feedback: the wolf tutorial step never
+  // says how to target a wolf).
+  it('points at the target-key hint and needs the bound key on keyboard', () => {
+    const plan = tutorialSlayHintPlan(false);
+    expect(plan.bodyKey).toBe('hudChrome.tutorial.slayTargetHint');
+    expect(plan.params).toEqual(['targetKey']);
+  });
+
+  it('points at the tap-only hint and needs no params on touch', () => {
+    const plan = tutorialSlayHintPlan(true);
+    expect(plan.bodyKey).toBe('hudChrome.tutorial.slayTargetHintTouch');
+    expect(plan.params).toEqual([]);
+  });
+
+  it('the keyboard hint interpolates {targetKey} and never mentions Tab literally', () => {
+    // Naming the literal default ("Tab") in the string would go stale the moment
+    // a player rebinds Target Nearest Enemy; the {targetKey} splice always reads
+    // the live bind (see renderPanel in tutorial.ts).
+    const en = hudChromeStrings.tutorial.slayTargetHint;
+    expect(en).toMatch(/\{targetKey\}/);
+    expect(en).not.toMatch(/\bTab\b/);
+  });
+
+  it('the touch hint never references a keyboard, mouse, or {targetKey}', () => {
+    const en = hudChromeStrings.tutorial.slayTargetHintTouch;
+    expect(en).not.toMatch(/\bkeyboard\b|\bmouse\b|\{targetKey\}/i);
+  });
 });

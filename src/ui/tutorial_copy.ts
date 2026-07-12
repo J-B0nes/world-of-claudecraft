@@ -13,8 +13,9 @@ import type { TutorialStep } from './tutorial';
 
 // The interpolation values a body string may splice in. Only the keyboard copy
 // references the keyboard binds; the touch copy needs none of them except the
-// player name on the closing card.
-export type TutorialParam = 'moveKeys' | 'interactKey' | 'questKey' | 'name';
+// player name on the closing card. targetKey is only ever used by the slay-step
+// combat hint below.
+export type TutorialParam = 'moveKeys' | 'interactKey' | 'questKey' | 'name' | 'targetKey';
 
 export interface TutorialBodyPlan {
   bodyKey: TranslationKey;
@@ -44,6 +45,20 @@ const TOUCH: Partial<Record<TutorialStep, TutorialBodyPlan>> = {
 // touch interface is active.
 export function tutorialBodyPlan(step: TutorialStep, touch: boolean): TutorialBodyPlan {
   return (touch && TOUCH[step]) || KEYBOARD[step];
+}
+
+// The slay step's body (hud.tutorial.slayBody, above) describes the OBJECTIVE
+// (hunt the wolves) but never says how to engage one, which playtesters found
+// confusing on a first character. This appends a short combat hint naming the
+// actual bound target key (Tab by default) or a click on keyboard, and a tap on
+// touch, so a brand-new player learns targeting the first time they need it
+// rather than discovering it by accident. Only the slay step gets this hint;
+// every other step's objective (move, talk, turn in) is self-explanatory once
+// its body names the control.
+export function tutorialSlayHintPlan(touch: boolean): TutorialBodyPlan {
+  return touch
+    ? { bodyKey: 'hudChrome.tutorial.slayTargetHintTouch', params: [] }
+    : { bodyKey: 'hudChrome.tutorial.slayTargetHint', params: ['targetKey'] };
 }
 
 // True when a step's body copy actually changes between the touch and keyboard
