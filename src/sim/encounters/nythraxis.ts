@@ -489,10 +489,20 @@ export function nythraxisTransitionStunTargets(ctx: SimContext, boss: Entity): E
 }
 
 export function nythraxisRoomMetas(ctx: SimContext, boss: Entity): PlayerMeta[] {
+  // Membership (the lockout roster), so the circle is clipped to the boss
+  // slot's own z band, the same clip the deed task window applies: arena
+  // slots sit 500 apart in z with the spawn skewed high, so the raw circle
+  // reaches into the next slot's band. The in-room combat queries above keep
+  // the raw circle (their cross-slot reach is behind arena walls the movement
+  // resolver enforces, and they never confer credit or a lockout).
+  const inst = ctx.instances.find((i) => i.partyKey !== null && i.mobIds.includes(boss.id));
+  const origin = inst ? ctx.instanceOriginOf(inst) : null;
   const out: PlayerMeta[] = [];
   for (const meta of ctx.players.values()) {
     const p = ctx.entities.get(meta.entityId);
-    if (p && dist2d(p.pos, boss.spawnPos) <= NYTHRAXIS_ROOM_RADIUS) out.push(meta);
+    if (!p || dist2d(p.pos, boss.spawnPos) > NYTHRAXIS_ROOM_RADIUS) continue;
+    if (origin !== null && Math.abs(p.pos.z - origin.z) >= 250) continue;
+    out.push(meta);
   }
   out.sort((a, b) => a.entityId - b.entityId);
   return out;

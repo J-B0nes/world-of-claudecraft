@@ -2635,10 +2635,13 @@ export const PARTY_XP_RANGE = 80; // yards: members this close share kill xp/cre
 // boss death) and the still-on-Sim encounter logic; N1 may re-home it when it owns
 // the encounter. Kept here as the neutral shared seam in the meantime.
 export const NYTHRAXIS_BOSS_ID = 'nythraxis_scourge_of_thornpeak';
-// The Nythraxis arena room radius (yards from the boss spawn): the raid's one
-// membership envelope for targeting, wipe detection, kill credit, the lockout,
-// and the deed task window. Shared here so deeds.ts can read it without
-// importing encounters/nythraxis.ts (which itself imports deeds.ts).
+// The Nythraxis arena room radius (yards from the boss spawn). Shared here so
+// deeds.ts can read it without importing encounters/nythraxis.ts (which itself
+// imports deeds.ts). Membership consumers (the lockout roster and the deed
+// task window) clip this circle to the boss slot's own z band; the in-room
+// combat queries (targeting, wipe detection, the transition stun) use the raw
+// circle, whose cross-slot reach is behind arena walls the movement resolver
+// enforces.
 export const NYTHRAXIS_ROOM_RADIUS = 260;
 // The Drowned Litany finale boss. Used by the drowned_litany_boss driver.
 export const SISTER_NHALIA_BOSS_ID = 'sister_nhalia_drowned_canticle';
