@@ -215,6 +215,18 @@ describe('POST /api/steam/link', () => {
     expect(reconcileMock).toHaveBeenCalledWith(ACCOUNT.accountId, STEAM_ID);
   });
 
+  it('links with a max-size (5120 hex) ticket: the clamp admits it and verification runs', async () => {
+    enableSteam();
+    const maxTicket = 'b'.repeat(5120);
+    const ctx = linkCtx({ ticket: maxTicket });
+    await handler()(ctx);
+    expect(captured(ctx.res)).toEqual({
+      status: 200,
+      body: { linked: true, steamId: STEAM_ID },
+    });
+    expect(verifyMock).toHaveBeenCalledWith(expect.objectContaining({ ticket: maxTicket }));
+  });
+
   it.each([
     ['missing', undefined],
     ['not a string', 42],
@@ -409,6 +421,18 @@ describe('ticket helpers (pure)', () => {
     expect(isTicketShape('')).toBe(false);
     expect(isTicketShape(null)).toBe(false);
     expect(isTicketShape('g'.repeat(80))).toBe(false);
+  });
+
+  it('admits a max-size web-api ticket and pins the clamp to the literal', () => {
+    // Steam's GetTicketForWebApiResponse_t caps a ticket at
+    // k_nCubTicketMaxLength = 2560 bytes, 5120 hex chars once the shell
+    // encodes it; the size varies with the account's license list, so real
+    // tickets near the cap exist. Literals on purpose: an assertion written
+    // against the exported constant would stay green if the clamp regressed
+    // to the old 1024-byte GetAuthSessionTicket bound.
+    expect(MAX_TICKET_HEX_CHARS).toBe(5120);
+    expect(isTicketShape('a'.repeat(5120))).toBe(true);
+    expect(isTicketShape('a'.repeat(5121))).toBe(false);
   });
 
   it('parses the OK arm and extracts the steam id', () => {

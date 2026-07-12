@@ -26,12 +26,14 @@
 export const TICKET_IDENTITY = 'wocc-link';
 
 // The hex shape clamp. A web-api session ticket is a variable-length byte
-// blob (a little over 1 KiB with the signature section), hex-encoded by the
-// shell; 2048 hex chars bounds a hostile caller without crowding a real
-// ticket, and 40 rejects garbage too short to be one.
+// blob (it embeds the account's license list, so size varies per account);
+// Steam's GetTicketForWebApiResponse_t caps it at k_nCubTicketMaxLength =
+// 2560 bytes, which the shell hex-encodes to at most 5120 chars. 5120 bounds
+// a hostile caller without rejecting any real ticket, and 40 rejects garbage
+// too short to be one.
 const TICKET_HEX = /^[0-9a-fA-F]+$/;
 export const MIN_TICKET_HEX_CHARS = 40;
-export const MAX_TICKET_HEX_CHARS = 2048;
+export const MAX_TICKET_HEX_CHARS = 5120;
 
 /** True for a plausibly-shaped hex ticket (charset + length clamp only; real
  *  validity is decided by Steam during verification). */

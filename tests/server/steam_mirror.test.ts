@@ -1,7 +1,8 @@
 // The Steam achievement mirror (server/steam/mirror.ts): observer-only
 // no-op guards, the hot-path never-awaits contract, in-flight dedupe, the
 // capped retry ladder, the link cache (TTL + synchronous invalidation on
-// link change), and reconcile-on-link pushing exactly the mapped subset.
+// link change), reconcile-on-link pushing exactly the mapped subset, and the
+// push-time link revalidation that makes an unlink a revocation barrier.
 process.env.DATABASE_URL ||= 'postgres://test:test@127.0.0.1:5433/wocc_steam_mirror_units';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -135,10 +136,11 @@ describe('observer no-op guards', () => {
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
     await settle();
     expect(pushMock).not.toHaveBeenCalled();
-    // The failed lookup was evicted: the next unlock re-reads and delivers.
+    // The failed lookup was evicted: the next unlock re-reads and delivers
+    // (two lookup reads plus the delivered push's revalidation read).
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
     await settle();
-    expect(linkMock).toHaveBeenCalledTimes(2);
+    expect(linkMock).toHaveBeenCalledTimes(3);
     expect(pushMock).toHaveBeenCalledTimes(1);
   });
 });
@@ -246,12 +248,14 @@ describe('delivery, dedupe, and the retry ladder', () => {
 });
 
 describe('the link cache', () => {
-  it('a burst for one account does exactly one steam_links read inside the TTL', async () => {
+  it('a burst for one account does exactly one lookup read inside the TTL', async () => {
     enableSteam();
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED_2);
     await settle();
-    expect(linkMock).toHaveBeenCalledTimes(1);
+    // One cached lookup read for the whole burst; each delivered push then
+    // adds its own revalidation read, so three reads for two pushes.
+    expect(linkMock).toHaveBeenCalledTimes(3);
     expect(pushMock).toHaveBeenCalledTimes(2);
   });
 
@@ -262,7 +266,9 @@ describe('the link cache', () => {
     clock += LINK_CACHE_TTL_MS + 1;
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED_2);
     await settle();
-    expect(linkMock).toHaveBeenCalledTimes(2);
+    // Two lookup reads (the TTL expired between the unlocks) plus one
+    // revalidation read per delivered push.
+    expect(linkMock).toHaveBeenCalledTimes(4);
   });
 });
 
@@ -296,15 +302,21 @@ describe('reconcile-on-link', () => {
     await settle();
     expect(pushMock).toHaveBeenLastCalledWith(expect.objectContaining({ steamId: OLD_STEAM_ID }));
 
-    // Unlink: the route calls onLinkChanged(account, null) in-request, so the
-    // stale cached id is dead immediately, not a TTL later.
+    // Unlink: the route deletes the row, then calls onLinkChanged(account,
+    // null) in-request, so the stale cached id is dead immediately, not a
+    // TTL later.
+    linkMock.mockResolvedValue(null);
     onLinkChanged(ACCOUNT_ID, null);
     onDeedRecorded(ACCOUNT_ID, MAPPED_DEED_2);
     await settle();
     expect(pushMock).toHaveBeenCalledTimes(1);
 
-    // Relink to the NEW id: reconcile re-pushes history there, and fresh
-    // unlocks follow, all without ever touching the old id again.
+    // Relink to the NEW id (the route inserts the row before reconciling):
+    // reconcile re-pushes history there, and fresh unlocks follow, all
+    // without ever touching the old id again. This also pins that the
+    // push-time revalidation compares Steam ids rather than mere row
+    // existence: queued pushes for the NEW id must keep flowing.
+    linkMock.mockResolvedValue({ steamId: STEAM_ID });
     earnedMock.mockResolvedValue([MAPPED_DEED]);
     reconcileLink(ACCOUNT_ID, STEAM_ID);
     await settle();
@@ -312,5 +324,72 @@ describe('reconcile-on-link', () => {
     await settle();
     const pushedAfterRelink = pushMock.mock.calls.slice(1).map((c) => c[0].steamId);
     expect(pushedAfterRelink).toEqual([STEAM_ID, STEAM_ID]);
+  });
+});
+
+describe('unlink is a revocation barrier', () => {
+  it('drops a reconcile push when the account unlinks while the earned read is in flight', async () => {
+    enableSteam();
+    let releaseEarned: (deedIds: string[]) => void = () => {};
+    earnedMock.mockImplementationOnce(
+      () => new Promise<string[]>((resolve) => (releaseEarned = resolve)),
+    );
+    reconcileLink(ACCOUNT_ID, STEAM_ID);
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    // The unlink lands while the earned read is pending: row deleted, cache
+    // flipped, but the reconcile closure already captured the steam id.
+    linkMock.mockResolvedValue(null);
+    onLinkChanged(ACCOUNT_ID, null);
+    releaseEarned([MAPPED_DEED]);
+    await settle();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('drops an unlock when the account unlinks while the link lookup is in flight', async () => {
+    enableSteam();
+    let releaseLookup: (row: { steamId: string } | null) => void = () => {};
+    linkMock.mockImplementationOnce(
+      () => new Promise<{ steamId: string } | null>((resolve) => (releaseLookup = resolve)),
+    );
+    onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
+    // The unlink lands mid-lookup; every later read sees no row, but the
+    // pending lookup promise still resolves to the old link.
+    linkMock.mockResolvedValue(null);
+    onLinkChanged(ACCOUNT_ID, null);
+    releaseLookup({ steamId: OLD_STEAM_ID });
+    await settle();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('a warm cache from before a peer-process unlink cannot push past the DB row', async () => {
+    enableSteam();
+    onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
+    await settle();
+    expect(pushMock).toHaveBeenCalledTimes(1);
+    // The unlink lands on ANOTHER realm process: the DB row is gone, but
+    // onLinkChanged never fires here, so this process's cache entry stays
+    // positive for the TTL tail.
+    linkMock.mockResolvedValue(null);
+    onDeedRecorded(ACCOUNT_ID, MAPPED_DEED_2);
+    await settle();
+    expect(pushMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('a warm cache from before a peer-process RELINK cannot push to the old id', async () => {
+    enableSteam();
+    // Seed this process's cache with the OLD link.
+    linkMock.mockResolvedValue({ steamId: OLD_STEAM_ID });
+    onDeedRecorded(ACCOUNT_ID, MAPPED_DEED);
+    await settle();
+    expect(pushMock).toHaveBeenLastCalledWith(expect.objectContaining({ steamId: OLD_STEAM_ID }));
+    // The relink lands on ANOTHER realm process: the DB row now names a
+    // DIFFERENT steam id, while this process's warm cache still answers the
+    // old one. The push-time revalidation must compare ids, not row
+    // existence, so the stale-id push is dropped.
+    linkMock.mockResolvedValue({ steamId: STEAM_ID });
+    onDeedRecorded(ACCOUNT_ID, MAPPED_DEED_2);
+    await settle();
+    const pushedIds = pushMock.mock.calls.map((c) => c[0].steamId);
+    expect(pushedIds).toEqual([OLD_STEAM_ID]);
   });
 });

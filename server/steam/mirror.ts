@@ -63,9 +63,12 @@ export function setSteamMirrorDepsForTests(overrides: Partial<MirrorDeps>): void
 
 // ---------------------------------------------------------------------------
 // Link cache. Per-process, short TTL, promise-valued so a retro burst of
-// unlocks for one account does exactly one steam_links read. The link and
-// unlink routes overwrite entries SYNCHRONOUSLY via onLinkChanged, so a relink
-// to a different Steam id can never mirror to the stale one for the TTL tail.
+// unlocks for one account does exactly one steam_links read on the lookup
+// path. The link and unlink routes overwrite entries via onLinkChanged, but
+// that is only a latency courtesy: an in-flight lookup or reconcile closure
+// has already captured the old id, and PEER realm processes never see the
+// flip at all. The actual revocation barrier is the fresh steam_links read
+// attemptPush does before every push.
 // ---------------------------------------------------------------------------
 
 interface LinkCacheEntry {
@@ -108,6 +111,7 @@ export function onLinkChanged(accountId: number, steamId: string | null): void {
 // ---------------------------------------------------------------------------
 
 interface PushItem {
+  accountId: number;
   steamId: string;
   achName: string;
 }
@@ -152,6 +156,15 @@ async function attemptPush(item: PushItem): Promise<void> {
     console.warn('steam mirror: enabled without STEAM_APP_ID/STEAM_WEB_API_KEY, dropping unlock');
     return;
   }
+  // Push-time revalidation, the revocation barrier: a fresh steam_links read
+  // (deliberately not the TTL cache, which a peer realm process cannot see
+  // invalidated) must still name this exact Steam id, or the item was queued
+  // by a read that lost a race with an unlink and is dropped. Comparing ids
+  // rather than row existence keeps queued pushes flowing after a relink; a
+  // failed read drops too (no proof of a live link means no push, and
+  // reconcile-on-link heals the gap).
+  const row = await deps.linkForAccount(item.accountId).catch(() => null);
+  if (row?.steamId !== item.steamId) return;
   for (let attempt = 1; attempt <= MAX_PUSH_ATTEMPTS; attempt++) {
     const ok = await deps.pushUnlock({ key, appId, steamId: item.steamId, achName: item.achName });
     if (ok) return;
@@ -181,7 +194,7 @@ export function onDeedRecorded(accountId: number, deedId: string): void {
     if (achName === undefined) return;
     void cachedSteamId(accountId)
       .then((steamId) => {
-        if (steamId !== null) enqueue({ steamId, achName });
+        if (steamId !== null) enqueue({ accountId, steamId, achName });
       })
       .catch(() => {});
   } catch (err) {
@@ -204,7 +217,7 @@ export function reconcileLink(accountId: number, steamId: string): void {
       .then((deedIds) => {
         for (const deedId of deedIds) {
           const achName = ACHIEVEMENT_MAP[deedId];
-          if (achName !== undefined) enqueue({ steamId, achName });
+          if (achName !== undefined) enqueue({ accountId, steamId, achName });
         }
       })
       .catch((err) => {
