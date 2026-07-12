@@ -230,6 +230,41 @@ describe('reconcile through GameServer.join', () => {
     expect(onDeedRecordedMock).not.toHaveBeenCalled();
   });
 
+  it('the JOIN guild stamp passes retroDeeds true; a linkdead RESUME stamps it false', async () => {
+    // The firstJoin thread: join -> initSocial(session, true) -> sendSocialSnapshot
+    // -> setPlayerGuild(pid, name, { retroDeeds: true }), so an existing member's
+    // soc_guild_joined is re-credited silently. Dropping the `true` would starve
+    // the retro credit; passing it on a resume would fire the live banner on
+    // every reconnect. Both arms are driven behaviorally here.
+    const guild = {
+      id: 1,
+      name: 'The Vanguard',
+      rank: 'member' as const,
+      members: [],
+      events: [],
+    };
+    vi.spyOn(server.social, 'snapshot').mockResolvedValue({ friends: [], blocks: [], guild });
+    const setPlayerGuild = vi.spyOn(server.sim, 'setPlayerGuild');
+    const fc = fakeWs();
+    const session = server.join(fc.ws as never, 7, 42, 'Guilded', 'warrior', null);
+    if ('error' in session) throw new Error(session.error);
+    await vi.waitFor(() => expect(setPlayerGuild).toHaveBeenCalled());
+    expect(setPlayerGuild).toHaveBeenCalledWith(session.pid, 'The Vanguard', { retroDeeds: true });
+    // A linkdead resume re-stamps the guild through the same chokepoint but
+    // with retroDeeds false: the entity already carries it, nothing to credit.
+    setPlayerGuild.mockClear();
+    session.linkdead = true;
+    const fc2 = fakeWs();
+    const resumed = server.join(fc2.ws as never, 7, 42, 'Guilded', 'warrior', null);
+    if ('error' in resumed) throw new Error(resumed.error);
+    expect(resumed).toBe(session); // planJoin resumed the held session
+    await vi.waitFor(() => expect(setPlayerGuild).toHaveBeenCalled());
+    expect(setPlayerGuild).toHaveBeenCalledWith(session.pid, 'The Vanguard', {
+      retroDeeds: false,
+    });
+    await settle();
+  });
+
   it('a fresh character with no earned deeds issues no reconcile batch', async () => {
     const fc = fakeWs();
     const session = server.join(fc.ws as never, 7, 42, 'Hilda', 'warrior', null);

@@ -292,6 +292,9 @@ describe('the link cache', () => {
 
   it('is bounded: caching past the max evicts the oldest by insertion order, keeping the newest', async () => {
     enableSteam();
+    // Pin the cap magnitude as a literal (the eviction counts below are all
+    // derived from it, so a drifted constant must not read as green).
+    expect(LINK_CACHE_MAX).toBe(8192);
     // onLinkChanged writes the cache directly, so drive it well past the cap.
     const overflow = 200;
     for (let acct = 1; acct <= LINK_CACHE_MAX + overflow; acct++) {
@@ -673,6 +676,9 @@ describe('reconcile-on-login: the durable heal for a dropped push', () => {
 
   it('does not re-run the full sweep per insert while nothing has expired', async () => {
     enableSteam();
+    // Pin the base sweep bound as a literal (the fill counts and thresholds
+    // below are derived from it, so a drifted constant must not read as green).
+    expect(RECONCILE_STAMP_SWEEP_SIZE).toBe(8192);
     linkMock.mockResolvedValue(null);
     // Unlinked accounts still take a stamp (by design), which fills the map
     // cheaply. Filling to the base bound crosses no sweep yet (the trigger is

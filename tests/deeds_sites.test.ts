@@ -39,6 +39,7 @@ import {
   updateDeeds,
 } from '../src/sim/deeds';
 import { createMob } from '../src/sim/entity';
+import { respawnMob } from '../src/sim/mob/lifecycle';
 import { craftItem } from '../src/sim/professions/crafting';
 import { type ArenaMatch, type InstanceSlot, type PlayerMeta, Sim } from '../src/sim/sim';
 import { endArenaMatch } from '../src/sim/social/arena';
@@ -1187,6 +1188,29 @@ describe('hidden, delve, and chronicle simple sites', () => {
     spawnMob(sim, 'gravecaller_cultist', { x: 6, y: 0, z: 0 }, 3); // in-radius, alive
     farCultist.dead = true;
     onMobKillCreditForDeeds(sim.ctx, farCultist, entityOf(sim, killer), killer, [killer]);
+    onMobKillCreditForDeeds(sim.ctx, mender, entityOf(sim, killer), killer, [killer]);
+    expect(killer.deedsEarned.has('chr_marsh_hush_the_mending')).toBe(true);
+  });
+
+  it('chr_marsh_hush_the_mending: an in-place respawn clears the taint an uncredited death left', () => {
+    // A tainted mender that dies UNCREDITED (untapped, no player killer) never
+    // reaches the credited-kill taint consumption, and respawnMob REUSES the
+    // entity id, so without the respawn-time clear the fresh spawn would deny
+    // a clean mender-first kill forever.
+    const sim = makeSim();
+    const killer = addMeta(sim, 'Reaper');
+    const mender = spawnMob(sim, 'gravecaller_mender', { x: 0, y: 0, z: 0 }, 3);
+    const cultist1 = spawnMob(sim, 'gravecaller_cultist', { x: 5, y: 0, z: 0 }, 3);
+    spawnMob(sim, 'gravecaller_cultist', { x: -5, y: 0, z: 0 }, 3); // alive across both mender lives
+    cultist1.dead = true; // the credited kill sets this before the deed hook runs
+    onMobKillCreditForDeeds(sim.ctx, cultist1, entityOf(sim, killer), killer, [killer]); // taints the mender
+    // Uncredited death: no tap, no player killer, so handleDeath never reaches
+    // the credited block and the taint is not consumed.
+    handleDeath(sim.ctx, mender, null);
+    respawnMob(sim.ctx, mender);
+    expect(mender.dead).toBe(false); // the same entity id lives again
+    // A clean mender-first kill of the fresh spawn (a warded cultist still
+    // lives in radius) must grant: the respawn dropped the stale taint.
     onMobKillCreditForDeeds(sim.ctx, mender, entityOf(sim, killer), killer, [killer]);
     expect(killer.deedsEarned.has('chr_marsh_hush_the_mending')).toBe(true);
   });

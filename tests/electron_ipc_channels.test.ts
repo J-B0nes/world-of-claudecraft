@@ -72,6 +72,17 @@ describe('electron IPC channel contract (preload <-> main)', () => {
     }
   });
 
+  it('the steam-link-settled handler body cancels the live auth ticket', () => {
+    // The channel existing is not enough: the settle signal exists ONLY so the
+    // shell CancelAuthTickets the live handle promptly (Valve's contract), so
+    // the handler body must actually reach steamShell.cancelLinkTicket.
+    const main = read('electron/main.cjs');
+    const start = main.indexOf("ipcMain.handle('desktop-steam-link-settled'");
+    expect(start).toBeGreaterThan(-1);
+    const body = main.slice(start, main.indexOf('});', start));
+    expect(body).toContain('steamShell.cancelLinkTicket()');
+  });
+
   it('the bridge methods the client feature-checks exist in the preload', () => {
     for (const method of [
       'openBrowserLogin',

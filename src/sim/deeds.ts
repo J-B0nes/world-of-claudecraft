@@ -304,7 +304,9 @@ export interface DeedRuntime {
   // Entity ids of gravecaller_mender mobs whose kill-order is already broken:
   // a cultist they still tend was slain first, so a later kill of that mender
   // must NOT grant chr_marsh_hush_the_mending (the deed requires slaying the
-  // mender BEFORE any of its cultists). Cleared when the mender dies or despawns.
+  // mender BEFORE any of its cultists). Consumed on a credited mender kill
+  // (onMobKillCreditForDeeds), cleared on the in-place respawn (clearMenderTaint)
+  // and on despawn (dropEntityFromRoster); an evade reset deliberately keeps it.
   menderTainted: Set<number>;
   // Vale Cup per-match personal-outcome memory (match id keyed; practices can
   // run beside the public match). Cleared when the match ends.
@@ -365,6 +367,16 @@ function ensureEncounter(ctx: SimContext, bossId: number): DeedEncounterState {
 export function resetDeedEncounter(ctx: SimContext, mob: Entity): void {
   ctx.deedRuntime.encounters.delete(mob.id);
   ctx.deedRuntime.bloatPending.delete(mob.id);
+}
+
+/** Drop a mender's kill-order taint. Called from respawnMob, which REUSES the
+ *  entity id: a taint left by an UNCREDITED death (untapped, or a non-player
+ *  kill, so the credited-kill consumption in onMobKillCreditForDeeds never ran)
+ *  must not deny the fresh spawn. Deliberately NOT folded into resetDeedEncounter:
+ *  that also fires on evade-arrival, where the taint persists by design (kiting
+ *  a tainted mender until it evades must not launder the broken order). */
+export function clearMenderTaint(ctx: SimContext, entityId: number): void {
+  ctx.deedRuntime.menderTainted.delete(entityId);
 }
 
 /** Session cleanup when a player leaves the world (server-side long-run

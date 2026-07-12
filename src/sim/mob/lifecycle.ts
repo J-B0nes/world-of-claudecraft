@@ -75,6 +75,12 @@ export function respawnMob(ctx: SimContext, mob: Entity): void {
   despawnSummonedAdds(ctx, mob);
   // A respawn ends the attempt; the deed window re-arms.
   deedsMod.resetDeedEncounter(ctx, mob);
+  // The respawn reuses the entity id: an UNCREDITED death (untapped, or a
+  // non-player kill) skips the credited-kill taint consumption, so drop any
+  // kill-order taint here or the fresh mender spawns pre-denied. Respawn only:
+  // the evade reset deliberately keeps the taint (a deliberate post-move fix,
+  // not part of the verbatim extraction; draws no rng).
+  deedsMod.clearMenderTaint(ctx, mob.id);
   mob.firedSummons = 0;
   mob.enraged = false;
   mob.healedThisPull = false;

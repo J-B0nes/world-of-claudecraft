@@ -1732,4 +1732,38 @@ describe('trade completion counts only non-empty trades (soc_first_trade)', () =
     expect(metaA.deedsEarned.has('soc_first_trade')).toBe(true);
     expect(metaB.deedsEarned.has('soc_first_trade')).toBe(true);
   });
+
+  it('a copper-only offer from the receiver side counts and unlocks it for both', () => {
+    // The nonEmpty guard ORs four dimensions (items and copper, each side).
+    // This drives the receiver-copper arm with NO items on either side, so a
+    // regression to items-only (or initiator-only) reds here.
+    const sim = makeSim();
+    const a = sim.addPlayer('warrior', 'Aleph');
+    const b = sim.addPlayer('mage', 'Bet');
+    const ea = sim.entities.get(a)!;
+    const eb = sim.entities.get(b)!;
+    ea.pos.x = 0;
+    ea.pos.z = -40;
+    ea.prevPos = { ...ea.pos };
+    eb.pos.x = 2;
+    eb.pos.z = -40;
+    eb.prevPos = { ...eb.pos };
+    const metaA = sim.players.get(a)!;
+    const metaB = sim.players.get(b)!;
+    metaB.copper = 5;
+    const copperABefore = metaA.copper;
+    sim.tradeRequest(b, a); // a initiates: the session's receiver side is b
+    sim.tradeAccept(b);
+    sim.tradeSetOffer([], 1, b); // the receiver offers 1 copper, no items anywhere
+    sim.tradeConfirm(a);
+    sim.tradeConfirm(b);
+    sim.tick();
+    // The copper actually moved: a real transfer, not an empty handshake.
+    expect(metaA.copper).toBe(copperABefore + 1);
+    expect(metaB.copper).toBe(4);
+    expect(metaA.deedStats.counters.tradesCompleted).toBe(1);
+    expect(metaB.deedStats.counters.tradesCompleted).toBe(1);
+    expect(metaA.deedsEarned.has('soc_first_trade')).toBe(true);
+    expect(metaB.deedsEarned.has('soc_first_trade')).toBe(true);
+  });
 });

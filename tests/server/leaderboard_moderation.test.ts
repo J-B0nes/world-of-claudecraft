@@ -142,6 +142,21 @@ describe('every ranked board query embeds the fragment', () => {
     expect(publicSql[0]).toContain('AS eligible');
   });
 
+  it('the public rank read resolves null for a delisted subject and the rank for an eligible one', async () => {
+    // The SQL pins above prove the eligible flag is SELECTed; this drives the
+    // JS gate on it, so deleting the `if (!eligible) return null` arm reds here.
+    const rankRow = (eligible: boolean): QueryResult => ({
+      ...emptyResult(),
+      rowCount: 1,
+      rows: [{ ahead: 5, total: 10, eligible }],
+    });
+    const spy = vi.spyOn(pool, 'query');
+    spy.mockImplementation(() => Promise.resolve(rankRow(false)) as never);
+    await expect(lifetimeXpRankForCharacter(42)).resolves.toBeNull();
+    spy.mockImplementation(() => Promise.resolve(rankRow(true)) as never);
+    await expect(lifetimeXpRankForCharacter(42)).resolves.toEqual({ rank: 6, total: 10 });
+  });
+
   it('daily rewards: all five ranked reads agree on one population', async () => {
     const db = new PgDailyRewardDb();
     const day = '2026-07-08';

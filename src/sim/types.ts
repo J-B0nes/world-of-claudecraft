@@ -2887,7 +2887,7 @@ export type DeedTrigger =
   // At least `count` (default all) of the listed ids in deedStats.itemsDiscovered.
   | { kind: 'collectItems'; itemIds: string[]; count?: number }
   // Membership in deedStats.visited (stable authored marks like 'npc:saul' or
-  // 'poi:eastbrook_vale:Eastbrook'; every mark is fed by an explicit site).
+  // 'poi:eastbrook_vale:eastbrook'; every mark is fed by an explicit site).
   | { kind: 'visit'; markId: string }
   | { kind: 'visits'; markIds: string[]; count?: number }
   // All listed deeds earned, plus (optionally) all listed quests done. The
