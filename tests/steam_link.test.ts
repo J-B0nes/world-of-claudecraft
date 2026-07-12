@@ -161,4 +161,40 @@ describe('startSteamLink capability guard', () => {
     expect(mint).toHaveBeenCalledTimes(1);
     expect(steamLink).toHaveBeenCalledWith('deadbeef');
   });
+
+  it('a double click mints exactly one ticket: the in-flight latch drops re-entry', async () => {
+    // Two rapid clicks without the latch mint twice: the second mint makes the
+    // shell cancel a ticket the server may still be verifying, and strands the
+    // first handle uncancelled. The latch holds until the attempt settles.
+    const elements = installDom();
+    let releaseMint: (ticket: string) => void = () => {};
+    const mint = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          releaseMint = resolve;
+        }),
+    );
+    installBridge({ steamLinkTicket: mint, steamLinkSupported: async () => true });
+    const steamLink = vi.fn(async () => ({}));
+    const api = {
+      token: 'session-token',
+      steamAdvert: async () => true,
+      steamStatus: async () => ({ enabled: true, linked: false }),
+      steamLink,
+    } as unknown as Api;
+    wireSteamLink(api);
+    elements['btn-steam-link'].listeners.click();
+    await flushAsync(); // past the capability probe: the mint is now pending
+    elements['btn-steam-link'].listeners.click(); // mid-flight: must be dropped
+    await flushAsync();
+    expect(mint).toHaveBeenCalledTimes(1);
+    releaseMint('deadbeef');
+    await flushAsync();
+    expect(steamLink).toHaveBeenCalledTimes(1);
+    expect(steamLink).toHaveBeenCalledWith('deadbeef');
+    // The latch releases once the attempt settles: a later click mints again.
+    elements['btn-steam-link'].listeners.click();
+    await flushAsync();
+    expect(mint).toHaveBeenCalledTimes(2);
+  });
 });

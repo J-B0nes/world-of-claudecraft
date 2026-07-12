@@ -91,26 +91,39 @@ export async function refreshSteamLinkStatus(api: Api): Promise<void> {
   if (unlinkBtn) unlinkBtn.hidden = !linked;
 }
 
+// One link attempt at a time: without the latch a double click mints a second
+// ticket, which makes the shell cancel the first handle while the server may
+// still be verifying it, and strands the second handle uncancelled (the shell
+// reads its last-ticket slot before the mint await resolves). The latch drops
+// re-entry until the whole attempt settles.
+let linkInFlight = false;
+
 async function startSteamLink(api: Api): Promise<void> {
-  const bridge = DESKTOP_APP ? desktopBridge() : null;
-  if (typeof bridge?.steamLinkTicket !== 'function') return;
-  if (!(await steamTicketCapability(bridge))) return;
-  let ticket: string | null = null;
+  if (linkInFlight) return;
+  linkInFlight = true;
   try {
-    ticket = await bridge.steamLinkTicket();
-  } catch {
-    ticket = null;
+    const bridge = DESKTOP_APP ? desktopBridge() : null;
+    if (typeof bridge?.steamLinkTicket !== 'function') return;
+    if (!(await steamTicketCapability(bridge))) return;
+    let ticket: string | null = null;
+    try {
+      ticket = await bridge.steamLinkTicket();
+    } catch {
+      ticket = null;
+    }
+    if (!ticket) {
+      flashSteamStatus(t('hudChrome.steam.noTicket'));
+      return;
+    }
+    try {
+      await api.steamLink(ticket);
+    } catch (err) {
+      flashSteamStatus(userFacingApiError(err));
+    }
+    void refreshSteamLinkStatus(api);
+  } finally {
+    linkInFlight = false;
   }
-  if (!ticket) {
-    flashSteamStatus(t('hudChrome.steam.noTicket'));
-    return;
-  }
-  try {
-    await api.steamLink(ticket);
-  } catch (err) {
-    flashSteamStatus(userFacingApiError(err));
-  }
-  void refreshSteamLinkStatus(api);
 }
 
 export function wireSteamLink(api: Api): void {
