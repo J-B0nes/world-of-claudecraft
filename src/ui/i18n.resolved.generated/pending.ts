@@ -10,27 +10,39 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "es_ES": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "fr_FR": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "fr_CA": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "en_CA": [],
   "it_IT": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "de_DE": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
@@ -39,39 +51,57 @@ export const pending: Record<string, readonly string[]> = {
   "ko_KR": [],
   "ja_JP": [],
   "pt_BR": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "ru_RU": [],
   "cs_CZ": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "nl_NL": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "pl_PL": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "id_ID": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "tr_TR": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "sv_SE": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "vi_VN": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ],
   "da_DK": [
+    "hudChrome.corpseHarvest.harvestButtonTooltip",
+    "hudChrome.loot.takeAllTooltip",
     "hudChrome.tutorial.slayTargetHint",
     "hudChrome.tutorial.slayTargetHintTouch"
   ]
