@@ -1,5 +1,28 @@
 import * as THREE from 'three';
+import { loadGltf } from './assets/loader';
+import { registerPreload } from './assets/preload';
 import { markSharedGeometry, markSharedMaterial } from './shared_resource';
+
+// GLB-backed arch body (Tripo-generated, see public/models/props), with a
+// procedural fallback (arch + keystone + plinths below) for pre-load races /
+// headless test hosts, mirroring the gather_nodes.ts pattern. The portal
+// swirl disc stays procedural (an animated additive VFX, not part of the
+// static stone body).
+const DOOR_ARCH_ASSET_URL = '/models/props/dungeon_door_arch.glb';
+let loadedDoorArchGltf: THREE.Group | null = null;
+
+if (typeof window !== 'undefined') {
+  registerPreload(
+    loadGltf(DOOR_ARCH_ASSET_URL).then((gltf) => {
+      loadedDoorArchGltf = gltf.scene;
+    }),
+  );
+}
+
+/** Test-only window into the preload asset set (mirrors gather_nodes.ts). */
+export const doorPortalPreloadInternalsForTest = {
+  doorArchAssetUrl: DOOR_ARCH_ASSET_URL,
+};
 
 // The dungeon door / exit-portal visual system, lifted out of renderer.ts so the
 // orchestrator only calls buildDoorBody() (the same shape as buildProps /
@@ -129,19 +152,30 @@ export function buildDoorBody(
     return { body };
   }
 
-  const stone = doorStoneMaterial();
-  const arch = new THREE.Mesh(doorArchGeometry(), stone);
-  arch.castShadow = true;
-  body.add(arch);
-  const keystone = new THREE.Mesh(doorKeystoneGeometry(), stone);
-  keystone.position.set(0, 4.75, 0);
-  keystone.castShadow = true;
-  body.add(keystone);
-  for (const sx of [-1.7, 1.7]) {
-    const plinth = new THREE.Mesh(doorPlinthGeometry(), stone);
-    plinth.position.set(sx, 0.35, 0);
-    plinth.castShadow = true;
-    body.add(plinth);
+  if (loadedDoorArchGltf) {
+    const inst = loadedDoorArchGltf.clone(true);
+    inst.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    body.add(inst);
+  } else {
+    const stone = doorStoneMaterial();
+    const arch = new THREE.Mesh(doorArchGeometry(), stone);
+    arch.castShadow = true;
+    body.add(arch);
+    const keystone = new THREE.Mesh(doorKeystoneGeometry(), stone);
+    keystone.position.set(0, 4.75, 0);
+    keystone.castShadow = true;
+    body.add(keystone);
+    for (const sx of [-1.7, 1.7]) {
+      const plinth = new THREE.Mesh(doorPlinthGeometry(), stone);
+      plinth.position.set(sx, 0.35, 0);
+      plinth.castShadow = true;
+      body.add(plinth);
+    }
   }
   const portal = new THREE.Mesh(doorPortalGeometry(), doorPortalMaterial(entering, lowGfx));
   portal.position.y = 2.15;

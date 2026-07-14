@@ -12,10 +12,78 @@ import {
 import type { DungeonLayout } from '../sim/dungeon_layout';
 import { polygonXAtZ } from '../sim/geometry2d';
 import { hash2 } from '../sim/rng';
+import { loadGltf } from './assets/loader';
+import { registerPreload } from './assets/preload';
 import { GFX, surfaceMat } from './gfx';
 
 // Stable seed for all hash2 calls in this module (render-only dressing, no sim state).
 const MARSH_SEED = 0x4c69746e; // 'Litn' in ASCII
+
+// GLB-backed anchor kinds (Tripo-generated, see public/models/props). Each has
+// a procedural fallback (kept below, used only for pre-load races / headless
+// test hosts) that draws the SAME representative shape the GLB replaced.
+// 'dead_tree'/'reed_cluster'/'sluice_post' lose their per-instance hash2-driven
+// branch/stalk/rope variety when the GLB is loaded (one fixed model instead of
+// many procedural variants); acceptable per-instance trade for real art.
+type MarshGlbAnchorKind =
+  | 'plank_bridge'
+  | 'shrine_fragment'
+  | 'corpse_candle'
+  | 'bell_fragment'
+  | 'broken_bell_frame'
+  | 'sluice_post'
+  | 'dead_tree'
+  | 'reed_cluster';
+
+const MARSH_ASSET_URL: Record<MarshGlbAnchorKind, string> = {
+  plank_bridge: '/models/props/marsh_plank_bridge.glb',
+  shrine_fragment: '/models/props/marsh_shrine_fragment.glb',
+  corpse_candle: '/models/props/marsh_corpse_candle.glb',
+  bell_fragment: '/models/props/marsh_bell_fragment.glb',
+  broken_bell_frame: '/models/props/marsh_bell_gallows.glb',
+  sluice_post: '/models/props/marsh_sluice_post.glb',
+  dead_tree: '/models/props/marsh_dead_tree.glb',
+  reed_cluster: '/models/props/marsh_reed_cluster.glb',
+};
+
+const loadedMarshGltf = new Map<MarshGlbAnchorKind, THREE.Group>();
+
+if (typeof window !== 'undefined') {
+  for (const [kind, url] of Object.entries(MARSH_ASSET_URL) as [MarshGlbAnchorKind, string][]) {
+    registerPreload(
+      loadGltf(url).then((gltf) => {
+        loadedMarshGltf.set(kind, gltf.scene);
+      }),
+    );
+  }
+}
+
+function placeLoadedMarshAsset(
+  group: THREE.Group,
+  kind: MarshGlbAnchorKind,
+  x: number,
+  z: number,
+  rot: number,
+): boolean {
+  const loaded = loadedMarshGltf.get(kind);
+  if (!loaded) return false;
+  const inst = loaded.clone(true);
+  inst.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  inst.position.set(x, 0, z);
+  inst.rotation.y = rot;
+  group.add(inst);
+  return true;
+}
+
+/** Test-only window into the preload asset set (mirrors gather_nodes.ts). */
+export const marshDressingPreloadInternalsForTest = {
+  marshAssetUrl: MARSH_ASSET_URL,
+};
 
 /** Minimal sink matching dungeon Placements.add (kit prop names). */
 export interface MarshPlacementSink {
@@ -320,28 +388,47 @@ function placeDressingAnchor(group: THREE.Group, anchor: LitanyDressingAnchor): 
   const rot = anchor.rot ?? 0;
   switch (anchor.kind) {
     case 'reed_cluster':
-      addReedCluster(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'reed_cluster', anchor.x, anchor.z, rot)) {
+        addReedCluster(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'plank_bridge':
-      addPlankBridge(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'plank_bridge', anchor.x, anchor.z, rot)) {
+        addPlankBridge(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'shrine_fragment':
-      addShrineFragment(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'shrine_fragment', anchor.x, anchor.z, rot)) {
+        addShrineFragment(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'corpse_candle':
-      addCorpseCandleProp(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'corpse_candle', anchor.x, anchor.z, rot)) {
+        addCorpseCandleProp(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'bell_fragment':
-      addBellFragment(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'bell_fragment', anchor.x, anchor.z, rot)) {
+        addBellFragment(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'broken_bell_frame':
-      addBrokenBellFrame(group, anchor.x, anchor.z, rot);
+      // The GLB (marsh_bell_gallows.glb) already includes the bell, so it
+      // fully replaces frame + addBellFragment composition; the fallback
+      // keeps drawing them separately.
+      if (!placeLoadedMarshAsset(group, 'broken_bell_frame', anchor.x, anchor.z, rot)) {
+        addBrokenBellFrame(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'dead_tree':
-      addDeadTree(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'dead_tree', anchor.x, anchor.z, rot)) {
+        addDeadTree(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'sluice_post':
-      addSluicePost(group, anchor.x, anchor.z, rot);
+      if (!placeLoadedMarshAsset(group, 'sluice_post', anchor.x, anchor.z, rot)) {
+        addSluicePost(group, anchor.x, anchor.z, rot);
+      }
       break;
     case 'root_wall':
       addRootWall(group, anchor.x, anchor.z, rot);
