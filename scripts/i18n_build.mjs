@@ -58,7 +58,7 @@ const KEYS_PATH = process.env.I18N_OUT_DIR
   ? path.join(OUT_DIR, KEYS_FILE)
   : path.join(root, 'src/ui/i18n.catalog', KEYS_FILE);
 
-// The authoritative ordered locale set. `en` is the nested base; the other 13 are
+// The authoritative ordered locale set. `en` is the nested base; the others are
 // the flat dotted-key overlay files (src/ui/i18n.locales/<lang>.ts). This list
 // drives both the emit order and the runtime supportedLanguages (Object.keys of
 // the generated `translations`). The generator reads these SOURCE modules directly
