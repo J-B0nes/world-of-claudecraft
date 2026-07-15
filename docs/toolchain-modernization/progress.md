@@ -172,4 +172,9 @@ tests added, dead code removed, deferrals.
   Mid-phase the release base moved (PR #1861 added two catalog keys); the merge
   was clean, the union regenerated with the two keys interior and sorted (the
   line-item merge-benign property observed live), and release-merge-audit found
-  no divergence.
+  no divergence. Gate record (Node 24 + the ffmpeg-static shim, same environment
+  as the Phase 1 record): steps 1 to 6 green including the full vitest suite
+  (13,936 passed after the emit-shape pin update); browser regressions red ONLY
+  at the known environmental armory_mobile_layout pixel assertion (reproduces on
+  the untouched release tip; PR CI is the arbiter); typecheck and the env,
+  server, and client builds green.
