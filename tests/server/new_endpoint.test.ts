@@ -25,6 +25,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -398,6 +399,18 @@ describe('toolchain pin: node_modules/.bin/tsc', () => {
     const probe = spawnSync(TSC, ['--version'], { cwd: REPO, encoding: 'utf8' });
     expect(probe.status, `tsc --version failed:\n${probe.stdout}\n${probe.stderr}`).toBe(0);
     expect(probe.stdout.trim()).toMatch(/^Version 7\./);
+  });
+
+  it('the typescript package resolves the 6.x JS API wrapper (the svelte-check arm)', () => {
+    // The dual alias's second arm: svelte-check consumes require('typescript')
+    // and needs the 6.x JS API surface (ts.sys). A 7.x takeover of that alias
+    // (the native package reports 7.x and ships no ts.sys) would otherwise
+    // surface only as a cryptic svelte-check crash at gate/CI time, or pass
+    // silently if svelte-check happens to miss the removed API.
+    const requireFromRepo = createRequire(join(REPO, 'package.json'));
+    const ts = requireFromRepo('typescript');
+    expect(String(ts.version)).toMatch(/^6\./);
+    expect(typeof ts.sys).toBe('object');
   });
 });
 
