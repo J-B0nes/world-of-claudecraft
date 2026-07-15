@@ -25,7 +25,7 @@ import { saveCharacterState } from '../server/db';
 import { type ClientSession, GameServer, wireEntity } from '../server/game';
 import { ClientWorld } from '../src/net/online';
 import { mechHeldWeaponOverride, visualKeyFor } from '../src/render/characters/manifest';
-import { DELVES } from '../src/sim/data';
+import { DELVES, GATHER_NODES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { type Aura, DT, type PlayerClass } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
@@ -136,6 +136,7 @@ function bareClient(pid: number): ClientWorld {
   c.inputEchoSamples = [];
   c.spectateFacingPending = false;
   c.pendingSpectateFacing = null;
+  c.nodeCooldowns = new Map();
   return c;
 }
 
@@ -2484,6 +2485,7 @@ const ALL_DELTA_KEYS = [
   'market',
   'marks',
   'milestones',
+  'ncd',
   'party',
   'prof',
   'qdone',
@@ -2631,6 +2633,10 @@ function dirtyEveryDeltaField(): {
   meta.delveClears = { 'collapsed_reliquary:heroic': 1 };
   meta.companionUpgrades = { companion_tessa: 2 };
   meta.gatheringProficiency = { mining: 6, logging: 0, herbalism: 0 };
+  // Per-player gather-node respawn cooldown (#1866): one node still cooling
+  // down (readyAt 30s in the sim future), so `ncd` mirrors it as ~30 remaining
+  // seconds and nodeHarvestableByMe reports it not ready.
+  meta.nodeHarvestReadyAt[GATHER_NODES[0].id] = sim.time + 30;
   meta.delveDaily = { date: '2099-01-01', firstClearXp: new Set(['x']), markClears: 4 };
   meta.talents = { spec: 'arms', ranks: {}, choices: {} };
   // Book of Deeds: two earned deeds with DISTINCT utcDay stamps (an empty map
@@ -2776,6 +2782,10 @@ describe('full self-state snapshot delta fixture', () => {
     expect(client.delveMarks).toBe(7); // dmarks -> delveMarks
     expect(client.companionUpgrades).toEqual({ companion_tessa: 2 }); // dcomp -> companionUpgrades
     expect(client.gatheringProficiency).toEqual({ mining: 6, logging: 0, herbalism: 0 }); // gprof -> gatheringProficiency
+    // ncd -> nodeHarvestableByMe: the cooling-down node reads not-ready, an
+    // untouched node (never in the map) still reads ready.
+    expect(client.nodeHarvestableByMe(GATHER_NODES[0].id)).toBe(false);
+    expect(client.nodeHarvestableByMe('not_a_real_node')).toBe(true);
     expect(client.professionsState).toEqual({
       skills: [
         { professionId: 'mining', skill: 6, maxSkill: 300 },
@@ -2848,9 +2858,9 @@ describe('full self-state snapshot delta fixture', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 44 unique keys in sorted order', () => {
-    expect(ALL_DELTA_KEYS).toHaveLength(44);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(44);
+  it('ALL_DELTA_KEYS contains exactly 45 unique keys in sorted order', () => {
+    expect(ALL_DELTA_KEYS).toHaveLength(45);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(45);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -2862,7 +2872,7 @@ describe('delta-key contract pins (anti-drift)', () => {
     const scraped = new Set<string>();
     for (let m = re.exec(src); m !== null; m = re.exec(src)) scraped.add(m[1]);
     expect(scraped.has('lockouts')).toBe(true); // the multi-line call IS captured
-    expect(scraped.size).toBe(44);
+    expect(scraped.size).toBe(45);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

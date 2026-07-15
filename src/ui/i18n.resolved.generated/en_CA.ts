@@ -1809,7 +1809,8 @@ export const en_CA: EnTranslations = {
       "title": "Gathering",
       "mining": "Mining",
       "logging": "Logging",
-      "herbalism": "Herbalism"
+      "herbalism": "Herbalism",
+      "notReady": "This resource node has not respawned for you yet."
     },
     "archetypeTitle": {
       "label": "Title",

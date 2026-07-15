@@ -126,6 +126,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -252,6 +253,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -378,6 +380,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -504,6 +507,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -631,6 +635,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -757,6 +762,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -768,19 +774,23 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "zh_CN": [
     "hudChrome.discord.roleTag.legend",
-    "hudChrome.discord.roleTag.shill"
+    "hudChrome.discord.roleTag.shill",
+    "hudChrome.gathering.notReady"
   ],
   "zh_TW": [
     "hudChrome.discord.roleTag.legend",
-    "hudChrome.discord.roleTag.shill"
+    "hudChrome.discord.roleTag.shill",
+    "hudChrome.gathering.notReady"
   ],
   "ko_KR": [
     "hudChrome.discord.roleTag.legend",
-    "hudChrome.discord.roleTag.shill"
+    "hudChrome.discord.roleTag.shill",
+    "hudChrome.gathering.notReady"
   ],
   "ja_JP": [
     "hudChrome.discord.roleTag.legend",
-    "hudChrome.discord.roleTag.shill"
+    "hudChrome.discord.roleTag.shill",
+    "hudChrome.gathering.notReady"
   ],
   "pt_BR": [
     "guide.family.reptile.desc",
@@ -899,6 +909,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -910,7 +921,8 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "ru_RU": [
     "hudChrome.discord.roleTag.legend",
-    "hudChrome.discord.roleTag.shill"
+    "hudChrome.discord.roleTag.shill",
+    "hudChrome.gathering.notReady"
   ],
   "cs_CZ": [
     "guide.family.reptile.desc",
@@ -1029,6 +1041,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1155,6 +1168,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1281,6 +1295,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1407,6 +1422,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1533,6 +1549,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1659,6 +1676,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1785,6 +1803,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",
@@ -1911,6 +1930,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.finder.withdraw",
     "hudChrome.finder.yourListing",
     "hudChrome.finder.yourRoles",
+    "hudChrome.gathering.notReady",
     "hudChrome.keybinds.sheathe",
     "hudChrome.meters.autoShowHint",
     "hudChrome.petFeed.disabledFullHp",

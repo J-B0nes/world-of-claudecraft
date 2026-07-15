@@ -1809,7 +1809,8 @@ export const nl_NL: EnTranslations = {
       "title": "Verzamelen",
       "mining": "Mijnbouw",
       "logging": "Houtkap",
-      "herbalism": "Kruidenkunde"
+      "herbalism": "Kruidenkunde",
+      "notReady": "This resource node has not respawned for you yet."
     },
     "archetypeTitle": {
       "label": "Titel",
