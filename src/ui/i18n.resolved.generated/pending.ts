@@ -9,25 +9,130 @@
 // Reproducibility is checked by tests/i18n_resolved_equivalence.test.ts.
 
 export const pending: Record<string, readonly string[]> = {
-  "es": [],
-  "es_ES": [],
-  "fr_FR": [],
-  "fr_CA": [],
+  "es": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "es_ES": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "fr_FR": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "fr_CA": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
   "en_CA": [],
-  "it_IT": [],
-  "de_DE": [],
+  "it_IT": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "de_DE": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
   "zh_CN": [],
   "zh_TW": [],
   "ko_KR": [],
   "ja_JP": [],
-  "pt_BR": [],
+  "pt_BR": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
   "ru_RU": [],
-  "cs_CZ": [],
-  "nl_NL": [],
-  "pl_PL": [],
-  "id_ID": [],
-  "tr_TR": [],
-  "sv_SE": [],
-  "vi_VN": [],
-  "da_DK": []
+  "cs_CZ": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "nl_NL": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "pl_PL": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "id_ID": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "tr_TR": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "sv_SE": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "vi_VN": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ],
+  "da_DK": [
+    "entities.items.duskhide_wraps.name",
+    "entities.items.eastbrook_druids_hide.name",
+    "entities.items.eastbrook_ritual_vestments.name",
+    "entities.items.eastbrook_warded_leggings.name",
+    "entities.items.sootscale_mantle.name",
+    "entities.items.wardweave_cowl.name"
+  ]
 };

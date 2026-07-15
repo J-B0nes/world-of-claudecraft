@@ -988,6 +988,75 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     sellValue: 110,
     buyValue: 1100,
   },
+  // --- Crafted caster-stat gear (int/spi): one common-tier piece per
+  // tailoring/leatherworking/armorcrafting, filling the gap that every OTHER
+  // crafted item is armor-only (see recipes.ts COMMON_RECIPES comment). Stats
+  // sized via item_budget.ts primaryStatBudget(level, quality, slot).
+  eastbrook_ritual_vestments: {
+    id: 'eastbrook_ritual_vestments',
+    name: 'Eastbrook Ritual Vestments',
+    kind: 'armor',
+    armorType: 'cloth',
+    slot: 'chest',
+    quality: 'uncommon',
+    stats: { armor: 30, int: 2, spi: 1 },
+    sellValue: 210,
+    buyValue: 2100,
+  },
+  eastbrook_druids_hide: {
+    id: 'eastbrook_druids_hide',
+    name: "Eastbrook Druid's Hide",
+    kind: 'armor',
+    armorType: 'leather',
+    slot: 'chest',
+    quality: 'uncommon',
+    stats: { armor: 52, int: 2, spi: 1 },
+    sellValue: 230,
+    buyValue: 2300,
+  },
+  eastbrook_warded_leggings: {
+    id: 'eastbrook_warded_leggings',
+    name: 'Eastbrook Warded Leggings',
+    kind: 'armor',
+    armorType: 'mail',
+    slot: 'legs',
+    quality: 'uncommon',
+    stats: { armor: 50, int: 2, spi: 1 },
+    sellValue: 220,
+    buyValue: 2200,
+  },
+  // Hub-tier (level-20, crafting-hub-gated) caster pieces, one per craft,
+  // mirroring TOOL_RECIPES' thorium tier.
+  wardweave_cowl: {
+    id: 'wardweave_cowl',
+    name: 'Wardweave Cowl',
+    kind: 'armor',
+    armorType: 'cloth',
+    slot: 'helmet',
+    quality: 'rare',
+    stats: { armor: 44, int: 5, spi: 3 },
+    sellValue: 440,
+  },
+  duskhide_wraps: {
+    id: 'duskhide_wraps',
+    name: 'Duskhide Wraps',
+    kind: 'armor',
+    armorType: 'leather',
+    slot: 'gloves',
+    quality: 'rare',
+    stats: { armor: 46, int: 5, spi: 3 },
+    sellValue: 420,
+  },
+  sootscale_mantle: {
+    id: 'sootscale_mantle',
+    name: 'Sootscale Mantle',
+    kind: 'armor',
+    armorType: 'mail',
+    slot: 'shoulder',
+    quality: 'rare',
+    stats: { armor: 78, int: 5, spi: 3 },
+    sellValue: 470,
+  },
   // --- Hollow Crypt rewards (rare/blue) ---
   // Item-level showcase: these rares are NORMALIZED to the stat budget their item
   // level earns (see src/sim/item_level.ts). The three weapons are the q_hollow
