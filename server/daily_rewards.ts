@@ -91,6 +91,7 @@ interface Eligibility {
   eligible: boolean;
   reason: 'eligible' | 'no_wallet' | 'under_minimum' | 'price_unavailable' | 'banned';
   banReason: string | null;
+  banExpiresAt: string | null;
   walletPubkey: string | null;
   wocBalance: number | null;
   wocUsdPrice: number | null;
@@ -361,6 +362,10 @@ async function dailyRewardClock(now = new Date()): Promise<{
   return { day, config: await dailyRewardRuntimeConfig(day) };
 }
 
+export async function currentDailyRewardDay(now = new Date()): Promise<string> {
+  return (await dailyRewardClock(now)).day;
+}
+
 async function prizePoolSol(config: DailyRewardRuntimeConfig): Promise<number | null> {
   if (config.prizePoolSol !== null) return config.prizePoolSol;
   if (config.solUsdPrice === null) return null;
@@ -378,6 +383,7 @@ export async function dailyRewardEligibility(
       eligible: false,
       reason: 'no_wallet',
       banReason: null,
+      banExpiresAt: null,
       walletPubkey: null,
       wocBalance: null,
       wocUsdPrice: runtimeConfig.wocUsdPrice,
@@ -394,6 +400,7 @@ export async function dailyRewardEligibility(
       eligible: false,
       reason: 'price_unavailable',
       banReason: null,
+      banExpiresAt: null,
       walletPubkey: wallet.pubkey,
       wocBalance: balance,
       wocUsdPrice: price,
@@ -406,6 +413,7 @@ export async function dailyRewardEligibility(
     eligible: usdValue >= runtimeConfig.minUsd,
     reason: usdValue >= runtimeConfig.minUsd ? 'eligible' : 'under_minimum',
     banReason: null,
+    banExpiresAt: null,
     walletPubkey: wallet.pubkey,
     wocBalance: balance,
     wocUsdPrice: price,
@@ -592,6 +600,7 @@ export class DailyRewardService {
         eligible: false,
         reason: 'banned',
         banReason: ban.reason,
+        banExpiresAt: ban.expiresAt,
         walletPubkey: null,
         wocBalance: null,
         wocUsdPrice: config.wocUsdPrice,

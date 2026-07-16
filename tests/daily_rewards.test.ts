@@ -40,6 +40,7 @@ import { buildDailyRewardsView } from '../src/ui/daily_rewards_view';
 
 class FakeDailyRewardDb implements DailyRewardDb {
   banReason: string | null = null;
+  banExpiresAt: string | null = null;
   winnerAnnouncements: DailyRewardWinnerAnnouncement[] = [];
   score = 0;
   spin: { outcomeKey: string; points: number; createdAt: string } | null = null;
@@ -53,8 +54,10 @@ class FakeDailyRewardDb implements DailyRewardDb {
   }[] = [];
 
   async ensureDay(): Promise<void> {}
-  async banForAccount(): Promise<{ reason: string } | null> {
-    return this.banReason === null ? null : { reason: this.banReason };
+  async banForAccount(): Promise<{ reason: string; expiresAt: string | null } | null> {
+    return this.banReason === null
+      ? null
+      : { reason: this.banReason, expiresAt: this.banExpiresAt };
   }
   async seedTasks(_day: string, tasks: DailyRewardTaskSeed[]): Promise<void> {
     this.tasks = tasks;
@@ -301,6 +304,21 @@ describe('daily rewards', () => {
     );
     expect(awarded).toBe(0);
     expect(db.events).toEqual([]);
+  });
+
+  it('includes the exact timed-ban expiry in player eligibility', async () => {
+    const db = new FakeDailyRewardDb();
+    db.banReason = 'Automated play was detected.';
+    db.banExpiresAt = '2026-07-16T06:00:00.000Z';
+
+    const status = await new DailyRewardService(db).status(1);
+
+    expect(status.eligibility).toMatchObject({
+      eligible: false,
+      reason: 'banned',
+      banReason: 'Automated play was detected.',
+      banExpiresAt: '2026-07-16T06:00:00.000Z',
+    });
   });
 
   it('uses live WOC and SOL prices from the payout service config', async () => {
