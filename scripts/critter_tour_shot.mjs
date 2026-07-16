@@ -125,7 +125,13 @@ for (const stop of STOPS) {
         v.project(cam);
         const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
         const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        return { d, sx, sy, inFront: v.z > -1 && v.z < 1, onScreen: sx >= 0 && sx <= window.innerWidth && sy >= 0 && sy <= window.innerHeight };
+        return {
+          d,
+          sx,
+          sy,
+          inFront: v.z > -1 && v.z < 1,
+          onScreen: sx >= 0 && sx <= window.innerWidth && sy >= 0 && sy <= window.innerHeight,
+        };
       })
       .filter((c) => c.inFront && c.onScreen)
       .sort((a, b) => a.d - b.d)
