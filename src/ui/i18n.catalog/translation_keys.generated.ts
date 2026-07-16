@@ -4488,6 +4488,8 @@ export type TranslationKeyFlat =
   | 'hudChrome.auraEffect.damageReduction'
   | 'hudChrome.auraEffect.defensiveStance'
   | 'hudChrome.auraEffect.disarm'
+  | 'hudChrome.auraEffect.dmgDone'
+  | 'hudChrome.auraEffect.dmgDoneReduce'
   | 'hudChrome.auraEffect.dodge'
   | 'hudChrome.auraEffect.dodgeReduce'
   | 'hudChrome.auraEffect.dot'

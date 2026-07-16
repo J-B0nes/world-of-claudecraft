@@ -1526,6 +1526,8 @@ export const en_CA: EnTranslations = {
       "attackSpeedSlow": "Slows attack speed by {pct}%",
       "attackSpeedFast": "Increases attack speed by {pct}%",
       "haste": "Increases attack and casting speed by {pct}%",
+      "dmgDone": "Increases damage dealt by {pct}%",
+      "dmgDoneReduce": "Reduces damage dealt by {pct}%",
       "temporalHourglass": "Immune and unable to act; restores health and accelerates cooldown recovery. Right-click to cancel.",
       "tongues": "Increases casting time by {pct}%",
       "combustionCrit": "Your Fire spells always critically strike",

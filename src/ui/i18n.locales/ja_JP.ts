@@ -5922,6 +5922,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.auraEffect.attackSpeedSlow': '攻撃速度を{pct}%低下させる',
   'hudChrome.auraEffect.attackSpeedFast': '攻撃速度を{pct}%上昇させる',
   'hudChrome.auraEffect.haste': '攻撃速度と詠唱速度を{pct}%上昇させる',
+  'hudChrome.auraEffect.dmgDone': '与えるダメージを{pct}%上昇させる',
+  'hudChrome.auraEffect.dmgDoneReduce': '与えるダメージを{pct}%低下させる',
   'hudChrome.auraEffect.tongues': '詠唱時間を{pct}%増加させる',
   'hudChrome.auraEffect.damageReduction': '受けるすべてのダメージを{pct}%軽減する',
   'hudChrome.auraEffect.guardianWard':

@@ -6022,6 +6022,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.auraEffect.attackSpeedSlow': 'Замедляет скорость атаки на {pct}%',
   'hudChrome.auraEffect.attackSpeedFast': 'Повышает скорость атаки на {pct}%',
   'hudChrome.auraEffect.haste': 'Повышает скорость атаки и произнесения заклинаний на {pct}%',
+  'hudChrome.auraEffect.dmgDone': 'Повышает наносимый урон на {pct}%',
+  'hudChrome.auraEffect.dmgDoneReduce': 'Снижает наносимый урон на {pct}%',
   'hudChrome.auraEffect.tongues': 'Увеличивает время произнесения заклинаний на {pct}%',
   'hudChrome.auraEffect.damageReduction': 'Уменьшает весь получаемый урон на {pct}%',
   'hudChrome.auraEffect.guardianWard':

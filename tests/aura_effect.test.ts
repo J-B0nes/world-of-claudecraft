@@ -202,4 +202,17 @@ describe('auraEffectDescriptor', () => {
     const input: AuraEffectInput = { kind: 'dot', value: 12, tickInterval: 2, school: 'nature' };
     expect(desc(input)).toEqual(desc(input));
   });
+
+  it('describes the damage-dealt fraction buff as a percent in both directions', () => {
+    // Rune of Power / Elemental Convergence: the bearer deals more damage.
+    expect(desc({ kind: 'buff_dmg_done', value: 0.1 })).toEqual({
+      key: 'hudChrome.auraEffect.dmgDone',
+      nums: { pct: 10 },
+    });
+    // Negative = a demoralize (Direhowl's pct form): the reduce wording.
+    expect(desc({ kind: 'buff_dmg_done', value: -0.2 })).toEqual({
+      key: 'hudChrome.auraEffect.dmgDoneReduce',
+      nums: { pct: 20 },
+    });
+  });
 });

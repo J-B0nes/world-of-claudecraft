@@ -1526,6 +1526,8 @@ export const es_ES: EnTranslations = {
       "attackSpeedSlow": "Disminuye la velocidad de ataque un {pct}%",
       "attackSpeedFast": "Incrementa la velocidad de ataque un {pct}%",
       "haste": "Incrementa la velocidad de ataque y lanzamiento un {pct}%",
+      "dmgDone": "Increases damage dealt by {pct}%",
+      "dmgDoneReduce": "Reduces damage dealt by {pct}%",
       "temporalHourglass": "Inmune e incapaz de actuar; recupera salud y acelera los tiempos de reutilización. Haz clic derecho para cancelar.",
       "tongues": "Incrementa el tiempo de lanzamiento un {pct}%",
       "combustionCrit": "Tus hechizos de Fuego siempre golpean de crítico",

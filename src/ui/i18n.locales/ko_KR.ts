@@ -5925,6 +5925,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.auraEffect.attackSpeedSlow': '공격 속도를 {pct}% 늦춥니다',
   'hudChrome.auraEffect.attackSpeedFast': '공격 속도를 {pct}% 증가시킵니다',
   'hudChrome.auraEffect.haste': '공격 속도와 시전 속도를 {pct}% 증가시킵니다',
+  'hudChrome.auraEffect.dmgDone': '입히는 피해가 {pct}% 증가합니다',
+  'hudChrome.auraEffect.dmgDoneReduce': '입히는 피해가 {pct}% 감소합니다',
   'hudChrome.auraEffect.tongues': '시전 시간을 {pct}% 증가시킵니다',
   'hudChrome.auraEffect.damageReduction': '받는 모든 피해가 {pct}% 감소합니다',
   'hudChrome.auraEffect.guardianWard':

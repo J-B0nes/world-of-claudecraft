@@ -242,6 +242,14 @@ export function auraEffectDescriptor(a: AuraEffectInput): AuraEffectDescriptor |
     case 'buff_jump':
       return { key: `${KEY}.jump`, nums: { pct: pctFromMult(a.value) } };
 
+    // Rune of Power / Elemental Convergence, and Direhowl's demoralize in its
+    // negative pct form: the bearer DEALS less damage (pctFromFrac abs()es it).
+    case 'buff_dmg_done':
+      return {
+        key: a.value < 0 ? `${KEY}.dmgDoneReduce` : `${KEY}.dmgDone`,
+        nums: { pct: pctFromFrac(a.value) },
+      };
+
     default:
       return null;
   }

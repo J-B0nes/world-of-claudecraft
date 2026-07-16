@@ -5657,6 +5657,8 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.auraEffect.attackSpeedSlow': '攻击速度减慢 {pct}%',
   'hudChrome.auraEffect.attackSpeedFast': '攻击速度提高 {pct}%',
   'hudChrome.auraEffect.haste': '攻击速度和施法速度提高 {pct}%',
+  'hudChrome.auraEffect.dmgDone': '造成的伤害提高 {pct}%',
+  'hudChrome.auraEffect.dmgDoneReduce': '造成的伤害降低 {pct}%',
   'hudChrome.auraEffect.tongues': '施法时间延长 {pct}%',
   'hudChrome.auraEffect.damageReduction': '受到的所有伤害降低 {pct}%',
   'hudChrome.auraEffect.guardianWard': '下一次敌人的致命攻击会改为将你的生命值恢复至 {pct}%',
