@@ -1,9 +1,9 @@
 // The boarball: bespoke visual for the 'vale_cup_ball' entity (an inert
 // bell-pattern mob the Vale Cup sim module drives; without this carve-out the
-// renderer would dress it as a generic mob rig). A stitched-leather procedural
-// sphere with a hide CanvasTexture, client-side roll rotation derived from
-// per-frame position deltas (axis = up x velocity, pure helper below), a soft
-// contact-shadow blob, and a small module-owned dust pool for fast rolls.
+// renderer would dress it as a generic mob rig). A round, machined soccer-ball
+// procedural sphere with a CanvasTexture, client-side roll rotation derived
+// from per-frame position deltas (axis = up x velocity, pure helper below), a
+// soft contact-shadow blob, and a small module-owned dust pool for fast rolls.
 //
 // Sharing contract: texture + materials + the dust pool are MODULE-level and
 // never disposed (renderer.removeView only disposes per-view geometry, which
@@ -11,26 +11,7 @@
 import * as THREE from 'three';
 import { VALE_CUP_BALL_MOB, VALE_CUP_BALL_TEMPLATE_ID } from '../sim/content/vale_cup';
 import { VC_BALL_RADIUS } from '../sim/vale_cup_ball';
-import { loadGltf } from './assets/loader';
-import { registerPreload } from './assets/preload';
 import { GFX } from './gfx';
-
-// A small Tripo-generated GLB (see public/models/props/CLAUDE.md) preferred
-// over the procedural sphere below; the canvas-textured sphere stays as the
-// load-race fallback (same contract as mailbox.ts/fish.ts), so a headless or
-// slow-preload host still renders a ball.
-const BALL_ASSET_URL = '/models/props/vale_cup_ball.glb';
-let loadedBallGltf: THREE.Group | null = null;
-
-if (typeof window !== 'undefined') {
-  registerPreload(
-    loadGltf(BALL_ASSET_URL).then((gltf) => {
-      loadedBallGltf = gltf.scene;
-    }),
-  );
-}
-
-export const valeCupBallPreloadInternalsForTest = { ballAssetUrl: BALL_ASSET_URL };
 
 export const VALE_CUP_BALL_TEMPLATE = VALE_CUP_BALL_TEMPLATE_ID;
 // Base (unscaled) radius derived from the SIM's physics radius and the mob
@@ -204,52 +185,23 @@ function sharedShadowMaterial(): THREE.MeshBasicMaterial {
 
 export interface ValeCupBallBuild {
   group: THREE.Group;
-  /** the rolling ball: the renderer premultiplies roll quaternions onto it */
-  spinner: THREE.Object3D;
+  /** the rolling sphere: the renderer premultiplies roll quaternions onto it */
+  spinner: THREE.Mesh;
   /** ground-hugging contact blob; repositioned/faded per frame */
   shadow: THREE.Mesh;
   height: number;
-}
-
-// The GLB clone, centered on the ball's local origin and normalized to a
-// diameter of 2*BALL_RADIUS so the roll math (which pivots about the group
-// origin) is unaffected by the swap.
-function buildBallGlb(): THREE.Object3D {
-  const inst = loadedBallGltf!.clone(true);
-  inst.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
-  const box = new THREE.Box3().setFromObject(inst);
-  const size = box.getSize(new THREE.Vector3());
-  const diameter = Math.max(size.x, size.y, size.z);
-  if (diameter > 1e-3) inst.scale.setScalar((BALL_RADIUS * 2) / diameter);
-  const centered = new THREE.Box3().setFromObject(inst);
-  const center = centered.getCenter(new THREE.Vector3());
-  inst.position.sub(center);
-  const spinner = new THREE.Group();
-  spinner.add(inst);
-  spinner.position.y = BALL_RADIUS;
-  return spinner;
-}
-
-function buildProceduralBallSphere(): THREE.Object3D {
-  // a round, machined soccer ball (smooth sphere, not the old stuffed hide)
-  const geo = new THREE.SphereGeometry(BALL_RADIUS, 28, 20);
-  const spinner = new THREE.Mesh(geo, sharedBallMaterial());
-  spinner.position.y = BALL_RADIUS;
-  spinner.castShadow = true;
-  spinner.receiveShadow = true;
-  return spinner;
 }
 
 /** Per-view build. Geometry is view-owned (cheap; removeView disposes it),
  *  materials/textures are the shared module singletons above. */
 export function buildValeCupBall(): ValeCupBallBuild {
   const group = new THREE.Group();
-  const spinner: THREE.Object3D = loadedBallGltf ? buildBallGlb() : buildProceduralBallSphere();
+  // a round, machined soccer ball (smooth sphere, not the old stuffed hide)
+  const geo = new THREE.SphereGeometry(BALL_RADIUS, 28, 20);
+  const spinner = new THREE.Mesh(geo, sharedBallMaterial());
+  spinner.position.y = BALL_RADIUS;
+  spinner.castShadow = true;
+  spinner.receiveShadow = true;
   group.add(spinner);
 
   const shadow = new THREE.Mesh(

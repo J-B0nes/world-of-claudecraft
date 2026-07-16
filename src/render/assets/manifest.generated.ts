@@ -662,7 +662,6 @@ export const MEDIA_ASSETS: Record<string, string> =
   "models/props/tent_open.glb": "/media/models/props/tent_open.92b3477806c6.glb",
   "models/props/tent_small.glb": "/media/models/props/tent_small.af9378727756.glb",
   "models/props/timber_pillar.glb": "/media/models/props/timber_pillar.6652942ce01e.glb",
-  "models/props/vale_cup_ball.glb": "/media/models/props/vale_cup_ball.17b22770527f.glb",
   "models/props/weapon_stand.glb": "/media/models/props/weapon_stand.a781b465d38e.glb",
   "models/props/well.glb": "/media/models/props/well.9308ba09ea3b.glb",
   "models/props/yumi_brazier_stand.glb": "/media/models/props/yumi_brazier_stand.8a1f5e1ce91a.glb",
