@@ -3,8 +3,9 @@
 // nothing changes out of the box). The toggle gates the discrete event cues
 // (loot, level-up, quest, whisper, miss/dodge/parry) without touching the SFX
 // volume, spatial world sounds, or the gameplay-timing cues.
-import puppeteer from 'puppeteer-core';
+
 import fs from 'node:fs';
+import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH as EDGE } from './browser_path.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
@@ -65,9 +66,15 @@ const box = await page.evaluate(() => {
   const el = document.querySelector('#options-menu');
   if (!el) return null;
   const r = el.getBoundingClientRect();
-  return { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
+  return {
+    x: Math.round(r.x),
+    y: Math.round(r.y),
+    width: Math.round(r.width),
+    height: Math.round(r.height),
+  };
 });
-if (box && box.width > 0) await page.screenshot({ path: `${OUT}/audio_options_panel.png`, clip: box });
+if (box && box.width > 0)
+  await page.screenshot({ path: `${OUT}/audio_options_panel.png`, clip: box });
 
 // Flip it OFF by clicking the real toggle button (not a fake setting write), then
 // re-screenshot so the pair shows the on -> off states.
