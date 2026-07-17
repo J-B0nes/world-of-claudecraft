@@ -19,6 +19,7 @@
 // (applyAura/dealDamage/effectiveArmor/recalcPlayer + the rng/emit/players/entities
 // primitives), all of which still resolve on Sim.
 
+import { isDisarmed } from '../combat/cc';
 import { applyThornsReaction } from '../combat/thorns_charge';
 import { MOBS } from '../data';
 import * as deedsMod from '../deeds';
@@ -305,15 +306,17 @@ export function runMobSwingAffixes(
   // a landed hit is only able to seed a FRESH disarm window, so a run of procs (one
   // brute swinging faster than its own duration, or several in the same pack each
   // rolling their own chance) cannot chain-extend the lockout past its stated
-  // duration (issue #1969, "Autoattack ... Cant start swingtimer again").
+  // duration. The already-disarmed check sits AFTER the rng roll so a swing at an
+  // already-disarmed target still draws its proc roll, keeping every downstream draw
+  // at its documented stream position.
   const disarm = MOBS[mob.templateId]?.disarm;
   if (
     disarm &&
     mob.hostile &&
     target.kind === 'player' &&
     !target.dead &&
-    !target.auras.some((a) => a.kind === 'disarm') &&
-    ctx.rng.chance(disarm.chance)
+    ctx.rng.chance(disarm.chance) &&
+    !isDisarmed(target)
   ) {
     ctx.applyAura(target, {
       id: `disarm_${mob.templateId}`,

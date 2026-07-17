@@ -108,18 +108,21 @@ describe('mob disarm ("Disarming Smash")', () => {
     sim.setPlayerLevel(60); // enough HP to survive incidental mob swings during the tick loop
     const p = sim.player;
     const mob = spawnCrusher(sim, p);
-    MOBS['ogre_crusher'].disarm!.chance = 1; // deterministic: every landed hit procs
-    swing(sim, mob, p); // first proc: applies the debuff, 6s remaining
-    const first = p.auras.find((a) => a.kind === 'disarm');
-    expect(first?.remaining).toBe(6);
-    // Let 5s pass (still disarmed: 1s left), then land a second proc before it
-    // falls off. The debuff must NOT reset back up to a fresh 6s.
-    for (let i = 0; i < 20 * 5; i++) sim.tick();
-    swing(sim, mob, p);
-    MOBS['ogre_crusher'].disarm!.chance = 0.25;
-    const second = p.auras.find((a) => a.kind === 'disarm');
-    expect(second).toBeTruthy();
-    expect(second!.remaining).toBeLessThanOrEqual(1.01);
+    try {
+      MOBS['ogre_crusher'].disarm!.chance = 1; // deterministic: every landed hit procs
+      swing(sim, mob, p); // first proc: applies the debuff, 6s remaining
+      const first = p.auras.find((a) => a.kind === 'disarm');
+      expect(first?.remaining).toBe(6);
+      // Let 5s pass (still disarmed: 1s left), then land a second proc before it
+      // falls off. The debuff must NOT reset back up to a fresh 6s.
+      for (let i = 0; i < 20 * 5; i++) sim.tick();
+      swing(sim, mob, p);
+      const second = p.auras.find((a) => a.kind === 'disarm');
+      expect(second).toBeTruthy();
+      expect(second!.remaining).toBeCloseTo(1, 1);
+    } finally {
+      MOBS['ogre_crusher'].disarm!.chance = 0.25;
+    }
   });
 
   it('a friendly pet swing never disarms its target', () => {
