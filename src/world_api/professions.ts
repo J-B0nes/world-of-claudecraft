@@ -52,6 +52,21 @@ export interface CraftResultView {
     // #1297: denied because the recipe is station-bound and the player is not
     // currently at the level-20 crafting hub (or not yet the required level).
     | 'not_at_hub';
+  // Professions 2.0 Phase 2: true only when the masterwork effect applied to
+  // this craft's output. `quality` now reports the output def's static
+  // quality (outputs are deterministic; the quality roll is retired).
+  masterwork?: boolean;
+}
+
+// Masterwork proc surface (Professions 2.0 Phase 2): the local viewer's most
+// recent masterwork proc, mirrored from the server's `masterwork` event the
+// same way CraftResultView mirrors `craftResult`. Ids only, string-free per
+// the IWorld seam rule; `crafter` is the crafting player's entity id. `null`
+// until the first masterwork proc of the session.
+export interface MasterworkView {
+  recipeId: string;
+  itemId: string;
+  crafter: number;
 }
 
 // The professions read-surface facet (#1164, extended by #1121/#1127/#1129). `Sim`
@@ -77,6 +92,7 @@ export interface IWorldProfessions {
   harvestNode(nodeId: string): WorldInteractionOutcome;
   recipeList: readonly RecipeDef[];
   lastCraftResult: CraftResultView | null;
+  lastMasterwork: MasterworkView | null;
   craftItem(recipeId: string): void;
   craftingIdentity: CraftingIdentityView;
   // Active archetype identity (#1129). null before the acceptance quest.

@@ -213,7 +213,7 @@ describe('live profession attunement quests', () => {
   // combo_eligibility.ts). So the whole flow gets a same-seed determinism pin:
   // two sims with the same seed running the identical command script must end
   // byte-identical, including every rng-drawing step (harvest rarity rolls and
-  // the craft quality roll share the one world rng stream).
+  // the craft path's masterwork proc draw share the one world rng stream).
   it('same-seed runs of the gather, craft, attune, and hobby-switch flow are identical', () => {
     const run = () => {
       const sim = makeSim(4242);
@@ -235,7 +235,7 @@ describe('live profession attunement quests', () => {
       attuneNewPair(sim, WEAPON_ARMOR);
       sim.addItem('linen_scrap', 1, pid);
       sim.addItem('spider_leg', 1, pid);
-      sim.craftItem('recipe_minor_healing_potion', pid); // quality roll: draws rng
+      sim.craftItem('recipe_minor_healing_potion', pid); // masterwork proc: draws rng
       acceptProfessionQuest(sim, HOBBY_QUEST, 'tailoring');
       completeAndTurnIn(sim, HOBBY_QUEST);
       for (let i = 0; i < 20; i++) sim.tick();

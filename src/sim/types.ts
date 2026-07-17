@@ -680,8 +680,19 @@ export interface ItemInstancePayload {
   signer?: string;
   /** Remaining charges for a per-effect-limited item, keyed by effect id. */
   charges?: Record<string, number>;
-  /** Rolled quality/stat values baked into this specific copy at creation time. */
-  rolled?: { quality?: string; stats?: Record<string, number> };
+  /** Quality/stat values baked into this specific copy at creation time.
+   *  `quality` is legacy-only under the Phase 2 masterwork model: crafted
+   *  outputs are deterministic and new crafts never write it (persisted
+   *  payloads that carry it keep loading and reading as before). `masterwork`
+   *  marks a masterwork proc copy (professions/masterwork.ts) whose `stats`
+   *  are the baked tier-delta bonus rather than an enchant; the enchanted
+   *  marker is the separate `enchant` field below. */
+  rolled?: { quality?: string; stats?: Record<string, number>; masterwork?: boolean };
+  /** Id of the enchant applied to this specific copy (content/enchants.ts):
+   *  the authoritative already-enchanted marker (professions/enchanting.ts
+   *  isEnchantedInstance). Legacy enchanted copies predate this field and are
+   *  detected by bare rolled.stats WITHOUT rolled.masterwork instead. */
+  enchant?: string;
   /** Player id (Entity id) this specific copy is bound to. */
   boundTo?: number;
 }
@@ -2716,7 +2727,11 @@ export type SimEvent = { pid?: number } & (
       recipeId: string;
       itemId?: string;
       count?: number;
+      // Phase 2: the OUTPUT DEF quality (outputs are deterministic; the
+      // quality roll is retired). `masterwork` mirrors CraftResult.masterwork
+      // so the online client's lastCraftResult mirror stays field-complete.
       quality?: ItemDef['quality'];
+      masterwork?: boolean;
       reason?:
         | 'unknown_recipe'
         | 'insufficient_materials'
@@ -2725,6 +2740,12 @@ export type SimEvent = { pid?: number } & (
         | 'throttled'
         | 'not_at_hub';
     }
+  // Masterwork proc (Professions 2.0 Phase 2): a successful craft's single
+  // output-side rng draw procced, minting a masterwork instance with baked
+  // bonus stats. Personal (emitted with pid = the crafter's entity id, which
+  // `crafter` repeats as payload). Ids only, text-free on purpose (like
+  // craftResult above): the client renders its own localized copy.
+  | { type: 'masterwork'; recipeId: string; itemId: string; crafter: number }
   // Gather-node harvest outcome (#1729): a successful resource harvest emits
   // this so the client can play a gathering audio cue for the acting player.
   // Personal (carries pid), delivered only to the harvester. Emitted only on a

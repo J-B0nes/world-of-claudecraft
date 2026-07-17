@@ -260,6 +260,7 @@ import {
   applyEnchant as applyEnchantImpl,
   type DisenchantResult,
   disenchantItem as disenchantItemImpl,
+  isEnchantedInstance,
 } from './professions/enchanting';
 import * as professionsFocus from './professions/focus';
 import {
@@ -271,6 +272,7 @@ import {
   isNodeHarvestableBy,
   normalizeGatheringProficiency,
 } from './professions/gathering';
+import type { MasterworkProc } from './professions/masterwork';
 import { type SalvageResult, salvageItem as salvageItemImpl } from './professions/salvage';
 import type { ProfessionRecipeRecord as RecipeDef } from './professions/types';
 import {
@@ -951,6 +953,11 @@ export interface PlayerMeta {
   // toast/log line off, without deciding the outcome itself. Null until the
   // player's first craft attempt.
   lastCraftResult: CraftResult | null;
+  // This player's most recent masterwork proc (Professions 2.0 Phase 2), same
+  // session-only shape as lastCraftResult above: never persisted into
+  // CharacterState. Null until the player's first masterwork proc this
+  // session. Backs the IWorld lastMasterwork read surface.
+  lastMasterwork: MasterworkProc | null;
   // Outcome of this player's most recent salvageItem command (#1300), same
   // session-only shape as lastCraftResult above. Null until the player's
   // first salvage attempt. Not yet wired onto the IWorld/wire surface (same
@@ -1935,6 +1942,7 @@ export class Sim {
       pendingGatherGrants: [],
       nodeHarvestReadyAt: {},
       lastCraftResult: null,
+      lastMasterwork: null,
       lastSalvageResult: null,
       lastDisenchantResult: null,
       lastEnchantResult: null,
@@ -5961,20 +5969,22 @@ export class Sim {
   }
 
   // Enchanting-eligible count for `itemId` (#1712 review): a plain fungible
-  // stack counts, and so does an instanced copy that carries NO rolled.stats
-  // (e.g. crafting.ts's single-copy rare+ grant, which instances every
-  // rare-or-better craft for its signer/rolled-quality payload but does not
-  // itself apply an enchant). Only a copy that already has rolled.stats (i.e.
-  // is already enchanted) is excluded, so disenchant/apply-enchant never
-  // consumes an already-enchanted copy but DOES accept crafted gear, unlike
-  // the fungible-only gate this replaces for enchanting.ts specifically.
+  // stack counts, and so does an instanced copy that is not itself already
+  // enchanted (e.g. crafting.ts's single-copy rare+ grant or a Phase 2
+  // masterwork copy, whose rolled.stats are its baked bonus, NOT an enchant).
+  // Only an already-enchanted copy (professions/enchanting.ts
+  // isEnchantedInstance: the explicit `enchant` marker, or legacy bare
+  // rolled.stats without rolled.masterwork) is excluded, so disenchant/
+  // apply-enchant never consumes an already-enchanted copy but DOES accept
+  // crafted and masterwork gear, unlike the fungible-only gate this replaces
+  // for enchanting.ts specifically.
   countEnchantableItem(itemId: string, pid?: number): number {
     const r = this.resolve(pid);
     if (!r) return 0;
     let n = 0;
     for (const s of r.meta.inventory) {
       if (s.itemId !== itemId) continue;
-      if (s.instance?.rolled?.stats) continue;
+      if (s.instance && isEnchantedInstance(s.instance)) continue;
       n += s.count;
     }
     return n;
@@ -5983,11 +5993,12 @@ export class Sim {
   // Removal counterpart to countEnchantableItem above: prefers plain fungible
   // stacks (matching removeFungibleItem's ordering within that subset) and only
   // reaches for an instanced-but-unenchanted copy once no fungible copy is left.
-  // Never removes a copy that already carries rolled.stats. Returns the
+  // Never removes an already-enchanted copy (isEnchantedInstance). Returns the
   // `instance` payload of every instanced slot actually consumed (matching
   // removeItem's return contract) so a caller applying an enchant can merge a
-  // crafted copy's signer/rolled.quality into the freshly-enchanted instance
-  // instead of silently dropping them (#1712 round-3 review).
+  // crafted copy's signer/masterwork/legacy rolled.quality into the
+  // freshly-enchanted instance instead of silently dropping them (#1712
+  // round-3 review).
   removeEnchantableItem(itemId: string, count: number, pid?: number): ItemInstancePayload[] {
     const consumedInstances: ItemInstancePayload[] = [];
     const r = this.resolve(pid);
@@ -6002,10 +6013,10 @@ export class Sim {
       count -= take;
       if (s.count <= 0) meta.inventory.splice(i, 1);
     }
-    // Pass 2: instanced copies without rolled.stats.
+    // Pass 2: instanced copies that are not already enchanted.
     for (let i = meta.inventory.length - 1; i >= 0 && count > 0; i--) {
       const s = meta.inventory[i];
-      if (s.itemId !== itemId || !s.instance || s.instance.rolled?.stats) continue;
+      if (s.itemId !== itemId || !s.instance || isEnchantedInstance(s.instance)) continue;
       consumedInstances.push(s.instance);
       const take = Math.min(s.count, count);
       s.count -= take;
@@ -6230,15 +6241,34 @@ export class Sim {
       itemId: result.itemId,
       count: result.count,
       quality: result.quality,
+      masterwork: result.masterwork,
       reason: result.reason,
       pid: meta?.entityId,
     });
+    // Masterwork proc surface (Professions 2.0 Phase 2): stash the per-player
+    // view (session-only, like lastCraftResult above) and emit the personal
+    // masterwork event, in addition to the craftResult emit.
+    if (result.masterwork && result.itemId && meta) {
+      const proc: MasterworkProc = {
+        recipeId: result.recipeId,
+        itemId: result.itemId,
+        crafter: meta.entityId,
+      };
+      meta.lastMasterwork = proc;
+      this.emit({ type: 'masterwork', ...proc, pid: meta.entityId });
+    }
   }
 
   // IWorld read surface (IWorldProfessions, #1127): the local viewer's most
   // recent craft-result, or null before their first craft attempt this session.
   get lastCraftResult(): CraftResult | null {
     return this.players.get(this.primaryId)?.lastCraftResult ?? null;
+  }
+
+  // IWorld read surface (IWorldProfessions, Phase 2): the local viewer's most
+  // recent masterwork proc, or null before their first proc this session.
+  get lastMasterwork(): MasterworkProc | null {
+    return this.players.get(this.primaryId)?.lastMasterwork ?? null;
   }
 
   // Recipe acquisition command (#1299): a thin delegate onto

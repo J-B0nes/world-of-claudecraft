@@ -9,7 +9,7 @@ Update this file at the end of every implementation and QA session. Statuses:
 |---|---|---|---|---|
 | 1 | Ring and identity foundations | complete | 2026-07-16 | 2026-07-17 |
 | 1 QA | Verify ring and identity foundations | complete | 2026-07-17 | 2026-07-17 |
-| 2 | Masterwork model | not started | | |
+| 2 | Masterwork model | complete | 2026-07-17 | 2026-07-17 |
 | 2 QA | Verify masterwork model | not started | | |
 | 3 | Host-parity bug fixes | not started | | |
 | 3 QA | Verify host-parity bug fixes | not started | | |
@@ -68,10 +68,10 @@ decision), the COMBO_RECIPES record field order (cosmetic), legacy
 IWorldProfessions member retirement (Phase 15 candidate).
 
 ### Phase 2: Masterwork model
-- [ ] Craft outputs deterministic; five-way quality roll retired; `trivialAt` retired
-- [ ] Masterwork proc (skill, self-signed, specialization inputs) with pinned rng-draw contract
-- [ ] Masterwork stats baked via `item_budget` into `instance.rolled.stats`; deeds reader still coherent
-- [ ] Masterwork SimEvent with celebration payload; power-ceiling tuning targets in `state.md`
+- [x] Craft outputs deterministic; five-way quality roll retired; `trivialAt` retired
+- [x] Masterwork proc (skill, self-signed, specialization inputs) with pinned rng-draw contract
+- [x] Masterwork stats baked via `item_budget` into `instance.rolled.stats`; deeds reader still coherent
+- [x] Masterwork SimEvent with celebration payload; power-ceiling tuning targets in `state.md`
 
 ### Phase 3: Host-parity bug fixes
 - [ ] Trade carries `ItemInstancePayload` end to end (regression test)
@@ -147,3 +147,23 @@ IWorldProfessions member retirement (Phase 15 candidate).
 ## Notes
 
 (append per-phase notes, deferrals, and surprises here as sessions complete)
+
+Phase 2 (2026-07-17): phase-start commit 9a5ce7a93 (the Phase 1 QA merge,
+the release/v0.27.0 head); code-final commit 90ba58f17 (the
+professions_craft parity golden); the docs commit follows it, so the QA
+session diffs 9a5ce7a93..branch-head. Implemented on the worktree branch
+feature/professions-2-phase-02-masterwork. Validation: whole-repo tsc
+clean; the six phase suites (204 tests), the new and reader suites (122),
+the net/wire row (377), and tests/parity (174 passed, one pre-existing
+env-gated skip) all green; the full gate passed every stage except the
+known environmental armory browser failure (PR CI is the arbiter), with
+typecheck and the env/server/client builds finished manually per the
+established playbook. Reviews: six read-only reviewers (architecture,
+cross-platform-sync, privacy-security, migration-safety, qa-checklist,
+test-coverage-auditor), zero blocking and zero unresolved should-fix
+findings; the archetype-ceiling-gates-masterwork semantic and the
+chore-first commit order are deliberate and explained in the commit
+bodies. Deferred and surfaced items live in the Phase 2 drift notes in
+state.md: the rollback enchantability caveat for the release notes, the
+two battlefield trickle questions, the guide prose deferral to Phases 6
+and 15, and the standing instance-payload wire invariant.

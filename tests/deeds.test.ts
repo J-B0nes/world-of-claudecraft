@@ -611,6 +611,52 @@ describe('retro on join', () => {
     expect(meta.deedsEarned.has('col_first_rare')).toBe(true);
   });
 
+  it('a masterwork bag instance seeds at the item DEF quality on join (no bump inflation)', () => {
+    // Professions 2.0 Phase 2: a masterwork copy carries rolled.masterwork +
+    // rolled.stats and NO rolled.quality, so the join seed reads the def
+    // quality. eastbrook_ritual_vestments' def is uncommon: the gameplay bump
+    // to rare is a stat-budget fact, never a discovery fact.
+    const sim = makeSim();
+    const pid = sim.addPlayer('warrior', 'MasterVet', {
+      state: {
+        ...veteranState(),
+        inventory: [
+          {
+            itemId: 'eastbrook_ritual_vestments',
+            count: 1,
+            instance: {
+              signer: 'MasterVet',
+              rolled: { masterwork: true, stats: { int: 1, spi: 1 } },
+            },
+          },
+        ],
+      },
+    });
+    const meta = sim.players.get(pid)!;
+    expect(meta.deedStats.itemsDiscovered.has('eastbrook_ritual_vestments')).toBe(true);
+    expect(meta.deedStats.visited.has('quality:rare')).toBe(false);
+    expect(meta.deedsEarned.has('col_first_rare')).toBe(false);
+  });
+
+  it('a legacy bag instance with rolled.quality rare still seeds the quality:rare mark on join', () => {
+    // Legacy crafted instances (pre-Phase 2) persist rolled.quality; their
+    // exact old read is unchanged: the rolled quality beats the def.
+    const sim = makeSim();
+    const pid = sim.addPlayer('warrior', 'LegacyVet', {
+      state: {
+        ...veteranState(),
+        inventory: [
+          { itemId: 'redbrook_blade', count: 1, instance: { rolled: { quality: 'rare' } } },
+        ],
+      },
+    });
+    const meta = sim.players.get(pid)!;
+    expect(meta.deedStats.itemsDiscovered.has('redbrook_blade')).toBe(true);
+    expect(meta.deedStats.visited.has('quality:rare')).toBe(true);
+    expect(meta.deedsEarned.has('col_first_rare')).toBe(true);
+    expect(meta.deedsEarned.has('col_first_epic')).toBe(false);
+  });
+
   it('the retro pass is a pure function of the loaded state and the catalog', () => {
     const a = new Sim({ seed: 7, playerClass: 'mage' });
     const b = new Sim({ seed: 7, playerClass: 'mage' });
@@ -713,6 +759,52 @@ describe('retro on join', () => {
       state: { ...veteranState(), level: MAX_LEVEL, restedXp: 50 },
     });
     expect(sim.players.get(banked)!.deedsEarned.has('prog_well_rested')).toBe(true);
+  });
+});
+
+// Professions 2.0 Phase 2: a live masterwork grant (sim.addItemInstance, the
+// exact hub the craft path's masterwork arm calls) carries rolled.masterwork
+// and NO rolled.quality, so the discovery ledger reads the item DEF quality,
+// identical to a plain grant of the same item; the one-tier gameplay bump
+// never inflates the quality-first marks.
+describe('masterwork instance discovery (Professions 2.0 Phase 2)', () => {
+  it('a rare-DEF masterwork instance marks discovery exactly like a plain grant of the item', () => {
+    // Rare DEF (boundstone_helm): the def quality itself lands quality:rare on
+    // both paths, and the masterwork bump (rare to epic in stats) lands epic
+    // on NEITHER.
+    const viaMasterwork = makeSim();
+    const { meta: mwMeta } = primary(viaMasterwork);
+    viaMasterwork.addItemInstance(
+      'boundstone_helm',
+      { signer: mwMeta.name, rolled: { masterwork: true, stats: { sta: 2, str: 1 } } },
+      viaMasterwork.playerId,
+    );
+    viaMasterwork.tick();
+    const viaPlain = makeSim();
+    const { meta: plainMeta } = primary(viaPlain);
+    viaPlain.addItem('boundstone_helm', 1, viaPlain.playerId);
+    viaPlain.tick();
+    for (const meta of [mwMeta, plainMeta]) {
+      expect(meta.deedStats.itemsDiscovered.has('boundstone_helm')).toBe(true);
+      expect(meta.deedStats.visited.has('quality:rare')).toBe(true);
+      expect(meta.deedStats.visited.has('quality:epic')).toBe(false);
+      expect(meta.deedsEarned.has('col_first_rare')).toBe(true);
+      expect(meta.deedsEarned.has('col_first_epic')).toBe(false);
+    }
+  });
+
+  it('an uncommon-DEF masterwork instance never lands the bumped rare mark', () => {
+    const sim = makeSim();
+    const { meta } = primary(sim);
+    sim.addItemInstance(
+      'eastbrook_ritual_vestments',
+      { signer: meta.name, rolled: { masterwork: true, stats: { int: 1, spi: 1 } } },
+      sim.playerId,
+    );
+    sim.tick();
+    expect(meta.deedStats.itemsDiscovered.has('eastbrook_ritual_vestments')).toBe(true);
+    expect(meta.deedStats.visited.has('quality:rare')).toBe(false);
+    expect(meta.deedsEarned.has('col_first_rare')).toBe(false);
   });
 });
 

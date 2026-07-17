@@ -99,6 +99,7 @@ import {
   type SocialInfo,
   type TradeInfo,
 } from '../world_api';
+import type { MasterworkView } from '../world_api/professions';
 import { computeBackoffDelay } from './backoff';
 import { optimisticQuestState } from './quest_state_optimistic';
 import { isTransientReconnectRejection, isTransientTimeoutRejection } from './reconnect_policy';
@@ -1337,6 +1338,10 @@ export class ClientWorld implements IWorld {
   // Craft-result surface (#1127), mirrored from the server's `craftResult`
   // event (applyEvent below). Null until this session's first craft attempt.
   lastCraftResult: CraftResultView | null = null;
+  // Masterwork proc surface (Professions 2.0 Phase 2), mirrored LIVE from the
+  // server's `masterwork` event (applyMasterworkEvent below), exactly like
+  // lastCraftResult above. Null until this session's first masterwork proc.
+  lastMasterwork: MasterworkView | null = null;
   // Compatibility scalar projections of the atomic `cprof` identity mirror.
   // Quest acceptance is the only online transition path, so these direct legacy
   // methods deliberately send no wire commands.
@@ -1839,6 +1844,7 @@ export class ClientWorld implements IWorld {
       for (const ev of msg.list) {
         this.applyLockpickEvent(ev as SimEvent);
         this.applyCraftResultEvent(ev as SimEvent);
+        this.applyMasterworkEvent(ev as SimEvent);
         this.applyChatFlairEvent(ev as SimEvent);
         this.eventQueue.push(ev as SimEvent);
       }
@@ -3251,8 +3257,17 @@ export class ClientWorld implements IWorld {
       itemId: ev.itemId,
       count: ev.count,
       quality: ev.quality as MaterialRarity | undefined,
+      masterwork: ev.masterwork,
       reason: ev.reason,
     };
+  }
+  // Mirror the authoritative masterwork event into lastMasterwork
+  // (Professions 2.0 Phase 2), modeled exactly on applyCraftResultEvent
+  // above. The event still flows to the HUD (drainEvents) for a future
+  // Phase 6 toast.
+  private applyMasterworkEvent(ev: SimEvent): void {
+    if (ev.type !== 'masterwork') return;
+    this.lastMasterwork = { recipeId: ev.recipeId, itemId: ev.itemId, crafter: ev.crafter };
   }
   delveRiteChoose(intensity: RiteIntensity): void {
     this.cmd({ cmd: 'delve_rite_choose', intensity });
