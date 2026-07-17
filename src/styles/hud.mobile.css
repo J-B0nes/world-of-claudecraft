@@ -2520,6 +2520,14 @@
     grid-template-columns: 1fr 1fr;
     justify-items: start;
   }
+  body.mobile-touch #claudium-window .cl-wallet-connect {
+    grid-template-columns: 1fr;
+  }
+  body.mobile-touch #claudium-window .cl-wallet-connect button {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 40px;
+  }
   body.mobile-touch #claudium-window .cl-rail {
     min-height: 44px;
     padding: 7px 8px;

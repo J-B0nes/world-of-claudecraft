@@ -28,6 +28,7 @@ import type * as http from 'node:http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountModerationStatus } from '../../server/db';
 import { unlinkWallet, walletForAccount } from '../../server/db';
+import { desktopWalletHandoffs } from '../../server/desktop_wallet_handoff';
 import { compose } from '../../server/http/compose';
 import { withErrors } from '../../server/http/middleware/with_errors';
 import type { Ctx, Method, Middleware } from '../../server/http/types';
@@ -190,8 +191,96 @@ afterEach(() => {
   resetWalletDbForTests();
   resetWalletRuntimeForTests();
   resetWalletLinkRateLimits();
+  desktopWalletHandoffs.clear();
   resetRateLimitClock();
   vi.restoreAllMocks();
+});
+
+describe('desktop browser wallet handoff routes', () => {
+  const address = 'HCe5EmTL9sq9iAWTx1VfFmthz9gMG9HPs3yNn9MqXSUq';
+
+  it('registers the create, claim, complete, and result operation', () => {
+    for (const path of [
+      '/api/desktop-wallet/create',
+      '/api/desktop-wallet/claim',
+      '/api/desktop-wallet/complete',
+      '/api/desktop-wallet/result',
+    ]) {
+      expect(routeFor('POST', path)).toBeDefined();
+    }
+  });
+
+  it('relays a transaction signature once to the authenticated desktop account', async () => {
+    authedDb();
+    vi.mocked(walletForAccount).mockResolvedValue({
+      account_id: 7,
+      pubkey: address,
+      linked_at: '2026-07-01T00:00:00.000Z',
+    });
+    const created = await runRoute('POST', '/api/desktop-wallet/create', {
+      headers: { authorization: BEARER },
+      body: {
+        kind: 'transaction',
+        expectedAddress: address,
+        transactionBase64: 'AQID',
+      },
+    });
+    expect(created.status).toBe(200);
+    const code = String(bodyRecord(created.body).code);
+
+    const claimed = await runRoute('POST', '/api/desktop-wallet/claim', { body: { code } });
+    expect(claimed.body).toEqual({
+      kind: 'transaction',
+      expectedAddress: address,
+      transactionBase64: 'AQID',
+    });
+
+    const completed = await runRoute('POST', '/api/desktop-wallet/complete', {
+      body: { code, kind: 'transaction', address, signature: 'chain-signature' },
+    });
+    expect(completed.body).toEqual({ completed: true });
+
+    const result = await runRoute('POST', '/api/desktop-wallet/result', {
+      headers: { authorization: BEARER },
+      body: { code },
+    });
+    expect(result.body).toEqual({
+      status: 'complete',
+      result: { kind: 'transaction', address, signature: 'chain-signature' },
+    });
+    const retried = await runRoute('POST', '/api/desktop-wallet/result', {
+      headers: { authorization: BEARER },
+      body: { code },
+    });
+    expect(retried.body).toEqual({
+      status: 'complete',
+      result: { kind: 'transaction', address, signature: 'chain-signature' },
+    });
+  });
+
+  it('rejects a transaction handoff for a wallet other than the account link', async () => {
+    authedDb();
+    vi.mocked(walletForAccount).mockResolvedValue({
+      account_id: 7,
+      pubkey: address,
+      linked_at: '2026-07-01T00:00:00.000Z',
+    });
+
+    const response = await runRoute('POST', '/api/desktop-wallet/create', {
+      headers: { authorization: BEARER },
+      body: {
+        kind: 'transaction',
+        expectedAddress: '11111111111111111111111111111111',
+        transactionBase64: 'AQID',
+      },
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'transaction wallet does not match the linked account wallet',
+      code: 'wallet.handoff_invalid',
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

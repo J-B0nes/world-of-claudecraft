@@ -405,6 +405,7 @@ export async function confirmNativeSettlement(
  */
 export interface ClaudiumSigners {
   stripe?(intent: ClaudiumStripeIntent, purchaseId: string): Promise<void>;
+  nativePayer?: string | null;
   nativeSignAndSend?(transactionBase64: string, rail: ClaudiumNativeRail): Promise<string>;
 }
 
@@ -433,8 +434,7 @@ export async function startClaudiumPurchase(
   }
 
   if (!signers.nativeSignAndSend) return OFF_NATIVE_QUOTE;
-  const wallet = await import('./wallet');
-  const payer = wallet.currentWallet().address;
+  const payer = signers.nativePayer ?? (await import('./wallet')).currentWallet().address;
   if (!payer) return OFF_NATIVE_QUOTE;
   const quote = await client.nativeQuote({ rail, sku, payer });
   if (!quote.ok || !quote.reference || !quote.transactionBase64) return quote;

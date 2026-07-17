@@ -251,6 +251,39 @@ describe('startClaudiumPurchase', () => {
     });
     expect(result).toEqual({ settled: true, balance: 500, reason: null });
   });
+
+  it('uses a linked-only desktop payer when no wallet is connected in the renderer', async () => {
+    const client = new EconomyClient({ token: () => 'token', base: 'https://game.example' });
+    const quote = vi.spyOn(client, 'nativeQuote').mockResolvedValue({
+      ok: true,
+      reference: 'CLM_desktop',
+      rail: 'sol',
+      claudium: 500,
+      amountBase: '123',
+      destination: 'treasury',
+      mint: null,
+      memo: 'CLM_desktop',
+      quoteExpiryMs: Date.now() + 60_000,
+      transactionBase64: 'AQID',
+      reason: null,
+    });
+    vi.spyOn(client, 'nativeConfirm').mockResolvedValue({
+      settled: true,
+      balance: 500,
+      reason: null,
+    });
+
+    await startClaudiumPurchase(client, 'sol', 'claudium_500', {
+      nativePayer: 'linked-desktop-wallet',
+      nativeSignAndSend: async () => 'signature',
+    });
+
+    expect(quote).toHaveBeenCalledWith({
+      rail: 'sol',
+      sku: 'claudium_500',
+      payer: 'linked-desktop-wallet',
+    });
+  });
 });
 
 describe('confirmNativeSettlement', () => {
