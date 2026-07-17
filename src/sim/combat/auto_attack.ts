@@ -198,6 +198,15 @@ export function updatePlayerAutoAttack(ctx: SimContext, p: Entity, meta: PlayerM
       threatMult,
       whiteDualWieldPenalty: p.dualWielding && abilityName === null,
     });
+    // Thuggery mastery (Sword Specialization shape): a landed mainhand auto has
+    // a chance to swing once more. The pct gate keeps the rng stream untouched
+    // for everyone without the mastery, and the extra swing cannot chain.
+    const extraAttackPct = ctx.playerMods(meta).global.extraAttackPct;
+    if (connected && abilityName === null && extraAttackPct > 0 && ctx.rng.chance(extraAttackPct)) {
+      meleeSwing(ctx, p, t, 0, null, {
+        whiteDualWieldPenalty: p.dualWielding,
+      });
+    }
     maybeProcBattleTrance(ctx, p, meta, connected);
     maybeProcSuddenDeath(ctx, p, meta, connected);
     // Wolf Form swings at the rogue's fixed feral cadence, not the carried weapon's

@@ -103,6 +103,10 @@ export interface GlobalModEffect {
   critDmgHealPct?: number;
   spellHastePct?: number;
   critVsRooted?: number;
+  // Thuggery mastery: chance for a landed mainhand auto-attack to trigger one
+  // extra swing (the classic Sword Specialization shape; combat/auto_attack.ts).
+  // The extra swing never chains into another proc.
+  extraAttackPct?: number;
   autoRagePct?: number;
   abilityRagePct?: number;
   onKillSpeedPct?: number;
@@ -488,6 +492,7 @@ function zeroGlobal(): Required<GlobalModEffect> {
     critDmgHealPct: 0,
     spellHastePct: 0,
     critVsRooted: 0,
+    extraAttackPct: 0,
     autoRagePct: 0,
     abilityRagePct: 0,
     onKillSpeedPct: 0,
@@ -589,6 +594,7 @@ export function accumulateTalentEffect(
     target.critDmgHealPct += (source.critDmgHealPct ?? 0) * multiplier;
     target.spellHastePct += (source.spellHastePct ?? 0) * multiplier;
     target.critVsRooted += (source.critVsRooted ?? 0) * multiplier;
+    target.extraAttackPct += (source.extraAttackPct ?? 0) * multiplier;
     target.autoRagePct += (source.autoRagePct ?? 0) * multiplier;
     target.abilityRagePct += (source.abilityRagePct ?? 0) * multiplier;
     target.onKillSpeedPct += (source.onKillSpeedPct ?? 0) * multiplier;

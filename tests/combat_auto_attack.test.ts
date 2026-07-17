@@ -269,7 +269,7 @@ describe('auto_attack meleeSwing: landed talent procs resolve before retaliation
 
   it('Venom Dividend rolls its chance before thorns and pays only on success', () => {
     // Balance pass: the flat 5-per-swing became the Combat Potency shape (20%
-    // chance for 15 energy), so the proc now draws exactly one rng roll per
+    // chance for 10 energy), so the proc now draws exactly one rng roll per
     // poisoned swing; the roll resolves before the thorns retaliation.
     const run = (active: boolean) => {
       const { sim, p } = makeSim('rogue', 20, 26014);
@@ -301,7 +301,7 @@ describe('auto_attack meleeSwing: landed talent procs resolve before retaliation
     const active = run(true);
     expect(active.draws).toHaveLength(baseline.draws.length + 1); // the chance roll
     expect(active.valueAtRetaliation).toBe(active.resource); // resolved before thorns
-    expect([0, 15]).toContain(active.resource); // pays 15 or nothing, never 5
+    expect([0, 10]).toContain(active.resource); // pays 10 or nothing, never 5
   });
 });
 

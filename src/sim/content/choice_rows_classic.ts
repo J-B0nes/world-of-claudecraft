@@ -953,14 +953,14 @@ export const ROGUE_CHOICE_ROWS: ClassChoiceRows = {
           id: 'rog_r14_deadly_brew',
           name: 'Venom Dividend',
           description:
-            'Landed melee auto-attacks with an active poison have a 20% chance to restore 15 energy.',
+            'Landed melee auto-attacks with an active poison have a 20% chance to restore 10 energy.',
           icon: 'deadly_poison',
           effect: {
             proc: {
               id: 'rog_deadly_brew',
               name: 'Venom Dividend',
               trigger: { on: 'meleeSwingWhile', auraKind: 'imbue', chance: 0.2 },
-              responses: [{ kind: 'resource', amount: 15 }],
+              responses: [{ kind: 'resource', amount: 10 }],
             },
           },
         },

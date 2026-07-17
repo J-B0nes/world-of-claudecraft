@@ -1178,7 +1178,7 @@ export const ABILITIES: Record<string, AbilityDef> = {
     threat: { flat: 30 },
     effects: [{ type: 'aoeDamage', min: 18, max: 24, radius: 8, frontal: true, softCap: 5 }],
     description:
-      'Attack in a wide arc, dealing Physical damage to all enemies in front of you. Above 5 targets the damage is reduced. When you dodge or parry, your next Revenge may cost no rage. (Protection)',
+      'Attack in a wide arc, dealing 18 to 24 Physical damage to all enemies in front of you. Above 5 targets the damage is reduced. When you dodge or parry, your next Revenge may cost no rage. (Protection)',
   },
   // Warrior combat stances. All three share exclusiveGroup 'warrior_stance', so
   // casting one swaps the sibling and a warrior is never stanceless (the default
@@ -3635,7 +3635,7 @@ export const ABILITIES: Record<string, AbilityDef> = {
     targetType: 'friendly',
     effects: [{ type: 'chainHeal', min: 120, max: 145, jumps: 2, falloff: 0.5, radius: 12 }],
     description:
-      'Heals a friendly target for a large amount, then jumps to up to 2 additional nearby allies, healing for 50% less with each jump. (Restoration signature)',
+      'Heals a friendly target for 120 to 145, then jumps to up to 2 additional nearby allies, healing for 50% less with each jump. (Restoration signature)',
   },
   healing_wave: {
     id: 'healing_wave',
@@ -5271,7 +5271,7 @@ export const ABILITIES: Record<string, AbilityDef> = {
       { type: 'chainDamage', min: 60, max: 75, jumps: 2, falloff: 1, radius: 10 },
     ],
     description:
-      'Hurls a radiant aegis at an enemy, dealing Holy damage and bouncing to 2 nearby enemies. (Protection signature)',
+      'Hurls a radiant aegis at an enemy for 90 to 110 Holy damage, then bounces to 2 nearby enemies for 60 to 75 Holy damage each. (Protection signature)',
   },
   bestial_wrath: {
     id: 'bestial_wrath',
@@ -6292,7 +6292,11 @@ function applyTalentMods(entry: KnownAbility, mods: TalentModifiers): void {
           ? { ...e, value: scaleBuffValue(e.kind, e.value, mul) }
           : e.type === 'finisherHaste'
             ? { ...e, mult: 1 + (e.mult - 1) * mul }
-            : e,
+            : // Weapon coats scale their per-swing rider (Redhanded's poison
+              // damage; a re-coat picks up the new value).
+              e.type === 'imbue'
+              ? { ...e, bonus: Math.round(e.bonus * mul) }
+              : e,
       );
     }
   }

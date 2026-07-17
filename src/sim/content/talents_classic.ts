@@ -183,8 +183,17 @@ const ROGUE_SPECS: SpecDef[] = [
     // Balance pass (maintainer sheet): the backstab identity (the classic
     // Improved Backstab 30%), not a bleed rider on Subtlety's turf.
     'Redhanded',
-    "Increases Craven Thrust's critical strike chance by 30%.",
-    { ability: [{ ability: 'backstab', critPct: 0.3 }] },
+    "Increases Craven Thrust's critical strike chance by 30% and your poison damage by 10%.",
+    {
+      ability: [
+        { ability: 'backstab', critPct: 0.3 },
+        // The assassination poison identity (Potent Poisons shape): the two
+        // weapon coats scale their per-swing rider, the strike its hit.
+        { ability: 'instant_poison', buffPct: 0.1 },
+        { ability: 'deadly_poison', buffPct: 0.1 },
+        { ability: 'crippling_poison', dmgPct: 0.1 },
+      ],
+    },
   ),
   spec(
     'combat',
@@ -197,8 +206,11 @@ const ROGUE_SPECS: SpecDef[] = [
     // Balance pass (maintainer sheet): the only mastery in the game with a
     // penalty loses it.
     "Scrapper's Edge",
-    'Increases attack speed by 10%.',
-    { global: { meleeHastePct: 0.1 } },
+    'Increases attack speed by 10%, and your auto-attacks have a 5% chance to trigger an extra attack.',
+    // The extra-attack chance is the classic Sword Specialization max rank; 10%
+    // was considered and rejected (with the haste it would push auto throughput
+    // past 20% and drown the haste half).
+    { global: { meleeHastePct: 0.1, extraAttackPct: 0.05 } },
   ),
   spec(
     'subtlety',

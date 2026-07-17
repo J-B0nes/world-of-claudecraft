@@ -191,6 +191,8 @@ const PCT_FIELDS = new Set([
   // Phase-2 defensive pass: pct-of-max-health proc responses.
   'amountPctMaxHp',
   'healPctMaxHp',
+  // Thuggery mastery: the Sword Specialization extra-attack chance.
+  'extraAttackPct',
   // Serpent's Venom (hunter choice row): the added dot totals a fraction of the
   // direct hit (effect_dispatch resolves total = lastDirectDamage * directPct),
   // shown as "50% of its damage".

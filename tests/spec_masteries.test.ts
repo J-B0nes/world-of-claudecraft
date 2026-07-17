@@ -77,9 +77,10 @@ describe('spec masteries', () => {
       global: { petDmgPct: 0.35 },
       stats: { maxHpPct: 0.08 },
     });
-    // Balance pass: the penalty is gone.
+    // Balance pass: the penalty is gone; the Sword Specialization extra-attack
+    // chance joined the haste.
     expect(TALENTS.rogue?.specs.find((s) => s.id === 'combat')?.mastery.effect).toEqual({
-      global: { meleeHastePct: 0.1 },
+      global: { meleeHastePct: 0.1, extraAttackPct: 0.05 },
     });
     expect(TALENTS.warlock?.specs.find((s) => s.id === 'demonology')?.mastery.effect).toEqual({
       global: { petDmgSharePct: 0.2 },
@@ -109,9 +110,14 @@ describe('spec masteries', () => {
       global: { healPct: 0.15, manaPct: 0.05, manaRegenPct: 0.2 },
     });
     // Balance pass: Redhanded is the scoped Craven Thrust crit (Improved
-    // Backstab shape).
+    // Backstab shape) plus the Potent Poisons identity.
     expect(TALENTS.rogue?.specs.find((s) => s.id === 'assassination')?.mastery.effect).toEqual({
-      ability: [{ ability: 'backstab', critPct: 0.3 }],
+      ability: [
+        { ability: 'backstab', critPct: 0.3 },
+        { ability: 'instant_poison', buffPct: 0.1 },
+        { ability: 'deadly_poison', buffPct: 0.1 },
+        { ability: 'crippling_poison', dmgPct: 0.1 },
+      ],
     });
     // Balance pass: tuned down plus the Duskveil stealth-speed identity.
     expect(TALENTS.rogue?.specs.find((s) => s.id === 'subtlety')?.mastery.effect).toEqual({

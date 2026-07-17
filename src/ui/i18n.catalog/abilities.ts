@@ -1327,7 +1327,7 @@ const classAbilityNamesEn = {
       [
         'chain_heal',
         'Chain Heal',
-        'Heals a friendly target for a large amount, then jumps to up to 2 additional nearby allies, healing for 50% less with each jump. (Restoration signature)',
+        'Heals a friendly target for 120 to 145, then jumps to up to 2 additional nearby allies, healing for 50% less with each jump. (Restoration signature)',
       ],
       [
         'metamorphosis',
@@ -1347,7 +1347,7 @@ const classAbilityNamesEn = {
       [
         'holy_shield',
         'Hallowed Wall',
-        'Hurls a radiant aegis at an enemy, dealing Holy damage and bouncing to 2 nearby enemies. (Protection signature)',
+        'Hurls a radiant aegis at an enemy for 90 to 110 Holy damage, then bounces to 2 nearby enemies for 60 to 75 Holy damage each. (Protection signature)',
       ],
       [
         'bestial_wrath',
@@ -1607,7 +1607,7 @@ const classAbilityNamesEn = {
       [
         'revenge',
         'Revenge',
-        'Attack in a wide arc, dealing Physical damage to all enemies in front of you. Above 5 targets the damage is reduced. When you dodge or parry, your next Revenge may cost no rage. (Protection)',
+        'Attack in a wide arc, dealing 18 to 24 Physical damage to all enemies in front of you. Above 5 targets the damage is reduced. When you dodge or parry, your next Revenge may cost no rage. (Protection)',
       ],
       [
         'heroic_leap',
@@ -1695,7 +1695,7 @@ const classAbilityNamesEn = {
       [
         'deterrence',
         'Bristleguard',
-        'Increases your dodge chance by 50 percentage points for 10 sec. (Hunter talent)',
+        'Increases your dodge chance by 50 percentage points and reduces all damage taken by 30% for 10 sec. (Hunter talent)',
       ],
       [
         'divine_shield',
@@ -1720,7 +1720,7 @@ const classAbilityNamesEn = {
       [
         'frost_trap',
         'Rime Snare',
-        'Freezes enemies at the target area for 3 sec, preventing movement and actions. (Hunter talent)',
+        'Places a frost trap at your feet that arms after 1.5 sec. The first enemy to touch it is frozen for 3 sec, unable to move or act. One trap at a time. Lasts 60 sec. (Hunter talent)',
       ],
       [
         'ghostly_strike',
@@ -1866,7 +1866,11 @@ const classAbilityNamesEn = {
         'Reproach',
         "Interrupts the target's spellcast and prevents casting from that school for 4 sec.",
       ],
-      ['shadowstep', 'Shadeslip', 'Steps through the shadows toward your target. (Rogue talent)'],
+      [
+        'shadowstep',
+        'Shadeslip',
+        'Steps through the shadows toward your target without breaking Duskveil. (Rogue talent)',
+      ],
       ['silence', 'Hushword', 'Silences the target for 4 sec. (Priest talent)'],
       [
         'smoke_screen',
@@ -1906,7 +1910,7 @@ const classAbilityNamesEn = {
       [
         'voidfeast',
         'Voidfeast',
-        'Devours a magic effect (a beneficial one from an enemy, or a harmful one from an ally) and heals you for 6% of your maximum health.',
+        'Devours a magic effect (a beneficial one from an enemy, or a harmful one from an ally) and heals you for 6% of your maximum health. Only usable when there is an effect to devour.',
       ],
     ]),
   },
