@@ -1,4 +1,5 @@
 import { audio } from '../game/audio';
+import { corpseLootAvailability } from '../game/corpse_loot_availability';
 import type { GamepadKind } from '../game/gamepad_map';
 import { InstanceMusicController } from '../game/instance_music';
 import { type Keybinds, keyCapLabel } from '../game/keybinds';
@@ -881,6 +882,10 @@ export class Hud {
   // that helper lives behind the game-layer seam). Null until wired; the
   // attack handler then falls back to the fixed attack control.
   onMobileAttackNearest: (() => void) | null = null;
+  // The healer button lives in the non-blocking ghost overlay, but successful
+  // resurrection must still flow through main.ts so authoritative outcomes can
+  // stop autorun without making Hud own Input or MobileControls.
+  onResurrectAtSpiritHealer: (() => void) | null = null;
   private readonly actionBarController: ActionBarController;
   private get hotbarActions(): HotbarAction[] {
     return this.actionBarController.actions;
@@ -1420,6 +1425,7 @@ export class Hud {
       element: $('#loot-window'),
       document,
       world: () => this.sim,
+      corpseAvailability: (mob) => corpseLootAvailability(mob, this.sim.playerId),
       closeTransient: () => this.closeOtherWindows('#loot-window'),
       hideTooltip: () => this.hideTooltip(),
       entityName: entityDisplayName,
@@ -1592,7 +1598,7 @@ export class Hud {
       this.sim.releaseSpirit();
     });
     bindTouchTap(this.resurrectCorpseBtnEl, () => this.sim.resurrectAtCorpse());
-    bindTouchTap(this.resurrectHealerBtnEl, () => this.sim.resurrectAtSpiritHealer());
+    bindTouchTap(this.resurrectHealerBtnEl, () => this.onResurrectAtSpiritHealer?.());
     document.addEventListener('pointerdown', (ev) => {
       const target = ev.target as Node | null;
       if (!target) return;
